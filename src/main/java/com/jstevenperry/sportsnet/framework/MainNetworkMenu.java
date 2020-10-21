@@ -1,0 +1,159 @@
+package com.jstevenperry.sportsnet.framework;
+
+import com.jstevenperry.sportsnet.framework.menus.NetworkChoice;
+import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
+import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
+import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
+import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
+import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
+import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+public class MainNetworkMenu {
+  private static final Logger log = LoggerFactory.getLogger(MainNetworkMenu.class);
+
+  private final List<NetworkCandidate> unsavedNetworks = new ArrayList<>();
+
+  private static ApplicationContext applicationContext;
+
+  public static ApplicationContext getApplicationContext() { return applicationContext; }
+
+  // Dependencies go here
+  private final SeasonDataDao seasonDataDao;
+  private final TournamentResultDao tournamentResultDao;
+  private final TournamentParticipantDao tournamentParticipantDao;
+  private final AbstractNetworkTrainer networkTrainer;
+  private final AbstractNetworkRunner networkRunner;
+
+  /**
+   * Save NetworkParameters so last settings are retained between
+   * training runs (it's a pain to have to re-enter everything all
+   * the time).
+   */
+  private NetworkParameters networkParameters;
+
+  public MainNetworkMenu(final SeasonDataDao seasonDataDao,
+                         final TournamentResultDao tournamentResultDao,
+                         final TournamentParticipantDao tournamentParticipantDao,
+                         final AbstractNetworkRunner networkRunner,
+                         final AbstractNetworkTrainer networkTrainer) {
+    this.seasonDataDao = seasonDataDao;
+    this.tournamentResultDao = tournamentResultDao;
+    this.tournamentParticipantDao = tournamentParticipantDao;
+    this.networkRunner = networkRunner;
+    this.networkTrainer = networkTrainer;
+  }
+
+  /**
+   * Entry point for the main network menu.
+   */
+  public void go() {
+    //
+    // No arguments - prompt the user for EVERYTHING
+    BufferedReader scanner = new BufferedReader(new InputStreamReader(System.in));
+    //
+    // Display main menu. When it terminates, so does program.
+    NetworkChoice menuChoice = NetworkChoice.UNKNOWN;
+    while (menuChoice != NetworkChoice.QUIT) {
+      try {
+        //
+        // Display the main menu, let the user make their choice
+        menuChoice = displayMainMenu(scanner);
+        //
+        // Process the user's choice
+        menuChoice = processMainMenuChoice(scanner, menuChoice);
+      } catch (Throwable t) {
+        //
+        // Something bad happened, but we soldier on...
+        log.error("Bad things happened, man: {}", t.getLocalizedMessage(), t);
+      }
+    }
+    //
+    // Bye now.
+    log.info("Program terminated. Goodbye.");
+  }
+
+  /**
+   * Display the main menu. Javadoc. Check.
+   */
+  private static NetworkChoice displayMainMenu(final BufferedReader scanner) throws IOException {
+    NetworkChoice ret = NetworkChoice.UNKNOWN;
+    //
+    // Show the options and camp out until they decide to quit
+    // Use System.out.println() because it just looks better
+    System.out.println("Welcome to NCAA Basketball Net.");
+    System.out.println("This is the main menu. What do you want to do?");
+    for (NetworkChoice menuItem : NetworkChoice.values()) {
+      if (menuItem.isSuitableForDisplay()) {
+        System.out.printf("%d - %s%n", menuItem.getOrdinalValue(), menuItem.getDisplayValue());
+      }
+    }
+    System.out.println("==> ");
+    String line = scanner.readLine();
+    if (StringUtils.isNotEmpty(line)) {
+      //
+      // Get the menu choice from the number entered by the user or UNKNOWN
+      ret = NetworkChoice.from(Integer.parseInt(StringUtils.strip(line)));
+    } else {
+      log.error("{}: {}", ret.getDisplayValue(), line);
+    }
+    return ret;
+  }
+
+  private NetworkChoice processMainMenuChoice(final BufferedReader scanner,
+                                              final NetworkChoice menuChoice) throws IOException, InterruptedException {
+    NetworkChoice ret = menuChoice;
+    switch (menuChoice) {
+      case QUIT:
+        if (unsavedNetworks.size() > 0) {
+          while (true) {
+            System.out.println("You have unsaved networks. Are you sure you want to quit (y/n)?");
+            String input = StringUtils.strip(scanner.readLine());
+            if (input.equalsIgnoreCase("y")) {
+              break;
+            } else if (input.equalsIgnoreCase("n")) {
+              // Set the return value to UNKNOWN so the main menu displays again
+              ret = NetworkChoice.UNKNOWN;
+              break;
+            }
+          }
+        }
+        break;
+      case TRAIN_NETWORK:
+        Optional<NetworkCandidate> trainedNetwork = networkTrainer.go(networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao);
+        trainedNetwork.ifPresent(networkCandidate -> {
+          unsavedNetworks.add(networkCandidate);
+          networkParameters = networkCandidate.getNetworkParameters();
+        });
+        break;
+      case EVALUATE_NETWORK:
+        NetworkEvaluator.go(scanner, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao);
+        break;
+      case RUN_NETWORK:
+        networkRunner.go(scanner, unsavedNetworks);
+        break;
+      case PERSIST_UNSAVED_NETWORKS:
+        if (unsavedNetworks.isEmpty()) {
+          System.out.println("No networks to save.");
+        } else {
+          NetworkPersister.persistNetworks(scanner, unsavedNetworks);
+        }
+        break;
+      case LIST_SAVED_NETWORKS:
+        NetworkUtils.displayNetworks();
+        break;
+    }
+    return ret;
+  }
+
+}

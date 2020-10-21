@@ -1,0 +1,55 @@
+/*
+ * Copyright 2017 Makoto Consulting Group, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.jstevenperry.sportsnet;
+
+import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
+import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
+import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
+import com.jstevenperry.sportsnet.ncaabb.persistence.NcaaBbSeasonDataFlatFileDao;
+import com.jstevenperry.sportsnet.ncaabb.persistence.NcaaBbTournamentParticipantFlatFileDao;
+import com.jstevenperry.sportsnet.ncaabb.persistence.NcaaBbTournamentResultFlatFileDao;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * Spring configuration class. Saves having to use XML files to configure Spring.
+ *
+ * @author J Steven Perry
+ */
+@Configuration
+@ComponentScan(basePackages = {
+  "com.jstevenperry.sportsnet.ncaabb.*",
+  "com.jstevenperry.sportsnet.nhl.*"
+})
+public class ApplicationConfig {
+
+  @Bean(name = "ncaaBbSeasonDataDao")
+  public SeasonDataDao getNcaaBbSeasonDataDao() {
+    return new NcaaBbSeasonDataFlatFileDao();
+  }
+
+  @Bean(name = "ncaaBbTournamentResultDao")
+  public TournamentResultDao getTournamentResultDao() {
+    return new NcaaBbTournamentResultFlatFileDao();
+  }
+
+  @Bean(name = "tournamentParticipantDao")
+  public TournamentParticipantDao getTournamentParticipantDao() {
+    return new NcaaBbTournamentParticipantFlatFileDao();
+  }
+
+}
