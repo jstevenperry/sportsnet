@@ -1,6 +1,8 @@
 package com.jstevenperry.sportsnet.framework.menus;
 
-public abstract class AbstractDataElementChoice {
+import java.io.Serializable;
+
+public abstract class AbstractDataElementChoice implements Serializable {
   /**
    * Return the index of this Data Element Menu Choice in its
    * corresponding INDArray of features.

@@ -1,6 +1,9 @@
-package com.jstevenperry.sportsnet.framework;
+package com.jstevenperry.sportsnet.framework.menus;
 
-import com.jstevenperry.sportsnet.framework.menus.NetworkChoice;
+import com.jstevenperry.sportsnet.framework.AbstractNetworkRunner;
+import com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer;
+import com.jstevenperry.sportsnet.framework.NetworkEvaluator;
+import com.jstevenperry.sportsnet.framework.NetworkPersister;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
@@ -19,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class MainNetworkMenu {
-  private static final Logger log = LoggerFactory.getLogger(MainNetworkMenu.class);
+public class NetworkMenu {
+  private static final Logger log = LoggerFactory.getLogger(NetworkMenu.class);
 
   private final List<NetworkCandidate> unsavedNetworks = new ArrayList<>();
 
@@ -42,11 +45,11 @@ public class MainNetworkMenu {
    */
   private NetworkParameters networkParameters;
 
-  public MainNetworkMenu(final SeasonDataDao seasonDataDao,
-                         final TournamentResultDao tournamentResultDao,
-                         final TournamentParticipantDao tournamentParticipantDao,
-                         final AbstractNetworkRunner networkRunner,
-                         final AbstractNetworkTrainer networkTrainer) {
+  public NetworkMenu(final SeasonDataDao seasonDataDao,
+                     final TournamentResultDao tournamentResultDao,
+                     final TournamentParticipantDao tournamentParticipantDao,
+                     final AbstractNetworkRunner networkRunner,
+                     final AbstractNetworkTrainer networkTrainer) {
     this.seasonDataDao = seasonDataDao;
     this.tournamentResultDao = tournamentResultDao;
     this.tournamentParticipantDao = tournamentParticipantDao;
@@ -71,7 +74,7 @@ public class MainNetworkMenu {
         menuChoice = displayMainMenu(scanner);
         //
         // Process the user's choice
-        menuChoice = processMainMenuChoice(scanner, menuChoice);
+        menuChoice = processMenuChoice(scanner, menuChoice);
       } catch (Throwable t) {
         //
         // Something bad happened, but we soldier on...
@@ -80,7 +83,7 @@ public class MainNetworkMenu {
     }
     //
     // Bye now.
-    log.info("Program terminated. Goodbye.");
+    log.info("Exiting network menu.");
   }
 
   /**
@@ -110,8 +113,8 @@ public class MainNetworkMenu {
     return ret;
   }
 
-  private NetworkChoice processMainMenuChoice(final BufferedReader scanner,
-                                              final NetworkChoice menuChoice) throws IOException, InterruptedException {
+  private NetworkChoice processMenuChoice(final BufferedReader scanner,
+                                          final NetworkChoice menuChoice) throws IOException, InterruptedException {
     NetworkChoice ret = menuChoice;
     switch (menuChoice) {
       case QUIT:

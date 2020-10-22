@@ -15,13 +15,6 @@
  */
 package com.jstevenperry.sportsnet;
 
-import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
-import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
-import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
-import com.jstevenperry.sportsnet.ncaabb.persistence.NcaaBbSeasonDataFlatFileDao;
-import com.jstevenperry.sportsnet.ncaabb.persistence.NcaaBbTournamentParticipantFlatFileDao;
-import com.jstevenperry.sportsnet.ncaabb.persistence.NcaaBbTournamentResultFlatFileDao;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
@@ -36,20 +29,20 @@ import org.springframework.context.annotation.Configuration;
   "com.jstevenperry.sportsnet.nhl.*"
 })
 public class ApplicationConfig {
-
-  @Bean(name = "ncaaBbSeasonDataDao")
-  public SeasonDataDao getNcaaBbSeasonDataDao() {
-    return new NcaaBbSeasonDataFlatFileDao();
-  }
-
-  @Bean(name = "ncaaBbTournamentResultDao")
-  public TournamentResultDao getTournamentResultDao() {
-    return new NcaaBbTournamentResultFlatFileDao();
-  }
-
-  @Bean(name = "tournamentParticipantDao")
-  public TournamentParticipantDao getTournamentParticipantDao() {
-    return new NcaaBbTournamentParticipantFlatFileDao();
-  }
+//
+//  @Bean(name = "ncaaBbSeasonDataDao")
+//  public SeasonDataDao getNcaaBbSeasonDataDao() {
+//    return new NcaaBbSeasonDataFlatFileDao();
+//  }
+//
+//  @Bean(name = "ncaaBbTournamentResultDao")
+//  public TournamentResultDao getTournamentResultDao() {
+//    return new NcaaBbTournamentResultFlatFileDao();
+//  }
+//
+//  @Bean(name = "ncaaBbTournamentParticipantDao")
+//  public TournamentParticipantDao getTournamentParticipantDao() {
+//    return new NcaaBbTournamentParticipantFlatFileDao();
+//  }
 
 }

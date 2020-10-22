@@ -49,6 +49,8 @@ public abstract class AbstractTournamentRunnerPlugin {
 
   private static final Byte KEEP_LOOPING = -1;
   private static final int BATCH_SIZE = 2000;
+  public static final String NCAABB_TOURNAMENT_RESULTS_CSV = "/ncaabb/tournament-results.csv";
+  public static final String NCAABB_TOURNAMENT_TEMPLATE_NCAABB_TXT = "/ncaabb/tournament-template-ncaabb.txt";
   private final SeasonDataDao seasonDataDao;
   private Map<TeamCoordinate, SeasonData> teamCoordinateSeasonDataMap;
 
@@ -135,7 +137,7 @@ public abstract class AbstractTournamentRunnerPlugin {
   private static List<String[]> readTournamentTemplateFile() {
     //
     // Open and read the tournament results template CSV, which contains the template for visualizing the tournament results
-    String tournamentResultsTemplateFileName = "/tournament-results.csv";
+    String tournamentResultsTemplateFileName = NCAABB_TOURNAMENT_RESULTS_CSV;
     //
     // List<String[]> contains the template file, which will be filled in by using the teamCoordinateSeasonDataMap
     // to map from team coordinates in the template to team names
@@ -216,7 +218,7 @@ public abstract class AbstractTournamentRunnerPlugin {
    * was written for.
    */
   public String getTournamentTemplateFileName() {
-    return "/tournament-template-ncaabb.txt";
+    return NCAABB_TOURNAMENT_TEMPLATE_NCAABB_TXT;
   }
 
   /**

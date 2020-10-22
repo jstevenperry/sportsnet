@@ -75,8 +75,6 @@ public class NetworkProperties {
    */
   private static PropertiesFile getPropertiesFile() {
     if (propertiesFile == null) {
-      propertiesFile = new PropertiesFile(PROPERTIES_FILE_NAME);
-      log.info("Loaded properties file from WAR (the default behavior)");
       String propertiesFileNameFromEnvironmentVariable = System.getProperty(NETWORK_PROPERTIES_FILE);
       if (StringUtils.isNotEmpty(propertiesFileNameFromEnvironmentVariable)) {
         log.info(String.format("Override found for property (%s). Attempting to load properties file: %s", NETWORK_PROPERTIES_FILE, propertiesFileNameFromEnvironmentVariable));
@@ -91,6 +89,10 @@ public class NetworkProperties {
           throw new RuntimeException(errorMessage, e);
         }
         log.info(String.format("Loaded properties file: %s", propertiesFileNameFromEnvironmentVariable));
+      } else {
+        log.warn("System property {} not set, attempting to load network properties file: {} from the classpath...", NETWORK_PROPERTIES_FILE, PROPERTIES_FILE_NAME);
+        propertiesFile = new PropertiesFile(PROPERTIES_FILE_NAME);
+        log.info("Loaded properties file from CLASSPATH (the default behavior)");
       }
     }
     // Sanity check

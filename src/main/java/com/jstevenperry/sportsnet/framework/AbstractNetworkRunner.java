@@ -38,18 +38,11 @@ public abstract class AbstractNetworkRunner {
         log.error("No TournamentRunnerPlugins, cannot run a network to simulate a tournament!");
       }
     } else {
-      log.info("No networks to run. Train some networks and try again.");
+      log.warn("No networks to run. Train some networks and try again.");
     }
   }
 
-  protected abstract List<AbstractTournamentRunnerPlugin> loadPlugins();// {
-//    List<TournamentRunnerPlugin> ret = Arrays.asList(
-//      //new TournamentRunnerPlugin2019(MainMenu.getApplicationContext())
-//      new TournamentRunnerPlugin2018(com.makotojava.ncaabb.dl4j.MainMenu.getApplicationContext())
-//    );
-//
-//    return ret;
-//  }
+  protected abstract List<AbstractTournamentRunnerPlugin> loadPlugins();
 
   private void promptUser(final BufferedReader scanner,
                                  final List<NetworkCandidate> allNetworks,
@@ -73,7 +66,7 @@ public abstract class AbstractNetworkRunner {
         }
       }
     } else {
-      System.out.println("No network selected, quitting.");
+      log.info("No network selected, quitting.");
     }
   }
 

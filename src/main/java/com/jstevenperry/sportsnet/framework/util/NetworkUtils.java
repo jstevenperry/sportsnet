@@ -100,23 +100,27 @@ public class NetworkUtils {
   public static void displayNetworks() throws IOException {
     BufferedReader scanner = new BufferedReader(new InputStreamReader(System.in));
     List<NetworkCandidate> networkCandidates = loadNetworks();
-    while (true) {
-      displayNetworkList(networkCandidates);
-      System.out.println("Enter the number of a network to see more about it (just press Enter to quit).");
-      String line = scanner.readLine();
-      if (StringUtils.isEmpty(line)) {
-        break;
-      }
-      if (StringUtils.isNumeric(line)) {
-        int networkNumber = Integer.parseInt(line);
-        if (networkNumber > 0 && networkNumber <= networkCandidates.size()) {
-          System.out.println(networkCandidates.get(networkNumber - 1).getNetworkParameters());
-        } else {
-          System.out.printf("%d is not one of the choices. Please choose a network from the list (or just press enter to quit).%n", networkNumber);
+    if (networkCandidates.size() > 0) {
+      while (true) {
+        displayNetworkList(networkCandidates);
+        System.out.println("Enter the number of a network to see more about it (just press Enter to quit).");
+        String line = scanner.readLine();
+        if (StringUtils.isEmpty(line)) {
+          break;
         }
-      } else {
-        System.out.printf("%s is not a valid choice. Please choose a network from the list (or just press enter to quit).%n", line);
+        if (StringUtils.isNumeric(line)) {
+          int networkNumber = Integer.parseInt(line);
+          if (networkNumber > 0 && networkNumber <= networkCandidates.size()) {
+            System.out.println(networkCandidates.get(networkNumber - 1).getNetworkParameters());
+          } else {
+            System.out.printf("%d is not one of the choices. Please choose a network from the list (or just press enter to quit).%n", networkNumber);
+          }
+        } else {
+          System.out.printf("%s is not a valid choice. Please choose a network from the list (or just press enter to quit).%n", line);
+        }
       }
+    } else {
+      log.warn("No saved networks exist. Train some networks, save one or more of them, and try again.");
     }
     System.out.println("Quitting.");
   }

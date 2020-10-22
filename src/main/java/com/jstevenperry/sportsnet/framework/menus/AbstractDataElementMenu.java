@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,8 +28,6 @@ public abstract class AbstractDataElementMenu {
 
   public abstract Optional<AbstractDataElementChoice> from(int ordinalValue);
 
-  public abstract List<AbstractDataElementChoice> sortChoices();
-
   public List<AbstractDataElementChoice> go(final BufferedReader scanner, final List<AbstractDataElementChoice> selectedElements) throws IOException {
     String thing = "data element";
     List<AbstractDataElementChoice> ret = (selectedElements == null) ? new ArrayList<>() : selectedElements;
@@ -37,7 +36,7 @@ public abstract class AbstractDataElementMenu {
     while (true) {
       if (!ret.isEmpty()) {
         System.out.println("******* CURRENT CHOICES *******");
-        sortChoices();
+        ret.sort(Comparator.comparingInt(AbstractDataElementChoice::getOrdinalValue));
         displayMenuItems(ret);
         System.out.println("(To use these choices just press enter)");
         System.out.printf("To remove a choice enter -NUMBER (for example, -%d removes %s from your selections)%n", ret.get(0).getOrdinalValue(), ret.get(0).getName());

@@ -6,6 +6,7 @@ import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,12 +15,13 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
+@Component("ncaaBbTournamentParticipantDao")
 public class NcaaBbTournamentParticipantFlatFileDao implements TournamentParticipantDao {
 
   private static final Logger log = LoggerFactory.getLogger(NcaaBbTournamentParticipantFlatFileDao.class);
 
   private static final int NUMBER_OF_FIELDS = 4;
-  private static final String FILE_NAME = "/tournament_participant.csv";
+  private static final String FILE_NAME = "/ncaabb/tournament_participant.csv";
 
   private Map<Integer, Map<String, TournamentParticipant>> database = new HashMap<>();
 

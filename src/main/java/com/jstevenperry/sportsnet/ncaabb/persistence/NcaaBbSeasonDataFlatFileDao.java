@@ -6,6 +6,7 @@ import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,15 +18,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Component("ncaaBbSeasonDataDao")
 public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
 
   private static final Logger log = LoggerFactory.getLogger(NcaaBbSeasonDataFlatFileDao.class);
 
   private static final int SEASON_DATA_NUMBER_OF_FIELDS = 25;
-  private static final String SEASON_DATA_FILE_NAME = "/season_data.csv";
+  private static final String SEASON_DATA_FILE_NAME = "/ncaabb/season_data.csv";
 
   private static final int WON_LOSS_PERCENTAGE_NUMBER_OF_FIELDS = 6;
-  private static final String WON_LOST_PERCENTAGE_FILE_NAME = "/won_lost_percentage.csv";
+  private static final String WON_LOST_PERCENTAGE_FILE_NAME = "/ncaabb/won_lost_percentage.csv";
 
   private final Map<Integer, Map<String, SeasonData>> database = new HashMap<>();
 

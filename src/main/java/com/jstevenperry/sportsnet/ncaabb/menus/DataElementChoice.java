@@ -4,6 +4,8 @@ import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
 
 public class DataElementChoice extends AbstractDataElementChoice {
 
+  private static final long serialVersionUID = 1L;
+
   private final String name;
   private final int elementIndex;
   private final int ordinalValue;
@@ -28,5 +30,14 @@ public class DataElementChoice extends AbstractDataElementChoice {
   @Override
   public String getName() {
     return name;
+  }
+
+  @Override
+  public String toString() {
+    return "DataElementChoice{" +
+      "name='" + name + '\'' +
+      ", elementIndex=" + elementIndex +
+      ", ordinalValue=" + ordinalValue +
+      '}';
   }
 }
