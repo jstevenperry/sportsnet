@@ -1,7 +1,7 @@
 package com.jstevenperry.sportsnet.ncaabb.persistence;
 
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
-import com.jstevenperry.sportsnet.ncaabb.model.SeasonData;
+import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component("ncaaBbSeasonDataDao")
-public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
+public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonData> {
 
   private static final Logger log = LoggerFactory.getLogger(NcaaBbSeasonDataFlatFileDao.class);
 
@@ -29,7 +29,7 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
   private static final int WON_LOSS_PERCENTAGE_NUMBER_OF_FIELDS = 6;
   private static final String WON_LOST_PERCENTAGE_FILE_NAME = "/ncaabb/won_lost_percentage.csv";
 
-  private final Map<Integer, Map<String, SeasonData>> database = new HashMap<>();
+  private final Map<Integer, Map<String, NcaaBbSeasonData>> database = new HashMap<>();
 
 
   public NcaaBbSeasonDataFlatFileDao() {
@@ -37,7 +37,7 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
     updateWonLostPercentage(database);
   }
 
-  private static void loadData(final Map<Integer, Map<String, SeasonData>> database) {
+  private static void loadData(final Map<Integer, Map<String, NcaaBbSeasonData>> database) {
     InputStream inputStream = NcaaBbSeasonDataFlatFileDao.class.getResourceAsStream(NcaaBbSeasonDataFlatFileDao.SEASON_DATA_FILE_NAME);
     try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
       CSVReader csvReader = new CSVReader(bufferedReader);
@@ -45,8 +45,8 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
       String[] line = csvReader.readNext();
       while (line != null) {
         if (line.length == SEASON_DATA_NUMBER_OF_FIELDS) {
-          SeasonData seasonData = parseSeasonDataFileLine(line);
-          Map<String, SeasonData> teamSeasonDataMap = database.computeIfAbsent(seasonData.getYear(), k -> new HashMap<>());
+          NcaaBbSeasonData seasonData = parseSeasonDataFileLine(line);
+          Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.computeIfAbsent(seasonData.getYear(), k -> new HashMap<>());
           teamSeasonDataMap.put(seasonData.getTeamName(), seasonData);
         } else {
           throw new RuntimeException(String.format("Expected %d fields, got %d instead.", SEASON_DATA_NUMBER_OF_FIELDS, line.length));
@@ -60,7 +60,7 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
     }
   }
 
-  private static void updateWonLostPercentage(final Map<Integer, Map<String, SeasonData>> database) {
+  private static void updateWonLostPercentage(final Map<Integer, Map<String, NcaaBbSeasonData>> database) {
     InputStream inputStream = NcaaBbSeasonDataFlatFileDao.class.getResourceAsStream(NcaaBbSeasonDataFlatFileDao.WON_LOST_PERCENTAGE_FILE_NAME);
     try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
       CSVReader csvReader = new CSVReader(bufferedReader);
@@ -68,11 +68,11 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
       String[] line = csvReader.readNext();
       while (line != null) {
         if (line.length == WON_LOSS_PERCENTAGE_NUMBER_OF_FIELDS) {
-          SeasonData wlSeasonData = parseWonLossPercentageDataFileLine(line);
-          Map<String, SeasonData> teamSeasonDataMap = database.get(wlSeasonData.getYear());
+          NcaaBbSeasonData wlSeasonData = parseWonLossPercentageDataFileLine(line);
+          Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.get(wlSeasonData.getYear());
           String teamName = wlSeasonData.getTeamName();
           if (teamSeasonDataMap.containsKey(teamName)) {
-            SeasonData seasonData = teamSeasonDataMap.get(teamName);
+            NcaaBbSeasonData seasonData = teamSeasonDataMap.get(teamName);
             seasonData.setWonLostPercentage(wlSeasonData.getWonLostPercentage());
           } else {
             throw new RuntimeException(String.format("Could not find team: %s in team season data map. Cannot continue.", teamName));
@@ -89,8 +89,8 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
     }
   }
 
-  private static SeasonData parseSeasonDataFileLine(final String[] line) {
-    SeasonData seasonData = new SeasonData();
+  private static NcaaBbSeasonData parseSeasonDataFileLine(final String[] line) {
+    NcaaBbSeasonData seasonData = new NcaaBbSeasonData();
     seasonData.setYear(Integer.parseInt(line[0]));
     seasonData.setTeamName(StringUtils.trim(line[1]));
     // Offense
@@ -123,8 +123,8 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
     return seasonData;
   }
 
-  private static SeasonData parseWonLossPercentageDataFileLine(final String[] line) {
-    SeasonData seasonData = new SeasonData();
+  private static NcaaBbSeasonData parseWonLossPercentageDataFileLine(final String[] line) {
+    NcaaBbSeasonData seasonData = new NcaaBbSeasonData();
     seasonData.setYear(Integer.parseInt(line[1]));
     seasonData.setTeamName(StringUtils.trim(line[2]));
     seasonData.setWonLostPercentage(BigDecimal.valueOf(Double.parseDouble(nice(line[5]))));
@@ -141,9 +141,9 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
   }
 
   @Override
-  public List<SeasonData> fetchAllByYear(final Integer year) {
-    Map<String, SeasonData> teamSeasonDataMap = database.get(year);
-    List<SeasonData> ret = teamSeasonDataMap.keySet()
+  public List<NcaaBbSeasonData> fetchAllByYear(final Integer year) {
+    Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.get(year);
+    List<NcaaBbSeasonData> ret = teamSeasonDataMap.keySet()
       .stream()
       .map(teamSeasonDataMap::get)
       .collect(Collectors.toList());
@@ -152,8 +152,8 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao {
   }
 
   @Override
-  public SeasonData fetchByYearAndTeamName(final Integer year, final String teamName) {
-    Map<String, SeasonData> teamSeasonDataMap = database.get(year);
+  public NcaaBbSeasonData fetchByYearAndTeamName(final Integer year, final String teamName) {
+    Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.get(year);
     return teamSeasonDataMap.get(teamName);
   }
 

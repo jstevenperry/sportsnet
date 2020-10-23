@@ -1,9 +1,12 @@
 package com.jstevenperry.sportsnet.framework;
 
+import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import com.jstevenperry.sportsnet.framework.model.GameCoordinate;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
+import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,11 +16,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public abstract class AbstractNetworkRunner {
+public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extends AbstractNetworkBase<T> {
+
+  private static final Byte KEEP_LOOPING = -1;
 
   private static final Logger log = LoggerFactory.getLogger(AbstractNetworkRunner.class);
 
-  public void go(final BufferedReader scanner, final List<NetworkCandidate> networkCandidateList) throws IOException {
+  public void go(final BufferedReader scanner,
+                 final List<NetworkCandidate> networkCandidateList,
+                 final SeasonDataDao<T> seasonDataDao) throws IOException {
     //
     // Load saved networks
     List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks();
@@ -29,7 +36,7 @@ public abstract class AbstractNetworkRunner {
     if (!allNetworks.isEmpty()) {
       //
       // Load plugins
-      List<AbstractTournamentRunnerPlugin> tournamentRunnerPlugins = loadPlugins();
+      List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins = loadPlugins(seasonDataDao);
       if (!tournamentRunnerPlugins.isEmpty()) {
         //
         // Ask the user what they want to do
@@ -42,11 +49,11 @@ public abstract class AbstractNetworkRunner {
     }
   }
 
-  protected abstract List<AbstractTournamentRunnerPlugin> loadPlugins();
+  protected abstract List<AbstractTournamentRunnerPlugin<T>> loadPlugins(SeasonDataDao<T> seasonDataDao);
 
   private void promptUser(final BufferedReader scanner,
                                  final List<NetworkCandidate> allNetworks,
-                                 final List<AbstractTournamentRunnerPlugin> tournamentRunnerPlugins) throws IOException {
+                                 final List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins) throws IOException {
     //
     // Get the network the user wants to run
     Optional<NetworkCandidate> selectedNetwork = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.ACTION_WORK_WITH);
@@ -55,9 +62,9 @@ public abstract class AbstractNetworkRunner {
       NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
       //
       // Prompt the user for the tournament plugin they want to run
-      Optional<AbstractTournamentRunnerPlugin> tournamentRunnerPluginMaybe = AbstractTournamentRunnerPlugin.selectPluginToRunMenu(scanner, tournamentRunnerPlugins);
+      Optional<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPluginMaybe = selectPluginToRunMenu(scanner, tournamentRunnerPlugins);
       if (tournamentRunnerPluginMaybe.isPresent()) {
-        AbstractTournamentRunnerPlugin tournamentRunnerPlugin = tournamentRunnerPluginMaybe.get();
+        AbstractTournamentRunnerPlugin<T> tournamentRunnerPlugin = tournamentRunnerPluginMaybe.get();
         //
         // If the network is valid for the specified tournament year, then run the tournament
         if (networkParameters.isValidYearForTournamentPrediction(tournamentRunnerPlugin.getTournamentYear())) {
@@ -68,6 +75,40 @@ public abstract class AbstractNetworkRunner {
     } else {
       log.info("No network selected, quitting.");
     }
+  }
+
+  public Optional<AbstractTournamentRunnerPlugin<T>> selectPluginToRunMenu(final BufferedReader scanner,
+                                                                           final List<? extends AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins) throws IOException {
+    Optional<AbstractTournamentRunnerPlugin<T>> ret = Optional.empty();
+    // Ask the user which plugin they want to run and for what year, and if it's doable, return the plugin
+    byte pluginNumber = KEEP_LOOPING;
+    while (pluginNumber == KEEP_LOOPING && !tournamentRunnerPlugins.isEmpty()) {
+      System.out.println("Enter the number of the network you want to persist (enter 0 to quit):");
+      System.out.println("Plugin#\t\tTournament Year");
+      int index = 0;
+      for (AbstractTournamentRunnerPlugin<T> tournamentRunnerPlugin : tournamentRunnerPlugins) {
+        System.out.printf("   %d %24s%n", index + 1, tournamentRunnerPlugin.getTournamentYear().toString());
+        index++;
+      }
+      String line = scanner.readLine();
+      if (StringUtils.isNotEmpty(line)) {
+        pluginNumber = Byte.parseByte(StringUtils.strip(line));
+        if (pluginNumber < 0 || pluginNumber > tournamentRunnerPlugins.size()) {
+          pluginNumber = KEEP_LOOPING;
+          continue;
+        }
+        if (pluginNumber == 0) {
+          break;
+        }
+      } else {
+        System.out.printf("%s is not a valid choice.%n", line);
+        pluginNumber = KEEP_LOOPING;
+      }
+    }
+    if (pluginNumber != 0) {
+      ret = Optional.of(tournamentRunnerPlugins.get(pluginNumber - 1));
+    }
+    return ret;
   }
 
 }

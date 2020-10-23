@@ -3,12 +3,13 @@ package com.jstevenperry.sportsnet.ncaabb.plugins;
 import com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin;
 import com.jstevenperry.sportsnet.framework.model.TeamCoordinate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
-import com.jstevenperry.sportsnet.ncaabb.model.SeasonData;
+import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class TournamentRunnerPlugin2019 extends AbstractTournamentRunnerPlugin {
+public class TournamentRunnerPlugin2019 extends AbstractTournamentRunnerPlugin<NcaaBbSeasonData> {
 
   public static final String NCAABB_TOURNAMENT_TEMPLATE_NCAABB_2019_TXT = "/ncaabb/tournament-template-ncaabb-2019.txt";
 
@@ -31,9 +32,9 @@ public class TournamentRunnerPlugin2019 extends AbstractTournamentRunnerPlugin {
    * Builds the internal map of TeamCoordinate -> SeasonData
    */
   @Override
-  protected Map<TeamCoordinate, SeasonData> buildTeamCoordinateMap() {
+  protected Map<TeamCoordinate, NcaaBbSeasonData> buildTeamCoordinateMap() {
     // Map a team to its initial team coordinates
-    Map<TeamCoordinate, SeasonData> coordinateSeasonDataMap = new HashMap<>();
+    Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap = new HashMap<>();
     // TODO: Layla writes this code
     // [0,0,0],[0,0,1] maps to Prairie View vs Fairleigh Dickinson
     createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 0, 0, "Prairie View");
@@ -41,5 +42,11 @@ public class TournamentRunnerPlugin2019 extends AbstractTournamentRunnerPlugin {
     // TODO: Add other matchups here
     return coordinateSeasonDataMap;
   }
+
+  @Override
+  public List<Double> writeSeasonData(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+    return NcaaBbSeasonData.asDoubleList(seasonData,resultClass,isTraining);
+  }
+
 
 }

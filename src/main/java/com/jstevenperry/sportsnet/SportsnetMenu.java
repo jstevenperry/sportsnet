@@ -2,15 +2,12 @@ package com.jstevenperry.sportsnet;
 
 import com.jstevenperry.sportsnet.framework.menus.NetworkMenu;
 import com.jstevenperry.sportsnet.framework.menus.SportsnetChoice;
-import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
-import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
-import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
-import com.jstevenperry.sportsnet.ncaabb.NcaaBbNetworkRunner;
-import com.jstevenperry.sportsnet.ncaabb.NcaaBbNetworkTrainer;
+import com.jstevenperry.sportsnet.ncaabb.menus.NcaaBbNetworkMenu;
+import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -32,12 +29,12 @@ public class SportsnetMenu {
 
   private static final Logger log = LoggerFactory.getLogger(SportsnetMenu.class);
 
-  @Autowired
-  private SeasonDataDao seasonDataDao;
-
   public static void main(final String[] args) {
+    SpringApplication.run(SportsnetMenu.class, args);
+    //
+    // Read the spring configuration
     ApplicationContext applicationContext = new AnnotationConfigApplicationContext(ApplicationConfig.class);
-
+    //
     // Show the "Pick your sport" menu
     SportsnetMenu.go(applicationContext);
   }
@@ -98,39 +95,19 @@ public class SportsnetMenu {
     return ret;
   }
 
-  private static void processMenuChoice(final SportsnetChoice menuChoice,
-                                        final ApplicationContext applicationContext) throws IOException, InterruptedException {
+  private static void processMenuChoice(final SportsnetChoice menuChoice, final ApplicationContext applicationContext) throws InterruptedException {
     switch (menuChoice) {
       case NCAA_MENS_BASKETBALL:
-        handleNcaaMensBasketball(applicationContext);
+        //
+        // Create the network menu and pass its dependencies in.
+        NetworkMenu<NcaaBbSeasonData> networkMenu = new NcaaBbNetworkMenu(applicationContext);
+        //
+        // Fire up the network Menu.
+        networkMenu.go();
         break;
       case NHL:
-        handleNhl(applicationContext);
         break;
     }
-  }
-
-  private static void handleNcaaMensBasketball(final ApplicationContext applicationContext) {
-    //
-    // Get beans from Spring config
-    SeasonDataDao seasonDataDao = (SeasonDataDao) applicationContext.getBean("ncaaBbSeasonDataDao");
-    TournamentParticipantDao tournamentParticipantDao = (TournamentParticipantDao) applicationContext.getBean("ncaaBbTournamentParticipantDao");
-    TournamentResultDao tournamentResultDao = (TournamentResultDao) applicationContext.getBean("ncaaBbTournamentResultDao");
-
-    //
-    // Create the network runner and network trainer implementations for NCAA BB
-    NcaaBbNetworkRunner networkRunner = new NcaaBbNetworkRunner(seasonDataDao);
-    NcaaBbNetworkTrainer networkTrainer = new NcaaBbNetworkTrainer();
-
-    //
-    // Create the network menu and pass its dependencies in.
-    NetworkMenu networkMenu = new NetworkMenu(seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkRunner, networkTrainer);
-    //
-    // Dependencies injected. Fire up the network Menu.
-    networkMenu.go();
-  }
-
-  private static void handleNhl(final ApplicationContext applicationContext) {
   }
 
 }

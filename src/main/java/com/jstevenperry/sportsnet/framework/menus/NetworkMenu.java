@@ -1,9 +1,10 @@
 package com.jstevenperry.sportsnet.framework.menus;
 
+import com.jstevenperry.sportsnet.framework.AbstractNetworkEvaluator;
 import com.jstevenperry.sportsnet.framework.AbstractNetworkRunner;
 import com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer;
-import com.jstevenperry.sportsnet.framework.NetworkEvaluator;
 import com.jstevenperry.sportsnet.framework.NetworkPersister;
+import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
@@ -13,7 +14,6 @@ import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,21 +22,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class NetworkMenu {
+public class NetworkMenu<T extends AbstractSeasonData> {
   private static final Logger log = LoggerFactory.getLogger(NetworkMenu.class);
 
   private final List<NetworkCandidate> unsavedNetworks = new ArrayList<>();
 
-  private static ApplicationContext applicationContext;
-
-  public static ApplicationContext getApplicationContext() { return applicationContext; }
-
   // Dependencies go here
-  private final SeasonDataDao seasonDataDao;
+  private final SeasonDataDao<T> seasonDataDao;
   private final TournamentResultDao tournamentResultDao;
   private final TournamentParticipantDao tournamentParticipantDao;
-  private final AbstractNetworkTrainer networkTrainer;
-  private final AbstractNetworkRunner networkRunner;
+  private final AbstractNetworkTrainer<T> networkTrainer;
+  private final AbstractNetworkEvaluator<T> networkEvaluator;
+  private final AbstractNetworkRunner<T> networkRunner;
 
   /**
    * Save NetworkParameters so last settings are retained between
@@ -45,16 +42,18 @@ public class NetworkMenu {
    */
   private NetworkParameters networkParameters;
 
-  public NetworkMenu(final SeasonDataDao seasonDataDao,
+  public NetworkMenu(final SeasonDataDao<T> seasonDataDao,
                      final TournamentResultDao tournamentResultDao,
                      final TournamentParticipantDao tournamentParticipantDao,
-                     final AbstractNetworkRunner networkRunner,
-                     final AbstractNetworkTrainer networkTrainer) {
+                     final AbstractNetworkRunner<T> networkRunner,
+                     final AbstractNetworkTrainer<T> networkTrainer,
+                     final AbstractNetworkEvaluator<T> networkEvaluator) {
     this.seasonDataDao = seasonDataDao;
     this.tournamentResultDao = tournamentResultDao;
     this.tournamentParticipantDao = tournamentParticipantDao;
     this.networkRunner = networkRunner;
     this.networkTrainer = networkTrainer;
+    this.networkEvaluator = networkEvaluator;
   }
 
   /**
@@ -140,10 +139,10 @@ public class NetworkMenu {
         });
         break;
       case EVALUATE_NETWORK:
-        NetworkEvaluator.go(scanner, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao);
+        networkEvaluator.go(scanner, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao);
         break;
       case RUN_NETWORK:
-        networkRunner.go(scanner, unsavedNetworks);
+        networkRunner.go(scanner, unsavedNetworks, seasonDataDao);
         break;
       case PERSIST_UNSAVED_NETWORKS:
         if (unsavedNetworks.isEmpty()) {

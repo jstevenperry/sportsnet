@@ -3,16 +3,17 @@ package com.jstevenperry.sportsnet.ncaabb.plugins;
 import com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin;
 import com.jstevenperry.sportsnet.framework.model.TeamCoordinate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
-import com.jstevenperry.sportsnet.ncaabb.model.SeasonData;
+import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin {
+public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin<NcaaBbSeasonData> {
 
   public static final String NCAABB_TOURNAMENT_TEMPLATE_NCAABB_2018_TXT = "/ncaabb/tournament-template-ncaabb-2018.txt";
 
-  public TournamentRunnerPlugin2018(final SeasonDataDao seasonDataDao) {
+  public TournamentRunnerPlugin2018(final SeasonDataDao<NcaaBbSeasonData> seasonDataDao) {
     super(seasonDataDao);
     setTeamCoordinateSeasonDataMap(buildTeamCoordinateMap());
   }
@@ -28,9 +29,9 @@ public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin {
   }
 
   @Override
-  protected Map<TeamCoordinate, SeasonData> buildTeamCoordinateMap() {
+  protected Map<TeamCoordinate, NcaaBbSeasonData> buildTeamCoordinateMap() {
     // Map a team to its initial team coordinates
-    Map<TeamCoordinate, SeasonData> coordinateSeasonDataMap = new HashMap<>();
+    Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap = new HashMap<>();
     // First Four
     createFirstFourMappings(coordinateSeasonDataMap);
     // Round of 64 (Round 1)
@@ -42,7 +43,7 @@ public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin {
     return coordinateSeasonDataMap;
   }
 
-  private void createFirstFourMappings(final Map<TeamCoordinate, SeasonData> coordinateSeasonDataMap) {
+  private void createFirstFourMappings(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
     createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 0, 0, "NC Central");
     createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 0, 1, "Texas Southern");
     createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 0, 0, "LIU Brooklyn");
@@ -54,7 +55,7 @@ public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin {
   }
 
   // For 2018 Region 0 is the South
-  private void createRoundOneMappingsRegion0(final Map<TeamCoordinate, SeasonData> coordinateSeasonDataMap) {
+  private void createRoundOneMappingsRegion0(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [0,1,0],[0,1,1]
     createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 0, "Virginia");
     createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 1, "UMBC");
@@ -82,7 +83,7 @@ public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin {
   }
 
   // For 2018 Region 1 is the West
-  private void createRoundOneMappingsRegion1(final Map<TeamCoordinate, SeasonData> coordinateSeasonDataMap) {
+  private void createRoundOneMappingsRegion1(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [1,1,0],[1,1,1]
     createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 0, "Xavier");
     // [1,1,1] is First Four Winner, cannot initialize this TeamCoordinate (it must be computed)
@@ -110,7 +111,7 @@ public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin {
   }
 
   // For 2018 Region 2 is the East
-  private void createRoundOneMappingsRegion2(final Map<TeamCoordinate, SeasonData> coordinateSeasonDataMap) {
+  private void createRoundOneMappingsRegion2(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [2,1,0],[2,1,1]
     createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 0, "Villanova");
     // [2,1,1] is First Four Winner, cannot initialize this TeamCoordinate (it must be computed)
@@ -138,7 +139,7 @@ public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin {
   }
 
   // For 2019 Region 3 is the Midwest
-  private void createRoundOneMappingsRegion3(final Map<TeamCoordinate, SeasonData> coordinateSeasonDataMap) {
+  private void createRoundOneMappingsRegion3(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [3,1,0],[3,1,1]
     createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 0, "Kansas");
     createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 1, "Penn");
@@ -165,4 +166,8 @@ public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin {
     createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 15, "Iona");
   }
 
+  @Override
+  public List<Double> writeSeasonData(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+    return NcaaBbSeasonData.asDoubleList(seasonData,resultClass,isTraining);
+  }
 }

@@ -1,5 +1,6 @@
 package com.jstevenperry.sportsnet.framework;
 
+import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
@@ -22,13 +23,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class NetworkEvaluator {
+public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> extends AbstractNetworkBase<T> {
 
-  private static final Logger log = LoggerFactory.getLogger(NetworkEvaluator.class);
+  private static final Logger log = LoggerFactory.getLogger(AbstractNetworkEvaluator.class);
 
-  public static void go(final BufferedReader scanner,
+  public void go(final BufferedReader scanner,
                         final List<NetworkCandidate> networkCandidateList,
-                        final SeasonDataDao seasonDataDao,
+                        final SeasonDataDao<T> seasonDataDao,
                         final TournamentResultDao tournamentResultDao,
                         final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
     //
@@ -48,9 +49,9 @@ public class NetworkEvaluator {
     }
   }
 
-  private static void promptUser(final BufferedReader scanner,
+  private void promptUser(final BufferedReader scanner,
                                  final List<NetworkCandidate> allNetworks,
-                                 final SeasonDataDao seasonDataDao,
+                                 final SeasonDataDao<T> seasonDataDao,
                                  final TournamentResultDao tournamentResultDao,
                                  final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
     //
@@ -68,7 +69,7 @@ public class NetworkEvaluator {
       //
       // Run the evaluation
       log.info("Pulling evaluation data...");
-      RecordReaderDataSetIterator evaluationDataIterator = AbstractNetworkTrainer.createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+      RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
       DataSet evaluationData = evaluationDataIterator.next();
       networkParameters.getNormalizer().transform(evaluationData);     // Apply normalization to the training data
       double[][] trainingDataFeatures = evaluationData.getFeatures().toDoubleMatrix();

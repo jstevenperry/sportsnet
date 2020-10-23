@@ -5,21 +5,15 @@ import com.jstevenperry.sportsnet.framework.menus.ActivationFunctionMenu;
 import com.jstevenperry.sportsnet.framework.menus.LossFunctionMenu;
 import com.jstevenperry.sportsnet.framework.menus.UpdaterMenu;
 import com.jstevenperry.sportsnet.framework.menus.WeightInitMenu;
+import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
-import com.jstevenperry.sportsnet.framework.model.TournamentParticipant;
-import com.jstevenperry.sportsnet.framework.model.TournamentResult;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
 import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
-import com.jstevenperry.sportsnet.ncaabb.model.SeasonData;
-import com.opencsv.CSVWriter;
 import org.apache.commons.lang3.StringUtils;
 import org.datavec.api.records.metadata.RecordMetaData;
-import org.datavec.api.records.reader.RecordReader;
-import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
-import org.datavec.api.split.InputStreamInputSplit;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -38,40 +32,21 @@ import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
-import org.nd4j.shade.guava.io.CharStreams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
-public abstract class AbstractNetworkTrainer {
+public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> extends AbstractNetworkBase<T> {
 
   private static final Logger log = LoggerFactory.getLogger(AbstractNetworkTrainer.class);
-
-  private final static Map<Integer, List<TournamentResult>> tournamentYearResultsMap = new HashMap<>();
-  private final static Map<Integer, Map<String, SeasonData>> tournamentYearSeasonDataMap = new HashMap<>();
-
-  private static List<TournamentResult> getTournamentResults(final Integer tournamentYear) {
-    return tournamentYearResultsMap.computeIfAbsent(tournamentYear, k -> new ArrayList<>());
-  }
-
-  private static Map<String, SeasonData> getTeamSeasonData(final Integer tournamentYear) {
-    return tournamentYearSeasonDataMap.computeIfAbsent(tournamentYear, k -> new HashMap<>());
-  }
 
   /**
    * Get the data elements the user wants to use to train the network.
@@ -91,7 +66,7 @@ public abstract class AbstractNetworkTrainer {
    * @throws IOException If something goes horribly wrong.
    */
   protected abstract List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner,
-                                                                                     final List<AbstractDataElementChoice> choices) throws IOException;// {
+                                                                           final List<AbstractDataElementChoice> choices) throws IOException;// {
 
   private static Optional<NetworkCandidate> keepNetwork(final MultiLayerNetwork network, final NetworkParameters networkParameters) {
     Optional<NetworkCandidate> ret;
@@ -101,50 +76,43 @@ public abstract class AbstractNetworkTrainer {
     return ret;
   }
 
-  public static RecordReaderDataSetIterator createIterator(final List<Integer> yearsForTraining,
-                                                           final SeasonDataDao seasonDataDao,
-                                                           final TournamentResultDao tournamentResultDao,
-                                                           final TournamentParticipantDao tournamentParticipantDao,
-                                                           final NetworkParameters networkParameters) throws IOException, InterruptedException {
-    StringWriter stringWriter = new StringWriter();
-    CSVWriter csvWriter = new CSVWriter(stringWriter);
-    for (Integer year : yearsForTraining) {
-      List<TournamentResult> tournamentResults = pullTournamentResults(year, tournamentResultDao);
-      Collections.shuffle(tournamentResults); // Shake things up a little
-      for (TournamentResult tournamentResult : tournamentResults) {
-        String winningTeamName = tournamentResult.getWinningTeamName();
-        SeasonData seasonDataWinning = pullSeasonData(year, winningTeamName, seasonDataDao);
-        TournamentParticipant tournamentParticipant = tournamentParticipantDao.fetchByYear(winningTeamName, year);
-        //
-        // Transform the data, then write out the data
-        List<Double> rowWinDouble = writeSeasonData(seasonDataWinning, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
-        String[] rowWinString = networkParameters.transformRow(rowWinDouble, true);
-        csvWriter.writeNext(rowWinString);
-//          log.debug(String.format("Winning Team: %s (%d), data: %s", winningTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowWinString)));
-        // Losing team
-        String losingTeamName = tournamentResult.getLosingTeamName();
-        SeasonData seasonDataLosing = pullSeasonData(year, losingTeamName, seasonDataDao);
-        tournamentParticipant = tournamentParticipantDao.fetchByYear(losingTeamName, year);
-        //
-        // Transform the data, then write out the data
-        List<Double> rowLossDouble = writeSeasonData(seasonDataLosing, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
-        String[] rowLossString = networkParameters.transformRow(rowLossDouble, true);
-        csvWriter.writeNext(rowLossString);
-//          log.debug(String.format("Losing Team: %s (%d), data: %s", losingTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowLossString)));
-      }
-    }
+  public Optional<NetworkCandidate> go(final NetworkParameters networkParametersGlobal,
+                                       final SeasonDataDao<T> seasonDataDao,
+                                       final TournamentResultDao tournamentResultDao,
+                                       final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
+    Optional<NetworkCandidate> ret;
+    NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
+    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
     //
-    // Get the underlying String and via dl4j's arcane class structure transform it into a DataSet and return it
-    StringBuffer stringBuffer = stringWriter.getBuffer();
-    RecordReader recordReader = new CSVRecordReader(0, ',');
-    recordReader.initialize(new InputStreamInputSplit(new ByteArrayInputStream(CharStreams.toString(new StringReader(stringBuffer.toString())).getBytes())));
-    return new RecordReaderDataSetIterator(recordReader, 1000, networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
+    // Fetch the network configuration parameters (reuse NetworkParameters so user doesn't have to re-enter everything each time)
+    fetchNetworkParameters(bufferedReader, networkParameters);
+    log.info("Network parameters acquired.");
+    //
+    // Get the season data for the teams in the training years
+    List<Integer> yearsToTrain = networkParameters.getYearsToTrainAndEvaluateNetwork().get(0);
+    log.info("Pulling training data...");
+    RecordReaderDataSetIterator trainingDataIterator = createIterator(yearsToTrain, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+    //
+    // Get the season data for the teams in the evaluation years
+    List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
+    log.info("Pulling evaluation data...");
+    RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+    //
+    // Create the network definition
+    log.info("Configuring network...");
+    MultiLayerConfiguration configuration = configureNetwork(networkParameters);
+    //
+    // Train the network. If nothing goes wrong, return the trained network.
+    log.info("Training network...");
+    MultiLayerNetwork network = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
+    ret = keepNetwork(network, networkParameters);
+    return ret;
   }
 
-  private static MultiLayerNetwork go(final MultiLayerConfiguration configuration,
-                                      final NetworkParameters networkParameters,
-                                      final RecordReaderDataSetIterator trainingDataIterator,
-                                      final RecordReaderDataSetIterator evaluationDataIterator) {
+  private static MultiLayerNetwork goInternal(final MultiLayerConfiguration configuration,
+                                              final NetworkParameters networkParameters,
+                                              final RecordReaderDataSetIterator trainingDataIterator,
+                                              final RecordReaderDataSetIterator evaluationDataIterator) {
     log.info("Training network...");
     trainingDataIterator.setCollectMetaData(true);
     DataSet trainingData = trainingDataIterator.next();
@@ -393,97 +361,6 @@ public abstract class AbstractNetworkTrainer {
     return ret;
   }
 
-  private static SeasonData pullSeasonData(final Integer year, final String teamName, final SeasonDataDao seasonDataDao) {
-    return getTeamSeasonData(year).computeIfAbsent(teamName, k -> {
-      log.debug(String.format("Reading %s %d season data from DB...", teamName, year));
-      return seasonDataDao.fetchByYearAndTeamName(year, teamName);
-    });
-  }
-
-  private static List<TournamentResult> pullTournamentResults(final Integer year, final TournamentResultDao tournamentResultDao) {
-    List<TournamentResult> ret = getTournamentResults(year);
-    if (ret.isEmpty()) {
-      log.debug(String.format("Reading %d tournament results from DB...", year));
-      ret.addAll(tournamentResultDao.fetchAllByYear(year));
-    }
-    return ret;
-  }
-
-  public static List<Double> writeSeasonData(final SeasonData seasonData) {
-    return writeSeasonData(seasonData, null, false);
-  }
-
-  public static List<Double> writeSeasonData(final SeasonData seasonData,
-                                             final Double resultClass,
-                                             final boolean isTraining) {
-    List<Double> ret = new ArrayList<>();
-    // Offense
-    ret.add(seasonData.getAvgPointsPerGame().doubleValue());
-    ret.add(seasonData.getScoringMarginPerGame().doubleValue());
-    ret.add(seasonData.getNumFgAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getFgPercentage().doubleValue());
-    ret.add(seasonData.getNum3pPerGame().doubleValue());
-    ret.add(seasonData.getNum3pAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getT3pPercentage().doubleValue());
-    ret.add(seasonData.getNumFtAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getFtPercentage().doubleValue());
-    ret.add(seasonData.getReboundMargin().doubleValue());
-    ret.add(seasonData.getAssistsPerGame().doubleValue());
-    ret.add(seasonData.getAtoRatio().doubleValue());
-    // Defense
-    ret.add(seasonData.getAvgOpponentPointsPerGame().doubleValue());
-    ret.add(seasonData.getNumOppFgAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getOppFgPercentage().doubleValue());
-    ret.add(seasonData.getNumOpp3pAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getOpp3pPercentage().doubleValue());
-    ret.add(seasonData.getBlocksPerGame().doubleValue());
-    ret.add(seasonData.getStealsPerGame().doubleValue());
-    ret.add(seasonData.getOppTurnoversPerGame().doubleValue());
-    // Errors
-    ret.add(seasonData.getTurnoversPerGame().doubleValue());
-    ret.add(seasonData.getFoulsPerGame().doubleValue());
-    ret.add(seasonData.getNumDq().doubleValue());
-    //
-    ret.add(seasonData.getWonLostPercentage().doubleValue());
-    // Class - the number of tournament victories
-    if (isTraining) {
-      ret.add(resultClass);
-    }
-    return ret;
-  }
-
-  public Optional<NetworkCandidate> go(final NetworkParameters networkParametersGlobal,
-                                       final SeasonDataDao seasonDataDao,
-                                       final TournamentResultDao tournamentResultDao,
-                                       final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
-    Optional<NetworkCandidate> ret;
-    NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
-    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-    //
-    // Fetch the network configuration parameters (reuse NetworkParameters so user doesn't have to re-enter everything each time)
-    fetchNetworkParameters(bufferedReader, networkParameters);
-    log.info("Network parameters acquired.");
-    //
-    // Get the season data for the teams in the training years
-    List<Integer> yearsToTrain = networkParameters.getYearsToTrainAndEvaluateNetwork().get(0);
-    log.info("Pulling training data...");
-    RecordReaderDataSetIterator trainingDataIterator = createIterator(yearsToTrain, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
-    //
-    // Get the season data for the teams in the evaluation years
-    List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
-    log.info("Pulling evaluation data...");
-    RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
-    //
-    // Create the network definition
-    log.info("Configuring network...");
-    MultiLayerConfiguration configuration = configureNetwork(networkParameters);
-    //
-    // Train the network. If nothing goes wrong, return the trained network.
-    log.info("Training network...");
-    MultiLayerNetwork network = go(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
-    ret = keepNetwork(network, networkParameters);
-    return ret;
-  }
 
   private void fetchNetworkParameters(final BufferedReader scanner, final NetworkParameters networkParameters) throws IOException {
     System.out.println("This is the Train Network Menu.");

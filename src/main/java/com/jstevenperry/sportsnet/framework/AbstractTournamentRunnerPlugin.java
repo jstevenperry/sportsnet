@@ -1,12 +1,12 @@
 package com.jstevenperry.sportsnet.framework;
 
+import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import com.jstevenperry.sportsnet.framework.model.GameCoordinate;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.model.TeamCoordinate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
-import com.jstevenperry.sportsnet.ncaabb.model.SeasonData;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import org.apache.commons.lang3.StringUtils;
@@ -43,54 +43,29 @@ import java.util.StringTokenizer;
  * This class is subclassed and key methods are overridden to create a
  * tournament-specific plugin that can be used to make predictions.
  */
-public abstract class AbstractTournamentRunnerPlugin {
+public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonData> extends AbstractNetworkBase<T> {
 
   private static final Logger log = LoggerFactory.getLogger(AbstractTournamentRunnerPlugin.class);
 
-  private static final Byte KEEP_LOOPING = -1;
   private static final int BATCH_SIZE = 2000;
   public static final String NCAABB_TOURNAMENT_RESULTS_CSV = "/ncaabb/tournament-results.csv";
   public static final String NCAABB_TOURNAMENT_TEMPLATE_NCAABB_TXT = "/ncaabb/tournament-template-ncaabb.txt";
-  private final SeasonDataDao seasonDataDao;
-  private Map<TeamCoordinate, SeasonData> teamCoordinateSeasonDataMap;
+  private final SeasonDataDao<T> seasonDataDao;
+  private Map<TeamCoordinate, T> teamCoordinateSeasonDataMap;
 
-  public AbstractTournamentRunnerPlugin(final SeasonDataDao seasonDataDao) {
+  public AbstractTournamentRunnerPlugin(final SeasonDataDao<T> seasonDataDao) {
     this.seasonDataDao = seasonDataDao;
   }
 
-  public static Optional<AbstractTournamentRunnerPlugin> selectPluginToRunMenu(final BufferedReader scanner,
-                                                                               final List<? extends AbstractTournamentRunnerPlugin> tournamentRunnerPlugins) throws IOException {
-    Optional<AbstractTournamentRunnerPlugin> ret = Optional.empty();
-    // Ask the user which plugin they want to run and for what year, and if it's doable, return the plugin
-    byte pluginNumber = KEEP_LOOPING;
-    while (pluginNumber == KEEP_LOOPING && !tournamentRunnerPlugins.isEmpty()) {
-      System.out.println("Enter the number of the network you want to persist (enter 0 to quit):");
-      System.out.println("Plugin#\t\tTournament Year");
-      int index = 0;
-      for (AbstractTournamentRunnerPlugin tournamentRunnerPlugin : tournamentRunnerPlugins) {
-        System.out.printf("   %d %24s%n", index + 1, tournamentRunnerPlugin.getTournamentYear().toString());
-        index++;
-      }
-      String line = scanner.readLine();
-      if (StringUtils.isNotEmpty(line)) {
-        pluginNumber = Byte.parseByte(StringUtils.strip(line));
-        if (pluginNumber < 0 || pluginNumber > tournamentRunnerPlugins.size()) {
-          pluginNumber = KEEP_LOOPING;
-          continue;
-        }
-        if (pluginNumber == 0) {
-          break;
-        }
-      } else {
-        System.out.printf("%s is not a valid choice.%n", line);
-        pluginNumber = KEEP_LOOPING;
-      }
-    }
-    if (pluginNumber != 0) {
-      ret = Optional.of(tournamentRunnerPlugins.get(pluginNumber - 1));
-    }
-    return ret;
-  }
+  /**
+   * Return the tournament year handled by the plugin subclass
+   */
+  public abstract Integer getTournamentYear();
+
+  /**
+   * Build the TeamCoordinate->SeasonData map, specific to a tournament year.
+   */
+  protected abstract Map<TeamCoordinate, T> buildTeamCoordinateMap();
 
   public static Optional<GameCoordinate> parseTournamentTemplateLine(final String line) {
     Optional<GameCoordinate> ret;
@@ -121,8 +96,8 @@ public abstract class AbstractTournamentRunnerPlugin {
    * @param teamCoordinateSeasonDataMap The map with every game played in the tournament and the TeamCoordindates
    *                                    of the games. This can be used to visualize the tournament.
    */
-  private static void visualizeTournamentResults(final NetworkCandidate networkCandidate,
-                                                 final Map<TeamCoordinate, SeasonData> teamCoordinateSeasonDataMap) {
+  private void visualizeTournamentResults(final NetworkCandidate networkCandidate,
+                                          final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
     //
     // Read the tournament results template, which contains team coordinates in specific spots in the
     // template that can be replaced with the actual team names that held those coordinates during any
@@ -134,7 +109,7 @@ public abstract class AbstractTournamentRunnerPlugin {
     writeTournamentResultsFile(networkCandidate, templateRecords, teamCoordinateSeasonDataMap);
   }
 
-  private static List<String[]> readTournamentTemplateFile() {
+  private List<String[]> readTournamentTemplateFile() {
     //
     // Open and read the tournament results template CSV, which contains the template for visualizing the tournament results
     String tournamentResultsTemplateFileName = NCAABB_TOURNAMENT_RESULTS_CSV;
@@ -158,9 +133,9 @@ public abstract class AbstractTournamentRunnerPlugin {
     return templateRecords;
   }
 
-  private static void writeTournamentResultsFile(final NetworkCandidate networkCandidate,
-                                                 final List<String[]> templateRecords,
-                                                 final Map<TeamCoordinate, SeasonData> teamCoordinateSeasonDataMap) {
+  private void writeTournamentResultsFile(final NetworkCandidate networkCandidate,
+                                          final List<String[]> templateRecords,
+                                          final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
     //
     // Open and write out the tournament results template for this specific tournament result
     String tournamentResultsFileName = NetworkUtils.fetchSimulationDirectoryAndCreateIfNecessary() + File.separatorChar +
@@ -196,16 +171,6 @@ public abstract class AbstractTournamentRunnerPlugin {
   }
 
   /**
-   * Return the tournament year handled by the plugin subclass
-   */
-  public abstract Integer getTournamentYear();
-
-  /**
-   * Build the TeamCoordinate->SeasonData map, specific to a tournament year.
-   */
-  protected abstract Map<TeamCoordinate, SeasonData> buildTeamCoordinateMap();
-
-  /**
    * Return the name of the tournament template file. Defaults to a 68 team
    * NCAA Men's basketball-style tournament (a.k.a., March Madness).
    * <p>
@@ -225,7 +190,7 @@ public abstract class AbstractTournamentRunnerPlugin {
    * Fetch and return season data for the team specified in the TeamCoordinate object
    * that is passed to this method.
    */
-  public SeasonData fetchSeasonData(final TeamCoordinate teamCoordinate) {
+  public T fetchSeasonData(final TeamCoordinate teamCoordinate) {
     return seasonDataDao.fetchByYearAndTeamName(getTournamentYear(), teamCoordinate.getName());
   }
 
@@ -263,10 +228,10 @@ public abstract class AbstractTournamentRunnerPlugin {
       //
       // Get the home team from the GameCoordinate
       TeamCoordinate homeTeamCoordinate = gameCoordinate.getHome();
-      SeasonData homeTeamSeasonData = getTeamCoordinateSeasonDataMap().get(homeTeamCoordinate);
+      T homeTeamSeasonData = getTeamCoordinateSeasonDataMap().get(homeTeamCoordinate);
       homeTeamCoordinate.setName(homeTeamSeasonData.getTeamName());
       TeamCoordinate awayTeamCoordinate = gameCoordinate.getAway();
-      SeasonData awayTeamSeasonData = getTeamCoordinateSeasonDataMap().get(awayTeamCoordinate);
+      T awayTeamSeasonData = getTeamCoordinateSeasonDataMap().get(awayTeamCoordinate);
       awayTeamCoordinate.setName(awayTeamSeasonData.getTeamName());
       //
       // Now compute two sets of records to eliminate positional bias
@@ -338,7 +303,7 @@ public abstract class AbstractTournamentRunnerPlugin {
     return winner;
   }
 
-  private void setWinner(final SeasonData winnerSeasonData,
+  private void setWinner(final T winnerSeasonData,
                          final TeamCoordinate homeTeamCoordinate,
                          final TeamCoordinate awayTeamCoordindate) {
     TeamCoordinate teamCoordinate = computeNextRoundCoordinates(homeTeamCoordinate, awayTeamCoordindate);
@@ -370,16 +335,16 @@ public abstract class AbstractTournamentRunnerPlugin {
     return ret;
   }
 
-  protected Optional<RecordReaderDataSetIterator> computeRecordIterator(final SeasonData homeTeamSeasonData,
-                                                                        final SeasonData awayTeamSeasonData,
+  protected Optional<RecordReaderDataSetIterator> computeRecordIterator(final T homeTeamSeasonData,
+                                                                        final T awayTeamSeasonData,
                                                                         final NetworkParameters networkParameters) {
     Optional<RecordReaderDataSetIterator> ret;
     //
     // Compute one row of data with home team first
-    String[] home = networkParameters.transformRow(AbstractNetworkTrainer.writeSeasonData(homeTeamSeasonData));
+    String[] home = networkParameters.transformRow(writeSeasonData(homeTeamSeasonData));
     //
     // Compute another row of data with away team first
-    String[] away = networkParameters.transformRow(AbstractNetworkTrainer.writeSeasonData(awayTeamSeasonData));
+    String[] away = networkParameters.transformRow(writeSeasonData(awayTeamSeasonData));
     //
     // Wrap both rows in a CSVRecordReader, with all the bells and whistles and return the appropriate iterator
     StringBuilder stringSource = new StringBuilder();
@@ -405,7 +370,7 @@ public abstract class AbstractTournamentRunnerPlugin {
     return ret;
   }
 
-  protected void createTeamCoordinateMapping(final Map<TeamCoordinate, SeasonData> coordinateSeasonDataMap,
+  protected void createTeamCoordinateMapping(final Map<TeamCoordinate, T> coordinateSeasonDataMap,
                                              final int region,
                                              final int round,
                                              final int index,
@@ -415,15 +380,15 @@ public abstract class AbstractTournamentRunnerPlugin {
       .setIndex(index)
       .setRegion(region)
       .setRound(round);
-    SeasonData seasonData = fetchSeasonData(teamCoordinate);
+    T seasonData = fetchSeasonData(teamCoordinate);
     coordinateSeasonDataMap.put(teamCoordinate, seasonData);
   }
 
-  public Map<TeamCoordinate, SeasonData> getTeamCoordinateSeasonDataMap() {
+  public Map<TeamCoordinate, T> getTeamCoordinateSeasonDataMap() {
     return teamCoordinateSeasonDataMap;
   }
 
-  public void setTeamCoordinateSeasonDataMap(final Map<TeamCoordinate, SeasonData> teamCoordinateSeasonDataMap) {
+  public void setTeamCoordinateSeasonDataMap(final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
     this.teamCoordinateSeasonDataMap = teamCoordinateSeasonDataMap;
   }
 

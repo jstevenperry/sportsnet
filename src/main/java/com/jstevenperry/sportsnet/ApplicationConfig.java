@@ -24,12 +24,9 @@ import org.springframework.context.annotation.Configuration;
  * @author J Steven Perry
  */
 @Configuration
-@ComponentScan(basePackages = {
-  "com.jstevenperry.sportsnet.ncaabb.*",
-  "com.jstevenperry.sportsnet.nhl.*"
-})
+@ComponentScan(basePackages = { "com.jstevenperry.sportsnet" })
 public class ApplicationConfig {
-//
+
 //  @Bean(name = "ncaaBbSeasonDataDao")
 //  public SeasonDataDao getNcaaBbSeasonDataDao() {
 //    return new NcaaBbSeasonDataFlatFileDao();

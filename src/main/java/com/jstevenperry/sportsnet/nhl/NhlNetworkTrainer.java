@@ -1,0 +1,22 @@
+package com.jstevenperry.sportsnet.nhl;
+
+import com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer;
+import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
+import com.jstevenperry.sportsnet.nhl.menus.DataElementMenu;
+import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.List;
+
+public class NhlNetworkTrainer extends AbstractNetworkTrainer<NhlSeasonData> {
+  @Override
+  protected List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner, final List<AbstractDataElementChoice> choices) throws IOException {
+    return new DataElementMenu().go(scanner, choices);
+  }
+
+  @Override
+  public List<Double> writeSeasonData(final NhlSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+    return null;
+  }
+}
