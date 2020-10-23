@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +23,7 @@ public abstract class AbstractDataElementMenu {
 
   private static final Logger log = LoggerFactory.getLogger(AbstractDataElementMenu.class);
 
-  public abstract AbstractDataElementChoice[] values();
+  public abstract List<AbstractDataElementChoice> values();
 
   public abstract Optional<AbstractDataElementChoice> from(int ordinalValue);
 
@@ -68,11 +67,11 @@ public abstract class AbstractDataElementMenu {
       ;
   }
 
-  private List<AbstractDataElementChoice> filter(final AbstractDataElementChoice[] values,
+  private List<AbstractDataElementChoice> filter(final List<AbstractDataElementChoice> values,
                                                     final List<AbstractDataElementChoice> selectedElements) {
-    List<AbstractDataElementChoice> ret = Arrays.asList(values);
+    List<AbstractDataElementChoice> ret = values;
     if (selectedElements != null && !selectedElements.isEmpty()) {
-      ret = Arrays.stream(values).filter(dataElementMenuChoice -> !selectedElements.contains(dataElementMenuChoice))
+      ret = values.stream().filter(dataElementMenuChoice -> !selectedElements.contains(dataElementMenuChoice))
         .collect(Collectors.toList());
     }
     return ret;

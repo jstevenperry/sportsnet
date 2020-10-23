@@ -1,22 +1,25 @@
 package com.jstevenperry.sportsnet.ncaabb.menus;
 
+import com.jstevenperry.sportsnet.framework.DataElementChoice;
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementMenu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class DataElementMenu extends AbstractDataElementMenu {
 
   private static final Logger log = LoggerFactory.getLogger(DataElementMenuChoiceEnum.class);
 
   @Override
-  public AbstractDataElementChoice[] values() {
+  public List<AbstractDataElementChoice> values() {
     return Arrays.stream(DataElementMenuChoiceEnum.values())
       .map(DataElementMenuChoiceEnum::getDataElementChoice)
-      .toArray(AbstractDataElementChoice[]::new);
+      .collect(Collectors.toList());
   }
 
   @Override
