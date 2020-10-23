@@ -1,4 +1,4 @@
-package com.jstevenperry.sportsnet.ncaabb.menus;
+package com.jstevenperry.sportsnet.framework;
 
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
 
