@@ -41,6 +41,10 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
     return tournamentYearSeasonDataMap.computeIfAbsent(tournamentYear, k -> new HashMap<>());
   }
 
+  public List<Double> writeSeasonData(final T seasonData) {
+    return writeSeasonData(seasonData, null, false);
+  }
+
   public abstract List<Double> writeSeasonData(final T seasonData,
                                                final Double resultClass,
                                                final boolean isTraining);
@@ -62,10 +66,6 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
       ret.addAll(tournamentResultDao.fetchAllByYear(year));
     }
     return ret;
-  }
-
-  public List<Double> writeSeasonData(final T seasonData) {
-    return writeSeasonData(seasonData, null, false);
   }
 
   public RecordReaderDataSetIterator createIterator(final List<Integer> yearsForTraining,
