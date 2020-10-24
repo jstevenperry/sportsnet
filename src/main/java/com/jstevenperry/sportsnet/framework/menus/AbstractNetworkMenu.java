@@ -69,6 +69,13 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
   public abstract Integer getNumberOfOutputClasses();
 
   /**
+   * The type of network, used to discriminate between artifacts
+   * (like saved networks) among different types of networks that
+   * are imcompatible with one another.
+   */
+  public abstract String getNetworkType();
+
+  /**
    * Entry point for the main network menu.
    */
   public void go() {
@@ -151,10 +158,10 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
         });
         break;
       case EVALUATE_NETWORK:
-        networkEvaluator.go(scanner, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao);
+        networkEvaluator.go(scanner, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNetworkType());
         break;
       case RUN_NETWORK:
-        networkRunner.go(scanner, unsavedNetworks, seasonDataDao);
+        networkRunner.go(scanner, unsavedNetworks, seasonDataDao, getNetworkType());
         break;
       case PERSIST_UNSAVED_NETWORKS:
         if (unsavedNetworks.isEmpty()) {
@@ -164,7 +171,7 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
         }
         break;
       case LIST_SAVED_NETWORKS:
-        NetworkUtils.displayNetworks();
+        NetworkUtils.displayNetworks(getNetworkType());
         break;
     }
     return ret;

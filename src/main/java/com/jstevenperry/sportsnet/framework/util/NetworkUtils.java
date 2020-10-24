@@ -28,9 +28,9 @@ public class NetworkUtils {
 
   public static final String DL4J_NETWORK_EPILOGUE = "dl4j.zip";
 
-  public static List<NetworkCandidate> loadNetworks() {
+  public static List<NetworkCandidate> loadNetworks(final String networkType) {
     List<NetworkCandidate> ret = new ArrayList<>();
-    String networkDirectoryName = NetworkUtils.fetchNetworkDirectoryAndCreateIfNecessary();
+    String networkDirectoryName = NetworkUtils.fetchNetworkDirectoryAndCreateIfNecessary(networkType);
     File networkDirectory = new File(networkDirectoryName);
     //
     // Get a listing of *.dl4j.zip
@@ -98,9 +98,9 @@ public class NetworkUtils {
     }
   }
 
-  public static void displayNetworks() throws IOException {
+  public static void displayNetworks(final String networkType) throws IOException {
     BufferedReader scanner = new BufferedReader(new InputStreamReader(System.in));
-    List<NetworkCandidate> networkCandidates = loadNetworks();
+    List<NetworkCandidate> networkCandidates = loadNetworks(networkType);
     if (networkCandidates.size() > 0) {
       while (true) {
         displayNetworkList(networkCandidates);
@@ -128,33 +128,16 @@ public class NetworkUtils {
   /**
    * Fetches the name of the network directory using NetworkProperties settings
    * and returns that name to the caller.
-   *
-   * @return
    */
-  public static String fetchNetworkDirectoryAndCreateIfNecessary() {
+  public static String fetchNetworkDirectoryAndCreateIfNecessary(final String networkType) {
     //
     // Compute the directory name from NetworkProperties settings
     String directoryName = NetworkProperties.getBaseDirectory() + File.separator
-      + NetworkProperties.getNetworkDirectoryName();
+      + networkType;
     //
     // If necessary, create the directory
     createDirectoryIfNecessary(directoryName);
-    //
-    // Return the directory name to the caller
-    return directoryName;
-  }
-
-  /**
-   * Fetches the name of the training data directory using NetworkProperties settings
-   * and returns that name to the caller.
-   *
-   * @return
-   */
-  public static String fetchTrainingDirectoryAndCreateIfNecessary() {
-    //
-    // Compute the directory name from NetworkProperties settings
-    String directoryName = NetworkProperties.getBaseDirectory() + File.separator
-      + NetworkProperties.getTrainingDirectoryName();
+    directoryName += File.separator + NetworkProperties.getNetworkDirectoryName();
     //
     // If necessary, create the directory
     createDirectoryIfNecessary(directoryName);
@@ -166,14 +149,15 @@ public class NetworkUtils {
   /**
    * Fetches the name of the simulation directory using NetworkProperties settings
    * and returns that name to the caller.
-   *
-   * @return
    */
-  public static String fetchSimulationDirectoryAndCreateIfNecessary() {
+  public static String fetchSimulationDirectoryAndCreateIfNecessary(String networkType) {
     //
     // Compute the directory name from NetworkProperties settings
-    String directoryName = NetworkProperties.getBaseDirectory() + File.separator
-      + NetworkProperties.getSimulationDirectoryName();
+    String directoryName = NetworkProperties.getBaseDirectory() + File.separator + networkType;
+    //
+    // If necessary, create the directory
+    createDirectoryIfNecessary(directoryName);
+    directoryName += NetworkProperties.getSimulationDirectoryName();
     //
     // If necessary, create the directory
     createDirectoryIfNecessary(directoryName);
@@ -185,10 +169,8 @@ public class NetworkUtils {
   /**
    * Helper method to create a directory. Insulates the caller from the details
    * of the Java API used to do this.
-   *
-   * @param directoryName
    */
-  private static void createDirectoryIfNecessary(String directoryName) {
+  public static String createDirectoryIfNecessary(String directoryName) {
     try {
       File directory = new File(directoryName);
       if (!directory.exists()) {
@@ -197,6 +179,7 @@ public class NetworkUtils {
         Path networkDirectoryPath = Files.createDirectory(Paths.get(directoryName));
         log.warn("Network directory '" + networkDirectoryPath.toString() + "' created.");
       }
+      return directoryName;
     } catch (IOException e) {
       String message = "I/O Exception occurred while creating directory '" + directoryName + "'. Cannot continue!";
       log.error(message, e);
@@ -210,9 +193,6 @@ public class NetworkUtils {
    * The 0th element contains the number of neurons in the input
    * layer. The (<code>neuronLayerDescriptor</code>.size()-1)th element
    * contains the number of neurons in the output layer.
-   *
-   * @param neuronLayerDescriptor
-   * @return
    */
   public static String generateLayerStructureString(List<Integer> neuronLayerDescriptor) {
     StringBuilder sb = new StringBuilder();
@@ -224,26 +204,6 @@ public class NetworkUtils {
       sb.append(Integer.toString(neuronsCount));
     }
     return sb.toString();
-  }
-
-  public static String computeDl4jCsvTrainingDataFileName(final Integer[] years) {
-    StringBuilder sb = new StringBuilder();
-    for (Integer year: years) {
-      sb.append("_");
-      sb.append(year.toString());
-    }
-    return fetchTrainingDirectoryAndCreateIfNecessary() + File.separator +
-      "SeasonData" + sb.toString() + ".csv";
-  }
-
-  public static String computeDl4jCsvSimulationDataFileName(final Integer tournamentYear,
-                                                            final String homeTeamName) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(tournamentYear);
-    sb.append('_');
-    sb.append(homeTeamName);
-
-    return fetchSimulationDirectoryAndCreateIfNecessary() + File.separator + sb.toString() + ".csv";
   }
 
   /**

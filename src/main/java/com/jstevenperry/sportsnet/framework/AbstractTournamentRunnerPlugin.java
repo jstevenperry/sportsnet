@@ -138,8 +138,8 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
                                           final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
     //
     // Open and write out the tournament results template for this specific tournament result
-    String tournamentResultsFileName = NetworkUtils.fetchSimulationDirectoryAndCreateIfNecessary() + File.separatorChar +
-      NetworkPersister.generateNetworkFileNameBase(networkCandidate) + ".csv";
+    String tournamentResultsFileName = NetworkUtils.fetchSimulationDirectoryAndCreateIfNecessary(networkCandidate.getNetworkParameters().getNetworkType())
+      + File.separatorChar + NetworkPersister.generateNetworkFileNameBase(networkCandidate) + ".csv";
     try (BufferedWriter tournamentResultsWriter = new BufferedWriter(new FileWriter(tournamentResultsFileName))) {
       CSVWriter csvWriter = new CSVWriter(tournamentResultsWriter);
       //

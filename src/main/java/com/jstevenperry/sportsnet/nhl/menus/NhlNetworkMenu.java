@@ -36,4 +36,9 @@ public class NhlNetworkMenu extends AbstractNetworkMenu<NhlSeasonData> {
     return 5;
   }
 
+  @Override
+  public String getNetworkType() {
+    return "NHL";
+  }
+
 }

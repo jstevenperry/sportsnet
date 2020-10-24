@@ -15,8 +15,6 @@ import java.util.List;
 
 public class NetworkParameters implements Serializable {
 
-  private static final long serialVersionUID = 6L;
-
   private Integer numberOfInputs;
   private Integer numberOfOutputs;
   private List<List<Integer>> yearsToTrainAndEvaluateNetwork = new ArrayList<>();
@@ -32,6 +30,7 @@ public class NetworkParameters implements Serializable {
   private boolean networkSaved;
   private double l2RegularizationLambda;
   private DataNormalization normalizer;
+  private String networkType;
 
   private static String listToCsvString(final List<Integer> integerList) {
     String ret = StringUtils.EMPTY;
@@ -60,7 +59,8 @@ public class NetworkParameters implements Serializable {
       .setWeightInit(getWeightInit())
       .setWhenTrained(getWhenTrained())
       .setL2RegularizationLambda(getL2RegularizationLambda())
-      .setNormalizer(getNormalizer());
+      .setNormalizer(getNormalizer())
+      .setNetworkType(getNetworkType());
     ret.getYearsToTrainAndEvaluateNetwork().get(0).addAll(getYearsToTrainAndEvaluateNetwork().get(0));
     ret.getYearsToTrainAndEvaluateNetwork().get(1).addAll(getYearsToTrainAndEvaluateNetwork().get(1));
     return ret;
@@ -257,22 +257,22 @@ public class NetworkParameters implements Serializable {
   }
 
   public String toString() {
-    final String sb =
-      String.format("Network info%n") +
-        String.format("\tNetwork structure         : %s%n", getNetworkLayout()) +
-        String.format("\tTraining Years            : %s%n", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(0), ',')) +
-        String.format("\tEvaluation Years          : %s%n", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(1), ',')) +
-        String.format("\tActivation function       : %s%n", getActivationFunction().name()) +
-        String.format("\tUpdater function          : %s%n", getUpdater()) +
-        String.format("\tLoss function             : %s%n", getLossFunction()) +
-        String.format("\tWeight init function      : %s%n", getWeightInit()) +
-        String.format("\tNumber of inputs          : %d%n", getNumberOfInputs()) +
-        String.format("\tNumber of outputs         : %d%n", getNumberOfOutputs()) +
-        String.format("\tNumber of training epochs : %d%n", getNumberOfEpochs()) +
-        String.format("\tNetwork accuracy          : %5.5f%%%n", getNetworkAccuracy() * 100.0) +
-        String.format("\tL2 Regularization Lambda  : %5.5f%n", getL2RegularizationLambda()) +
-        String.format("\tData Elements             : %s%n", StringUtils.join(getSelectedElements(), ','));
-    return sb;
+    return String.format("Network info%n") +
+      String.format("\tNetwork structure         : %s%n", getNetworkLayout()) +
+      String.format("\tTraining Years            : %s%n", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(0), ',')) +
+      String.format("\tEvaluation Years          : %s%n", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(1), ',')) +
+      String.format("\tActivation function       : %s%n", getActivationFunction().name()) +
+      String.format("\tUpdater function          : %s%n", getUpdater()) +
+      String.format("\tLoss function             : %s%n", getLossFunction()) +
+      String.format("\tWeight init function      : %s%n", getWeightInit()) +
+      String.format("\tNumber of inputs          : %d%n", getNumberOfInputs()) +
+      String.format("\tNumber of outputs         : %d%n", getNumberOfOutputs()) +
+      String.format("\tNumber of training epochs : %d%n", getNumberOfEpochs()) +
+      String.format("\tNetwork accuracy          : %5.5f%%%n", getNetworkAccuracy() * 100.0) +
+      String.format("\tL2 Regularization Lambda  : %5.5f%n", getL2RegularizationLambda()) +
+      String.format("\tNormalizer                : %s%n", getNormalizer()) +
+      String.format("\tNetwork type              : %s%n", getNetworkType()) +
+      String.format("\tData Elements             : %s%n", StringUtils.join(getSelectedElements(), ','));
   }
 
   public double getL2RegularizationLambda() {
@@ -290,6 +290,15 @@ public class NetworkParameters implements Serializable {
 
   public NetworkParameters setNormalizer(final DataNormalization normalizer) {
     this.normalizer = normalizer;
+    return this;
+  }
+
+  public String getNetworkType() {
+    return networkType;
+  }
+
+  public NetworkParameters setNetworkType(final String networkType) {
+    this.networkType = networkType;
     return this;
   }
 }

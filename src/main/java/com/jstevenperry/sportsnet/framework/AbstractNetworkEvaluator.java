@@ -28,13 +28,14 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
   private static final Logger log = LoggerFactory.getLogger(AbstractNetworkEvaluator.class);
 
   public void go(final BufferedReader scanner,
-                        final List<NetworkCandidate> networkCandidateList,
-                        final SeasonDataDao<T> seasonDataDao,
-                        final TournamentResultDao tournamentResultDao,
-                        final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
+                 final List<NetworkCandidate> networkCandidateList,
+                 final SeasonDataDao<T> seasonDataDao,
+                 final TournamentResultDao tournamentResultDao,
+                 final TournamentParticipantDao tournamentParticipantDao,
+                 final String networkType) throws IOException, InterruptedException {
     //
     // Load saved networks
-    List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks();
+    List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks(networkType);
     //
     // Add loaded networks to networkCandidateList
     List<NetworkCandidate> allNetworks = new ArrayList<>();
@@ -50,10 +51,10 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
   }
 
   private void promptUser(final BufferedReader scanner,
-                                 final List<NetworkCandidate> allNetworks,
-                                 final SeasonDataDao<T> seasonDataDao,
-                                 final TournamentResultDao tournamentResultDao,
-                                 final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
+                          final List<NetworkCandidate> allNetworks,
+                          final SeasonDataDao<T> seasonDataDao,
+                          final TournamentResultDao tournamentResultDao,
+                          final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
     //
     // Get the network the user wants to run
     Optional<NetworkCandidate> selectedNetwork = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.ACTION_WORK_WITH);

@@ -96,8 +96,8 @@ public class NetworkPersister {
   private static boolean saveNetwork(final NetworkCandidate networkCandidate) {
     boolean ret = false;
     NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
-    String networkFileName = NetworkUtils.fetchNetworkDirectoryAndCreateIfNecessary() + File.separatorChar +
-      generateNetworkFileNameBase(networkCandidate) + ".zip";
+    String networkFileName = NetworkUtils.fetchNetworkDirectoryAndCreateIfNecessary(networkCandidate.getNetworkParameters().getNetworkType())
+      + File.separatorChar + generateNetworkFileNameBase(networkCandidate) + ".zip";
     System.out.printf("Saving network: %s as %s%n", networkParameters.getNetworkLayout(), networkFileName);
     try {
       File modelFile = new File(networkFileName);

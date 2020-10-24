@@ -24,10 +24,11 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
 
   public void go(final BufferedReader scanner,
                  final List<NetworkCandidate> networkCandidateList,
-                 final SeasonDataDao<T> seasonDataDao) throws IOException {
+                 final SeasonDataDao<T> seasonDataDao,
+                 final String networkType) throws IOException {
     //
     // Load saved networks
-    List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks();
+    List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks(networkType);
     //
     // Add loaded networks to networkCandidateList
     List<NetworkCandidate> allNetworks = new ArrayList<>();

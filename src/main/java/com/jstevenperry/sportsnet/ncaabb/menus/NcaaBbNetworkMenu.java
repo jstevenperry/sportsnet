@@ -36,4 +36,9 @@ public class NcaaBbNetworkMenu extends AbstractNetworkMenu<NcaaBbSeasonData> {
     // for a total of seven possible output classes.
     return 7;
   }
+
+  @Override
+  public String getNetworkType() {
+    return "NCAABB";
+  }
 }
