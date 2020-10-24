@@ -151,7 +151,7 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
         }
         break;
       case TRAIN_NETWORK:
-        Optional<NetworkCandidate> trainedNetwork = networkTrainer.go(networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses());
+        Optional<NetworkCandidate> trainedNetwork = networkTrainer.go(networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType());
         trainedNetwork.ifPresent(networkCandidate -> {
           unsavedNetworks.add(networkCandidate);
           networkParameters = networkCandidate.getNetworkParameters();

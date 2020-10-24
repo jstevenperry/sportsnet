@@ -114,7 +114,8 @@ public class NetworkPersister {
 
   public static String generateNetworkFileNameBase(final NetworkCandidate networkCandidate) {
     NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
-    return String.format("NcaaBbNet-%s-%s.dl4j",
+    return String.format("%s-Net-%s-%s.dl4j",
+      networkParameters.getNetworkType(),
       networkParameters.getNetworkLayout(),
       networkParameters.getWhenTrained().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
       ));

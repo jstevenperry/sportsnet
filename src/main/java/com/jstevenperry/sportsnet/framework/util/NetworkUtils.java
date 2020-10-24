@@ -157,7 +157,7 @@ public class NetworkUtils {
     //
     // If necessary, create the directory
     createDirectoryIfNecessary(directoryName);
-    directoryName += NetworkProperties.getSimulationDirectoryName();
+    directoryName += File.separator + NetworkProperties.getSimulationDirectoryName();
     //
     // If necessary, create the directory
     createDirectoryIfNecessary(directoryName);

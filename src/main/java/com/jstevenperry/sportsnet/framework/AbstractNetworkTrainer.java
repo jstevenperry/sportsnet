@@ -22,7 +22,6 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
-import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -80,9 +79,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                        final SeasonDataDao<T> seasonDataDao,
                                        final TournamentResultDao tournamentResultDao,
                                        final TournamentParticipantDao tournamentParticipantDao,
-                                       final Integer numberOfOutputClasses) throws IOException, InterruptedException {
+                                       final Integer numberOfOutputClasses,
+                                       final String networkType) throws IOException, InterruptedException {
     Optional<NetworkCandidate> ret;
     NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
+    networkParameters.setNetworkType(networkType);
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
     //
     // Fetch the network configuration parameters (reuse NetworkParameters so user doesn't have to re-enter everything each time)
@@ -128,7 +129,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     int printIterationIndex = numberOfEpochs / 10;
     MultiLayerNetwork model = new MultiLayerNetwork(configuration);
     model.init();
-    model.setListeners(new ScoreIterationListener(printIterationIndex));
+    //model.setListeners(new ScoreIterationListener(printIterationIndex));
     model.setListeners(new PerformanceListener(printIterationIndex, true));
     //
     // Fit the model
