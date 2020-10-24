@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Component("nhlBbSeasonDataDao")
+@Component("nhlSeasonDataDao")
 public class NhlSeasonDataFlatFileDao implements SeasonDataDao<NhlSeasonData> {
 
   private static final Logger log = LoggerFactory.getLogger(NhlSeasonDataFlatFileDao.class);
@@ -75,7 +75,7 @@ public class NhlSeasonDataFlatFileDao implements SeasonDataDao<NhlSeasonData> {
     NhlSeasonData seasonData = new NhlSeasonData();
     seasonData.setYear(year);
     seasonData.setRank(Integer.parseInt(nice(StringUtils.trim(line[0]))));
-    seasonData.setTeamName(StringUtils.remove(StringUtils.trim(line[1]), '*'));
+    seasonData.setTeamName(StringUtils.remove(StringUtils.remove(StringUtils.trim(line[1]), '*'), '.'));
     seasonData.setAverageAge(Double.parseDouble(nice(StringUtils.trim(line[2]))));
     seasonData.setGamesPlayed(Integer.parseInt(nice(StringUtils.trim(line[3]))));
     seasonData.setWins(Integer.parseInt(nice(StringUtils.trim(line[4]))));

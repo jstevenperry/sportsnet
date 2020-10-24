@@ -1,6 +1,6 @@
 package com.jstevenperry.sportsnet.ncaabb.menus;
 
-import com.jstevenperry.sportsnet.framework.menus.NetworkMenu;
+import com.jstevenperry.sportsnet.framework.menus.AbstractNetworkMenu;
 import com.jstevenperry.sportsnet.ncaabb.NcaaBbNetworkEvaluator;
 import com.jstevenperry.sportsnet.ncaabb.NcaaBbNetworkRunner;
 import com.jstevenperry.sportsnet.ncaabb.NcaaBbNetworkTrainer;
@@ -10,7 +10,7 @@ import com.jstevenperry.sportsnet.ncaabb.persistence.NcaaBbTournamentParticipant
 import com.jstevenperry.sportsnet.ncaabb.persistence.NcaaBbTournamentResultFlatFileDao;
 import org.springframework.context.ApplicationContext;
 
-public class NcaaBbNetworkMenu extends NetworkMenu<NcaaBbSeasonData> {
+public class NcaaBbNetworkMenu extends AbstractNetworkMenu<NcaaBbSeasonData> {
   public NcaaBbNetworkMenu(final ApplicationContext applicationContext) {
     //
     // Invoke superclass constructor, passing it everything it needs
@@ -21,5 +21,19 @@ public class NcaaBbNetworkMenu extends NetworkMenu<NcaaBbSeasonData> {
       new NcaaBbNetworkRunner(),
       new NcaaBbNetworkTrainer(),
       new NcaaBbNetworkEvaluator());
+  }
+
+  @Override
+  public String getMenuTitle() {
+    return "NCAA Basketball Net";
+  }
+
+  @Override
+  public Integer getNumberOfOutputClasses() {
+    //
+    // NCAA Men's Tournament is a 64 team affair, consisting of 6 rounds,
+    // during which any given team could win from zero to six times,
+    // for a total of seven possible output classes.
+    return 7;
   }
 }

@@ -64,7 +64,7 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
       // Prompt the user for the year(s) they want to evaluate
       System.out.println("Enter year(s) for evaluation/validation (enter multiple years separated by commas)");
       List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
-      AbstractNetworkTrainer.scanListOfValidYears(scanner, yearsToEvaluate);
+      AbstractNetworkTrainer.scanListOfValidYears(scanner, yearsToEvaluate, tournamentParticipantDao);
       log.info("Evaluation data year(s): " + StringUtils.join(yearsToEvaluate, ','));
       //
       // Run the evaluation

@@ -17,6 +17,9 @@ package com.jstevenperry.sportsnet.nhl.model;
 
 import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NhlSeasonData extends AbstractSeasonData {
 
   private int rank;
@@ -24,6 +27,7 @@ public class NhlSeasonData extends AbstractSeasonData {
   private int gamesPlayed;
   private int wins;
   private int losses;
+  private int overtimeLosses;
   private int points;
   private double pointsPct;
   private int goalsFor;
@@ -39,10 +43,10 @@ public class NhlSeasonData extends AbstractSeasonData {
   private int powerPlayOpportunities;
   private double powerPlayPct;
   private int powerPlayGoalsAgainst;
-  private int getPowerPlayOpportunitiesAgainst;
+  private int powerPlayOpportunitiesAgainst;
   private double penaltyKillPct;
   private int shortHandedGoals;
-  private int getShortHandedGoalsAgainst;
+  private int shortHandedGoalsAgainst;
   private double penaltyMinutesPerGame;
   private double opponentPenaltyMinutesPerGame;
   private int shotsOnGoal;
@@ -50,6 +54,52 @@ public class NhlSeasonData extends AbstractSeasonData {
   private int shotsAgainst;
   private double savePct;
   private int shutouts;
+
+  public static List<Double> asDoubleList(final NhlSeasonData seasonData, final Double resultClass, final Boolean isTraining) {
+    List<Double> ret = new ArrayList<>();
+
+    ret.add(asDouble(seasonData.getRank()));
+    ret.add(seasonData.getAverageAge());
+    ret.add(asDouble(seasonData.getGamesPlayed()));
+    ret.add(asDouble(seasonData.getWins()));
+    ret.add(asDouble(seasonData.getLosses()));
+    ret.add(asDouble(seasonData.getOvertimeLosses()));
+    ret.add(asDouble(seasonData.getPoints()));
+    ret.add(seasonData.getPointsPct());
+    ret.add(asDouble(seasonData.getGoalsFor()));
+    ret.add(asDouble(seasonData.getGoalsAgainst()));
+    ret.add(asDouble(seasonData.getShootOutWins()));
+    ret.add(asDouble(seasonData.getShootOutLosses()));
+    ret.add(seasonData.getSimpleRatingSystem());
+    ret.add(seasonData.getStrengthOfSchedule());
+    ret.add(seasonData.getGoalsPerGame());
+    ret.add(asDouble(seasonData.getEvenStrengthGoals()));
+    ret.add(asDouble(seasonData.getEvenStrengthGoalsAgainst()));
+    ret.add(asDouble(seasonData.getPowerPlayGoals()));
+    ret.add(asDouble(seasonData.getPowerPlayOpportunities()));
+    ret.add(seasonData.getPowerPlayPct());
+    ret.add(asDouble(seasonData.getPowerPlayGoalsAgainst()));
+    ret.add(asDouble(seasonData.getPowerPlayOpportunitiesAgainst()));
+    ret.add(seasonData.getPenaltyKillPct());
+    ret.add(asDouble(seasonData.getShortHandedGoals()));
+    ret.add(asDouble(seasonData.getShortHandedGoalsAgainst()));
+    ret.add(seasonData.getPenaltyMinutesPerGame());
+    ret.add(seasonData.getOpponentPenaltyMinutesPerGame());
+    ret.add(asDouble(seasonData.getShotsOnGoal()));
+    ret.add(seasonData.getShootingPct());
+    ret.add(asDouble(seasonData.getShotsAgainst()));
+    ret.add(seasonData.getSavePct());
+    ret.add(asDouble(seasonData.getShutouts()));
+
+    if (isTraining) {
+      ret.add(resultClass);
+    }
+    return ret;
+  }
+
+  private static Double asDouble(final int intValue) {
+    return Integer.valueOf(intValue).doubleValue();
+  }
 
   public int getRank() {
     return rank;
@@ -231,12 +281,12 @@ public class NhlSeasonData extends AbstractSeasonData {
     return this;
   }
 
-  public int getGetPowerPlayOpportunitiesAgainst() {
-    return getPowerPlayOpportunitiesAgainst;
+  public int getPowerPlayOpportunitiesAgainst() {
+    return powerPlayOpportunitiesAgainst;
   }
 
-  public NhlSeasonData setGetPowerPlayOpportunitiesAgainst(final int getPowerPlayOpportunitiesAgainst) {
-    this.getPowerPlayOpportunitiesAgainst = getPowerPlayOpportunitiesAgainst;
+  public NhlSeasonData setPowerPlayOpportunitiesAgainst(final int powerPlayOpportunitiesAgainst) {
+    this.powerPlayOpportunitiesAgainst = powerPlayOpportunitiesAgainst;
     return this;
   }
 
@@ -258,12 +308,12 @@ public class NhlSeasonData extends AbstractSeasonData {
     return this;
   }
 
-  public int getGetShortHandedGoalsAgainst() {
-    return getShortHandedGoalsAgainst;
+  public int getShortHandedGoalsAgainst() {
+    return shortHandedGoalsAgainst;
   }
 
-  public NhlSeasonData setGetShortHandedGoalsAgainst(final int getShortHandedGoalsAgainst) {
-    this.getShortHandedGoalsAgainst = getShortHandedGoalsAgainst;
+  public NhlSeasonData setShortHandedGoalsAgainst(final int shortHandedGoalsAgainst) {
+    this.shortHandedGoalsAgainst = shortHandedGoalsAgainst;
     return this;
   }
 
@@ -327,6 +377,15 @@ public class NhlSeasonData extends AbstractSeasonData {
 
   public NhlSeasonData setShutouts(final int shutouts) {
     this.shutouts = shutouts;
+    return this;
+  }
+
+  public int getOvertimeLosses() {
+    return overtimeLosses;
+  }
+
+  public NhlSeasonData setOvertimeLosses(final int overtimeLosses) {
+    this.overtimeLosses = overtimeLosses;
     return this;
   }
 }

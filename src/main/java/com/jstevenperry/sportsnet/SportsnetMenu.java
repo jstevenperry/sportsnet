@@ -1,9 +1,11 @@
 package com.jstevenperry.sportsnet;
 
-import com.jstevenperry.sportsnet.framework.menus.NetworkMenu;
+import com.jstevenperry.sportsnet.framework.menus.AbstractNetworkMenu;
 import com.jstevenperry.sportsnet.framework.menus.SportsnetChoice;
 import com.jstevenperry.sportsnet.ncaabb.menus.NcaaBbNetworkMenu;
 import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
+import com.jstevenperry.sportsnet.nhl.menus.NhlNetworkMenu;
+import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,12 +102,16 @@ public class SportsnetMenu {
       case NCAA_MENS_BASKETBALL:
         //
         // Create the network menu and pass its dependencies in.
-        NetworkMenu<NcaaBbSeasonData> networkMenu = new NcaaBbNetworkMenu(applicationContext);
+        AbstractNetworkMenu<NcaaBbSeasonData> ncaaBbNetworkMenu = new NcaaBbNetworkMenu(applicationContext);
         //
         // Fire up the network Menu.
-        networkMenu.go();
+        ncaaBbNetworkMenu.go();
         break;
       case NHL:
+        AbstractNetworkMenu<NhlSeasonData> nhlNetworkMenu = new NhlNetworkMenu(applicationContext);
+        //
+        // Fire up the network Menu.
+        nhlNetworkMenu.go();
         break;
     }
   }

@@ -79,13 +79,14 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   public Optional<NetworkCandidate> go(final NetworkParameters networkParametersGlobal,
                                        final SeasonDataDao<T> seasonDataDao,
                                        final TournamentResultDao tournamentResultDao,
-                                       final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
+                                       final TournamentParticipantDao tournamentParticipantDao,
+                                       final Integer numberOfOutputClasses) throws IOException, InterruptedException {
     Optional<NetworkCandidate> ret;
     NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
     //
     // Fetch the network configuration parameters (reuse NetworkParameters so user doesn't have to re-enter everything each time)
-    fetchNetworkParameters(bufferedReader, networkParameters);
+    fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses);
     log.info("Network parameters acquired.");
     //
     // Get the season data for the teams in the training years
@@ -136,7 +137,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     }
 
     // Evaluate the model on the test set
-    Evaluation eval = new Evaluation(7);
+    Evaluation eval = new Evaluation(networkParameters.getNumberOfOutputs());
     INDArray output = model.output(evaluationData.getFeatures());
     eval.eval(evaluationData.getLabels(), output, evaluationData.getExampleMetaData(RecordMetaData.class)); // Note we are passing in the test set metadata here
     networkParameters.setNetworkAccuracy(eval.accuracy());
@@ -204,20 +205,24 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
    * <p>
    * The first element in the wrapper list is a the list of training years.
    */
-  private static void scanYearsToTrainAndEvaluateNetwork(final BufferedReader scanner, final NetworkParameters networkParameters) {
+  private static void scanYearsToTrainAndEvaluateNetwork(final BufferedReader scanner,
+                                                         final NetworkParameters networkParameters,
+                                                         final TournamentParticipantDao tournamentParticipantDao) {
     System.out.println("Enter year(s) for training (enter multiple years separated by commas)");
 
     List<Integer> yearsToTrain = networkParameters.getYearsToTrainAndEvaluateNetwork().get(0);
-    scanListOfValidYears(scanner, yearsToTrain);
+    scanListOfValidYears(scanner, yearsToTrain, tournamentParticipantDao);
     log.info("Training data year(s): " + StringUtils.join(yearsToTrain, ','));
 
     System.out.println("Enter year(s) for evaluation/validation (enter multiple years separated by commas)");
     List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
-    scanListOfValidYears(scanner, yearsToEvaluate);
+    scanListOfValidYears(scanner, yearsToEvaluate, tournamentParticipantDao);
     log.info("Evaluation data year(s): " + StringUtils.join(yearsToEvaluate, ','));
   }
 
-  public static void scanListOfValidYears(final BufferedReader scanner, final List<Integer> listOfYears) {
+  public static void scanListOfValidYears(final BufferedReader scanner,
+                                          final List<Integer> listOfYears,
+                                          final TournamentParticipantDao tournamentParticipantDao) {
     try {
       String userInput = null;
       while (StringUtils.isEmpty(userInput)) {
@@ -233,7 +238,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
           while (strtok.hasMoreTokens()) {
             Integer year = Integer.valueOf(strtok.nextToken().trim());
             // Validate year
-            NetworkUtils.validateYear(year);
+            NetworkUtils.validateYear(year, tournamentParticipantDao);
             listOfYears.add(year);
           }
         } else if (!listOfYears.isEmpty()) {
@@ -362,11 +367,14 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   }
 
 
-  private void fetchNetworkParameters(final BufferedReader scanner, final NetworkParameters networkParameters) throws IOException {
+  private void fetchNetworkParameters(final BufferedReader scanner,
+                                      final NetworkParameters networkParameters,
+                                      final TournamentParticipantDao tournamentParticipantDao,
+                                      final Integer numberOfOutputClasses) throws IOException {
     System.out.println("This is the Train Network Menu.");
     //
     // Get number of outputs
-    networkParameters.setNumberOfOutputs(7);
+    networkParameters.setNumberOfOutputs(numberOfOutputClasses);
     //
     // Get the selected Elements
     List<AbstractDataElementChoice> dataElementMenuChoices = scanDataElementChoice(scanner, networkParameters.getSelectedElements());
@@ -377,7 +385,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       networkParameters.setNumberOfInputs(dataElementMenuChoices.size());
       //
       // Fetch years to train and evaluate the network
-      scanYearsToTrainAndEvaluateNetwork(scanner, networkParameters);
+      scanYearsToTrainAndEvaluateNetwork(scanner, networkParameters, tournamentParticipantDao);
       //
       // Get the network layout in HL1xHL2xHL3x...HLn format, where HL1 is the first hidden layer, HLn is the nth.
       String networkLayout = scanNetworkLayout(scanner, networkParameters.getNetworkLayout(), networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());

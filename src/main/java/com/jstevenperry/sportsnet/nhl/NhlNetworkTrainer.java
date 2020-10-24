@@ -16,7 +16,7 @@ public class NhlNetworkTrainer extends AbstractNetworkTrainer<NhlSeasonData> {
   }
 
   @Override
-  public List<Double> writeSeasonData(final NhlSeasonData seasonData, final Double resultClass, final boolean isTraining) {
-    return null;
+  public List<Double> seasonDataAsDoubleList(final NhlSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+    return NhlSeasonData.asDoubleList(seasonData,resultClass,isTraining);
   }
 }

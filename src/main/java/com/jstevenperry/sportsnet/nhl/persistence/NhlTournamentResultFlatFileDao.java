@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Component("nhlBbTournamentResultDao")
+@Component("nhlTournamentResultDao")
 public class NhlTournamentResultFlatFileDao implements TournamentResultDao {
 
   private static final Logger log = LoggerFactory.getLogger(NhlTournamentResultFlatFileDao.class);
@@ -71,9 +71,9 @@ public class NhlTournamentResultFlatFileDao implements TournamentResultDao {
   private static TournamentResult parseLine(final Integer year, final String[] line) {
     TournamentResult ret = new TournamentResult();
     ret.setYear(year);
-    ret.setWinningTeamName(StringUtils.trim(line[0]));
+    ret.setWinningTeamName(StringUtils.remove(StringUtils.trim(line[0]), "*."));
     ret.setWinningScore(Integer.parseInt(line[1]));
-    ret.setLosingTeamName(StringUtils.trim(line[2]));
+    ret.setLosingTeamName(StringUtils.remove(StringUtils.remove(StringUtils.trim(line[2]), '*'), '.'));
     ret.setLosingScore(Integer.parseInt(line[3]));
     return ret;
   }

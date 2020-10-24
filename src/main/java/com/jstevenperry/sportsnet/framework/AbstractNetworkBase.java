@@ -33,6 +33,10 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
   private final Map<Integer, List<TournamentResult>> tournamentYearResultsMap = new HashMap<>();
   private final Map<Integer, Map<String, T>> tournamentYearSeasonDataMap = new HashMap<>();
 
+  public abstract List<Double> seasonDataAsDoubleList(final T seasonData,
+                                                      final Double resultClass,
+                                                      final boolean isTraining);
+
   private List<TournamentResult> getTournamentResults(final Integer tournamentYear) {
     return tournamentYearResultsMap.computeIfAbsent(tournamentYear, k -> new ArrayList<>());
   }
@@ -44,10 +48,6 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
   public List<Double> seasonDataAsDoubleList(final T seasonData) {
     return seasonDataAsDoubleList(seasonData, null, false);
   }
-
-  public abstract List<Double> seasonDataAsDoubleList(final T seasonData,
-                                                      final Double resultClass,
-                                                      final boolean isTraining);
 
   protected T pullSeasonData(final Integer year, final String teamName, final SeasonDataDao<T> seasonDataDao) {
     T seasonData = getTeamSeasonData(year).get(teamName);

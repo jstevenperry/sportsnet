@@ -13,7 +13,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component("ncaaBbTournamentParticipantDao")
 public class NcaaBbTournamentParticipantFlatFileDao implements TournamentParticipantDao {
@@ -70,5 +72,10 @@ public class NcaaBbTournamentParticipantFlatFileDao implements TournamentPartici
       ret = teamDataMap.get(teamName);
     }
     return ret;
+  }
+
+  @Override
+  public List<Integer> fetchValidTournamentYears() {
+    return database.keySet().stream().sorted().collect(Collectors.toList());
   }
 }

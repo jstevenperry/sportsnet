@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class NetworkMenu<T extends AbstractSeasonData> {
-  private static final Logger log = LoggerFactory.getLogger(NetworkMenu.class);
+public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
+  private static final Logger log = LoggerFactory.getLogger(AbstractNetworkMenu.class);
 
   private final List<NetworkCandidate> unsavedNetworks = new ArrayList<>();
 
@@ -42,12 +42,12 @@ public class NetworkMenu<T extends AbstractSeasonData> {
    */
   private NetworkParameters networkParameters;
 
-  public NetworkMenu(final SeasonDataDao<T> seasonDataDao,
-                     final TournamentResultDao tournamentResultDao,
-                     final TournamentParticipantDao tournamentParticipantDao,
-                     final AbstractNetworkRunner<T> networkRunner,
-                     final AbstractNetworkTrainer<T> networkTrainer,
-                     final AbstractNetworkEvaluator<T> networkEvaluator) {
+  public AbstractNetworkMenu(final SeasonDataDao<T> seasonDataDao,
+                             final TournamentResultDao tournamentResultDao,
+                             final TournamentParticipantDao tournamentParticipantDao,
+                             final AbstractNetworkRunner<T> networkRunner,
+                             final AbstractNetworkTrainer<T> networkTrainer,
+                             final AbstractNetworkEvaluator<T> networkEvaluator) {
     this.seasonDataDao = seasonDataDao;
     this.tournamentResultDao = tournamentResultDao;
     this.tournamentParticipantDao = tournamentParticipantDao;
@@ -55,6 +55,18 @@ public class NetworkMenu<T extends AbstractSeasonData> {
     this.networkTrainer = networkTrainer;
     this.networkEvaluator = networkEvaluator;
   }
+
+  /**
+   * Returns the title of the network menu, must be implemented by
+   * subclasses.
+   */
+  public abstract String getMenuTitle();
+
+  /**
+   * The number of output classes this network has. Must
+   * be implemented by subclasses.
+   */
+  public abstract Integer getNumberOfOutputClasses();
 
   /**
    * Entry point for the main network menu.
@@ -88,12 +100,12 @@ public class NetworkMenu<T extends AbstractSeasonData> {
   /**
    * Display the main menu. Javadoc. Check.
    */
-  private static NetworkChoice displayMainMenu(final BufferedReader scanner) throws IOException {
+  private NetworkChoice displayMainMenu(final BufferedReader scanner) throws IOException {
     NetworkChoice ret = NetworkChoice.UNKNOWN;
     //
     // Show the options and camp out until they decide to quit
     // Use System.out.println() because it just looks better
-    System.out.println("Welcome to NCAA Basketball Net.");
+    System.out.println("Welcome to " + getMenuTitle());
     System.out.println("This is the main menu. What do you want to do?");
     for (NetworkChoice menuItem : NetworkChoice.values()) {
       if (menuItem.isSuitableForDisplay()) {
@@ -132,7 +144,7 @@ public class NetworkMenu<T extends AbstractSeasonData> {
         }
         break;
       case TRAIN_NETWORK:
-        Optional<NetworkCandidate> trainedNetwork = networkTrainer.go(networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao);
+        Optional<NetworkCandidate> trainedNetwork = networkTrainer.go(networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses());
         trainedNetwork.ifPresent(networkCandidate -> {
           unsavedNetworks.add(networkCandidate);
           networkParameters = networkCandidate.getNetworkParameters();

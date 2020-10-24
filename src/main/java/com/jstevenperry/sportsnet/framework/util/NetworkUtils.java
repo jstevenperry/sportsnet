@@ -3,6 +3,7 @@ package com.jstevenperry.sportsnet.framework.util;
 import com.jstevenperry.sportsnet.framework.NetworkPersister;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
+import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
 import org.apache.commons.lang3.StringUtils;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.util.ModelSerializer;
@@ -272,18 +273,16 @@ public class NetworkUtils {
    *
    * Note: as you add years to the DB, you will need to modify this method accordingly.
    *
-   * TODO: Add a TournamentParticipantDao.fetchAllYears() method to return this list
-   * so it is dynamic.
-   *
    * @param year
    *          The year to validate.
    *
    * @throws RuntimeException
    *           - if the year to validate is outside the supported range.
    */
-  public static void validateYear(Integer year) {
-    if (year < 2010 || year > 2019) {
-      throw new RuntimeException("Invalid year: " + year + " (must be between 2010 and 2019, inclusive)");
+  public static void validateYear(final Integer year, final TournamentParticipantDao tournamentParticipantDao) {
+    List<Integer> validTournamentYears = tournamentParticipantDao.fetchValidTournamentYears();
+    if (!validTournamentYears.contains(year)) {
+      throw new RuntimeException(String.format("Invalid year: " + year + " (must be one of %s)", StringUtils.join(validTournamentYears.toArray(), ',')));
     }
   }
 
