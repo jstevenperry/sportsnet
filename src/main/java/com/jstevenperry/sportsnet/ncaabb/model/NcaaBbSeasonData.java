@@ -64,6 +64,45 @@ public class NcaaBbSeasonData extends AbstractSeasonData {
   private BigDecimal foulsPerGame;
   private BigDecimal numDq;
 
+  public static List<Double> asDoubleList(final NcaaBbSeasonData seasonData,
+                                          final Double resultClass,
+                                          final boolean isTraining) {
+    List<Double> ret = new ArrayList<>();
+    // Offense
+    ret.add(seasonData.getAvgPointsPerGame().doubleValue());
+    ret.add(seasonData.getScoringMarginPerGame().doubleValue());
+    ret.add(seasonData.getNumFgAttemptsPerGame().doubleValue());
+    ret.add(seasonData.getFgPercentage().doubleValue());
+    ret.add(seasonData.getNum3pPerGame().doubleValue());
+    ret.add(seasonData.getNum3pAttemptsPerGame().doubleValue());
+    ret.add(seasonData.getT3pPercentage().doubleValue());
+    ret.add(seasonData.getNumFtAttemptsPerGame().doubleValue());
+    ret.add(seasonData.getFtPercentage().doubleValue());
+    ret.add(seasonData.getReboundMargin().doubleValue());
+    ret.add(seasonData.getAssistsPerGame().doubleValue());
+    ret.add(seasonData.getAtoRatio().doubleValue());
+    // Defense
+    ret.add(seasonData.getAvgOpponentPointsPerGame().doubleValue());
+    ret.add(seasonData.getNumOppFgAttemptsPerGame().doubleValue());
+    ret.add(seasonData.getOppFgPercentage().doubleValue());
+    ret.add(seasonData.getNumOpp3pAttemptsPerGame().doubleValue());
+    ret.add(seasonData.getOpp3pPercentage().doubleValue());
+    ret.add(seasonData.getBlocksPerGame().doubleValue());
+    ret.add(seasonData.getStealsPerGame().doubleValue());
+    ret.add(seasonData.getOppTurnoversPerGame().doubleValue());
+    // Errors
+    ret.add(seasonData.getTurnoversPerGame().doubleValue());
+    ret.add(seasonData.getFoulsPerGame().doubleValue());
+    ret.add(seasonData.getNumDq().doubleValue());
+    //
+    ret.add(seasonData.getWonLostPercentage().doubleValue());
+    // Class - the number of tournament victories
+    if (isTraining) {
+      ret.add(resultClass);
+    }
+    return ret;
+  }
+
   public NcaaBbSeasonData() {
     // Nothing to do
   }
@@ -254,46 +293,5 @@ public class NcaaBbSeasonData extends AbstractSeasonData {
   public void setNumDq(BigDecimal numDq) {
     this.numDq = numDq.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
   }
-
-  public static List<Double> asDoubleList(final NcaaBbSeasonData seasonData,
-                                          final Double resultClass,
-                                          final boolean isTraining) {
-    List<Double> ret = new ArrayList<>();
-    // Offense
-    ret.add(seasonData.getAvgPointsPerGame().doubleValue());
-    ret.add(seasonData.getScoringMarginPerGame().doubleValue());
-    ret.add(seasonData.getNumFgAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getFgPercentage().doubleValue());
-    ret.add(seasonData.getNum3pPerGame().doubleValue());
-    ret.add(seasonData.getNum3pAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getT3pPercentage().doubleValue());
-    ret.add(seasonData.getNumFtAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getFtPercentage().doubleValue());
-    ret.add(seasonData.getReboundMargin().doubleValue());
-    ret.add(seasonData.getAssistsPerGame().doubleValue());
-    ret.add(seasonData.getAtoRatio().doubleValue());
-    // Defense
-    ret.add(seasonData.getAvgOpponentPointsPerGame().doubleValue());
-    ret.add(seasonData.getNumOppFgAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getOppFgPercentage().doubleValue());
-    ret.add(seasonData.getNumOpp3pAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getOpp3pPercentage().doubleValue());
-    ret.add(seasonData.getBlocksPerGame().doubleValue());
-    ret.add(seasonData.getStealsPerGame().doubleValue());
-    ret.add(seasonData.getOppTurnoversPerGame().doubleValue());
-    // Errors
-    ret.add(seasonData.getTurnoversPerGame().doubleValue());
-    ret.add(seasonData.getFoulsPerGame().doubleValue());
-    ret.add(seasonData.getNumDq().doubleValue());
-    //
-    ret.add(seasonData.getWonLostPercentage().doubleValue());
-    // Class - the number of tournament victories
-    if (isTraining) {
-      ret.add(resultClass);
-    }
-    return ret;
-  }
-
-
 
 }
