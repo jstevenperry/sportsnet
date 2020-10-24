@@ -48,8 +48,6 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
   private static final Logger log = LoggerFactory.getLogger(AbstractTournamentRunnerPlugin.class);
 
   private static final int BATCH_SIZE = 2000;
-  public static final String NCAABB_TOURNAMENT_RESULTS_CSV = "/ncaabb/tournament-results.csv";
-  public static final String NCAABB_TOURNAMENT_TEMPLATE_NCAABB_TXT = "/ncaabb/tournament-template-ncaabb.txt";
   private final SeasonDataDao<T> seasonDataDao;
   private Map<TeamCoordinate, T> teamCoordinateSeasonDataMap;
 
@@ -61,6 +59,13 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
    * Return the tournament year handled by the plugin subclass
    */
   public abstract Integer getTournamentYear();
+
+  /**
+   * Return the tournament results template file name.
+   * Used to visualize the brackets computed by the network
+   * when it simulates a tournament.
+   */
+  protected abstract String getTournamentResultsTemplateFileName();
 
   /**
    * Build the TeamCoordinate->SeasonData map, specific to a tournament year.
@@ -112,7 +117,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
   private List<String[]> readTournamentTemplateFile() {
     //
     // Open and read the tournament results template CSV, which contains the template for visualizing the tournament results
-    String tournamentResultsTemplateFileName = NCAABB_TOURNAMENT_RESULTS_CSV;
+    String tournamentResultsTemplateFileName = getTournamentResultsTemplateFileName();
     //
     // List<String[]> contains the template file, which will be filled in by using the teamCoordinateSeasonDataMap
     // to map from team coordinates in the template to team names
@@ -171,8 +176,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
   }
 
   /**
-   * Return the name of the tournament template file. Defaults to a 68 team
-   * NCAA Men's basketball-style tournament (a.k.a., March Madness).
+   * Return the name of the tournament template file.
    * <p>
    * The tournament template file is used to setup the games that will
    * be played in the tournament. Each game has a set of coordinates that
@@ -182,9 +186,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
    * specified by the subclass that is for the tournament year that plugin
    * was written for.
    */
-  public String getTournamentTemplateFileName() {
-    return NCAABB_TOURNAMENT_TEMPLATE_NCAABB_TXT;
-  }
+  public abstract String getTournamentTemplateFileName();
 
   /**
    * Fetch and return season data for the team specified in the TeamCoordinate object
@@ -385,6 +387,11 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
   }
 
   public Map<TeamCoordinate, T> getTeamCoordinateSeasonDataMap() {
+    if (teamCoordinateSeasonDataMap == null) {
+      String message = "Team Coordinate SeasonData map is null. Did you forget to call setTeamCoordinateSeasonDataMap in the tournament plugin constructor?";
+      log.error(message);
+      throw new RuntimeException(message);
+    }
     return teamCoordinateSeasonDataMap;
   }
 

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -87,7 +88,7 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
         List<Double> rowWinDouble = seasonDataAsDoubleList(seasonDataWinning, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
         String[] rowWinString = networkParameters.transformRow(rowWinDouble, true);
         csvWriter.writeNext(rowWinString);
-//          log.debug(String.format("Winning Team: %s (%d), data: %s", winningTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowWinString)));
+          log.debug(String.format("Winning Team: %s (%d), data: %s", winningTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowWinString)));
         // Losing team
         String losingTeamName = tournamentResult.getLosingTeamName();
         T seasonDataLosing = pullSeasonData(year, losingTeamName, seasonDataDao);
@@ -97,7 +98,7 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
         List<Double> rowLossDouble = seasonDataAsDoubleList(seasonDataLosing, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
         String[] rowLossString = networkParameters.transformRow(rowLossDouble, true);
         csvWriter.writeNext(rowLossString);
-//          log.debug(String.format("Losing Team: %s (%d), data: %s", losingTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowLossString)));
+          log.debug(String.format("Losing Team: %s (%d), data: %s", losingTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowLossString)));
       }
     }
     //

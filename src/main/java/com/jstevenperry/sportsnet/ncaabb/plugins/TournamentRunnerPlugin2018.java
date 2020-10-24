@@ -1,6 +1,5 @@
 package com.jstevenperry.sportsnet.ncaabb.plugins;
 
-import com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin;
 import com.jstevenperry.sportsnet.framework.model.TeamCoordinate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
@@ -9,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin<NcaaBbSeasonData> {
+public class TournamentRunnerPlugin2018 extends AbstractNcaaBbTournamentRunnerPlugin {
 
   public static final String NCAABB_TOURNAMENT_TEMPLATE_NCAABB_2018_TXT = "/ncaabb/tournament-template-ncaabb-2018.txt";
 

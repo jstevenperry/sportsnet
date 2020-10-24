@@ -1,6 +1,5 @@
 package com.jstevenperry.sportsnet.nhl.plugins;
 
-import com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin;
 import com.jstevenperry.sportsnet.framework.model.TeamCoordinate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
@@ -9,9 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TournamentRunnerPlugin2019 extends AbstractTournamentRunnerPlugin<NhlSeasonData> {
+public class TournamentRunnerPlugin2019 extends AbstractNhlTournamentRunnerPlugin {
   public TournamentRunnerPlugin2019(final SeasonDataDao<NhlSeasonData> seasonDataDao) {
     super(seasonDataDao);
+    setTeamCoordinateSeasonDataMap(buildTeamCoordinateMap());
   }
 
   @Override

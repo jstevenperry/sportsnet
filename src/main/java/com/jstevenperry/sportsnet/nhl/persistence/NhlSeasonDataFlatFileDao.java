@@ -80,6 +80,33 @@ public class NhlSeasonDataFlatFileDao implements SeasonDataDao<NhlSeasonData> {
     seasonData.setGamesPlayed(Integer.parseInt(nice(StringUtils.trim(line[3]))));
     seasonData.setWins(Integer.parseInt(nice(StringUtils.trim(line[4]))));
     seasonData.setLosses(Integer.parseInt(nice(StringUtils.trim(line[5]))));
+    seasonData.setOvertimeLosses(Integer.parseInt(nice(StringUtils.trim(line[6]))));
+    seasonData.setPoints(Integer.parseInt(nice(StringUtils.trim(line[7]))));
+    seasonData.setPointsPct(Double.parseDouble(nice(StringUtils.trim(line[8]))));
+    seasonData.setGoalsFor(Integer.parseInt(nice(StringUtils.trim(line[9]))));
+    seasonData.setGoalsAgainst(Integer.parseInt(nice(StringUtils.trim(line[10]))));
+    seasonData.setShootOutWins(Integer.parseInt(nice(StringUtils.trim(line[11]))));
+    seasonData.setShootOutLosses(Integer.parseInt(nice(StringUtils.trim(line[12]))));
+    seasonData.setSimpleRatingSystem(Double.parseDouble(nice(StringUtils.trim(line[13]))));
+    seasonData.setStrengthOfSchedule(Double.parseDouble(nice(StringUtils.trim(line[14]))));
+    seasonData.setGoalsPerGame(Double.parseDouble(nice(StringUtils.trim(line[15]))));
+    seasonData.setEvenStrengthGoals(Integer.parseInt(nice(StringUtils.trim(line[16]))));
+    seasonData.setEvenStrengthGoalsAgainst(Integer.parseInt(nice(StringUtils.trim(line[17]))));
+    seasonData.setPowerPlayGoals(Integer.parseInt(nice(StringUtils.trim(line[18]))));
+    seasonData.setPowerPlayOpportunities(Integer.parseInt(nice(StringUtils.trim(line[19]))));
+    seasonData.setPowerPlayPct(Double.parseDouble(nice(StringUtils.trim(line[20]))));
+    seasonData.setPowerPlayGoalsAgainst(Integer.parseInt(nice(StringUtils.trim(line[21]))));
+    seasonData.setPowerPlayOpportunitiesAgainst(Integer.parseInt(nice(StringUtils.trim(line[22]))));
+    seasonData.setPenaltyKillPct(Double.parseDouble(nice(StringUtils.trim(line[23]))));
+    seasonData.setShortHandedGoals(Integer.parseInt(nice(StringUtils.trim(line[24]))));
+    seasonData.setShortHandedGoalsAgainst(Integer.parseInt(nice(StringUtils.trim(line[25]))));
+    seasonData.setPenaltyMinutesPerGame(Double.parseDouble(nice(StringUtils.trim(line[26]))));
+    seasonData.setOpponentPenaltyMinutesPerGame(Double.parseDouble(nice(StringUtils.trim(line[27]))));
+    seasonData.setShotsOnGoal(Integer.parseInt(nice(StringUtils.trim(line[28]))));
+    seasonData.setShootingPct(Double.parseDouble(nice(StringUtils.trim(line[29]))));
+    seasonData.setShotsAgainst(Integer.parseInt(nice(StringUtils.trim(line[30]))));
+    seasonData.setSavePct(Double.parseDouble(nice(StringUtils.trim(line[31]))));
+    seasonData.setShutouts(Integer.parseInt(nice(StringUtils.trim(line[32]))));
 
     return seasonData;
   }
