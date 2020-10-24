@@ -44,7 +44,7 @@ public class TournamentRunnerPlugin2019 extends AbstractTournamentRunnerPlugin<N
   }
 
   @Override
-  public List<Double> writeSeasonData(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+  public List<Double> seasonDataAsDoubleList(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
     return NcaaBbSeasonData.asDoubleList(seasonData, resultClass, isTraining);
   }
 

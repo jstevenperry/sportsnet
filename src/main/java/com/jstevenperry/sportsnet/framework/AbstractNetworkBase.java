@@ -41,13 +41,13 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
     return tournamentYearSeasonDataMap.computeIfAbsent(tournamentYear, k -> new HashMap<>());
   }
 
-  public List<Double> writeSeasonData(final T seasonData) {
-    return writeSeasonData(seasonData, null, false);
+  public List<Double> seasonDataAsDoubleList(final T seasonData) {
+    return seasonDataAsDoubleList(seasonData, null, false);
   }
 
-  public abstract List<Double> writeSeasonData(final T seasonData,
-                                               final Double resultClass,
-                                               final boolean isTraining);
+  public abstract List<Double> seasonDataAsDoubleList(final T seasonData,
+                                                      final Double resultClass,
+                                                      final boolean isTraining);
 
   protected T pullSeasonData(final Integer year, final String teamName, final SeasonDataDao<T> seasonDataDao) {
     T seasonData = getTeamSeasonData(year).get(teamName);
@@ -84,7 +84,7 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
         TournamentParticipant tournamentParticipant = tournamentParticipantDao.fetchByYear(winningTeamName, year);
         //
         // Transform the data, then write out the data
-        List<Double> rowWinDouble = writeSeasonData(seasonDataWinning, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
+        List<Double> rowWinDouble = seasonDataAsDoubleList(seasonDataWinning, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
         String[] rowWinString = networkParameters.transformRow(rowWinDouble, true);
         csvWriter.writeNext(rowWinString);
 //          log.debug(String.format("Winning Team: %s (%d), data: %s", winningTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowWinString)));
@@ -94,7 +94,7 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
         tournamentParticipant = tournamentParticipantDao.fetchByYear(losingTeamName, year);
         //
         // Transform the data, then write out the data
-        List<Double> rowLossDouble = writeSeasonData(seasonDataLosing, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
+        List<Double> rowLossDouble = seasonDataAsDoubleList(seasonDataLosing, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
         String[] rowLossString = networkParameters.transformRow(rowLossDouble, true);
         csvWriter.writeNext(rowLossString);
 //          log.debug(String.format("Losing Team: %s (%d), data: %s", losingTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowLossString)));

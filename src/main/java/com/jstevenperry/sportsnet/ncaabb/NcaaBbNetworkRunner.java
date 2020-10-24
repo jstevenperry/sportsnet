@@ -27,7 +27,7 @@ public class NcaaBbNetworkRunner extends AbstractNetworkRunner<NcaaBbSeasonData>
   }
 
   @Override
-  public List<Double> writeSeasonData(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+  public List<Double> seasonDataAsDoubleList(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
     return NcaaBbSeasonData.asDoubleList(seasonData, resultClass, isTraining);
   }
 }

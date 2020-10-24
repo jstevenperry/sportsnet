@@ -341,10 +341,10 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     Optional<RecordReaderDataSetIterator> ret;
     //
     // Compute one row of data with home team first
-    String[] home = networkParameters.transformRow(writeSeasonData(homeTeamSeasonData));
+    String[] home = networkParameters.transformRow(seasonDataAsDoubleList(homeTeamSeasonData));
     //
     // Compute another row of data with away team first
-    String[] away = networkParameters.transformRow(writeSeasonData(awayTeamSeasonData));
+    String[] away = networkParameters.transformRow(seasonDataAsDoubleList(awayTeamSeasonData));
     //
     // Wrap both rows in a CSVRecordReader, with all the bells and whistles and return the appropriate iterator
     StringBuilder stringSource = new StringBuilder();

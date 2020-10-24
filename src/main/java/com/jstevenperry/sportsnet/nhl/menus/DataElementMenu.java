@@ -56,7 +56,7 @@ public class DataElementMenu extends AbstractDataElementMenu {
     SHOOTING_PCT(new DataElementChoice("Shooting percentage", 28, 29)),
     SHOTS_AGAINST(new DataElementChoice("Shots against", 29, 30)),
     SAVE_PCT(new DataElementChoice("Save percentage", 30, 31)),
-    SHOOTOUTS(new DataElementChoice("Shootouts", 31, 32)),
+    SHUTOUTS(new DataElementChoice("Shutouts", 31, 32)),
     ;
 
     private final AbstractDataElementChoice dataElementChoice;
