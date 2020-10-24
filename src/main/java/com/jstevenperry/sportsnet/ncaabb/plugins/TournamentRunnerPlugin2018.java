@@ -39,7 +39,6 @@ public class TournamentRunnerPlugin2018 extends AbstractTournamentRunnerPlugin<N
     createRoundOneMappingsRegion1(coordinateSeasonDataMap);
     createRoundOneMappingsRegion2(coordinateSeasonDataMap);
     createRoundOneMappingsRegion3(coordinateSeasonDataMap);
-    // TODO: Add other matchups here
     return coordinateSeasonDataMap;
   }
 
