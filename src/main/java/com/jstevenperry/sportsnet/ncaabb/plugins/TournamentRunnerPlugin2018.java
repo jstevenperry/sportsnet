@@ -1,5 +1,6 @@
 package com.jstevenperry.sportsnet.ncaabb.plugins;
 
+import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.TeamCoordinate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
@@ -39,6 +40,13 @@ public class TournamentRunnerPlugin2018 extends AbstractNcaaBbTournamentRunnerPl
     createRoundOneMappingsRegion2(coordinateSeasonDataMap);
     createRoundOneMappingsRegion3(coordinateSeasonDataMap);
     return coordinateSeasonDataMap;
+  }
+
+  @Override
+  protected String[] generateTournamentResultsFileHeader(final NetworkCandidate networkCandidate) {
+    return new String[] {
+      String.format("Tournament year: %d", getTournamentYear())
+    };
   }
 
   private void createFirstFourMappings(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {

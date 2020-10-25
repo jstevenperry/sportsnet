@@ -51,7 +51,7 @@ public class SportsnetMenu {
     //
     // Display main menu. When it terminates, so does program.
     SportsnetChoice menuChoice = SportsnetChoice.UNKNOWN;
-    while (menuChoice == SportsnetChoice.UNKNOWN) {
+    while (menuChoice != SportsnetChoice.QUIT) {
       try {
         //
         // Display the main menu, let the user make their choice
@@ -112,6 +112,9 @@ public class SportsnetMenu {
         //
         // Fire up the network Menu.
         nhlNetworkMenu.go();
+        break;
+      case QUIT:
+        log.info("Quitting...");
         break;
     }
   }

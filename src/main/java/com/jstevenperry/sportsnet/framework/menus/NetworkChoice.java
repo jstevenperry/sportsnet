@@ -7,7 +7,7 @@ public enum NetworkChoice {
   LIST_SAVED_NETWORKS("List saved networks", 3),
   RUN_NETWORK("Run a trained neural network", 4),
   EVALUATE_NETWORK("Evaluate a trained neural network", 6),
-  QUIT("Quit the program", 0);
+  QUIT("Go back to the previous menu", 0);
 
   private String displayValue;
   private int ordinalValue;

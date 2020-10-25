@@ -147,6 +147,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
       + File.separatorChar + NetworkPersister.generateNetworkFileNameBase(networkCandidate) + ".csv";
     try (BufferedWriter tournamentResultsWriter = new BufferedWriter(new FileWriter(tournamentResultsFileName))) {
       CSVWriter csvWriter = new CSVWriter(tournamentResultsWriter);
+      csvWriter.writeNext(generateTournamentResultsFileHeader(networkCandidate));
       //
       // Read each line in the templateRecords list and translate from team coordinates like [0,1,0] to
       // a team name using the teamCoordinateSeasonDataMap
@@ -168,12 +169,19 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         // Done with that record, write it out
         csvWriter.writeNext(templateRecord);
       }
+      log.info("writeTournamentResultsFile(): Wrote file: {}", tournamentResultsFileName);
     } catch (IOException e) {
       String message = String.format("Error writing tournament results output file %s", tournamentResultsFileName);
       log.error(message, e);
       throw new RuntimeException(message, e);
     }
   }
+
+  /**
+   * Generate the header line in the results file to identify important information
+   * about the results such as the tournament year and so on.
+   */
+  protected abstract String[] generateTournamentResultsFileHeader(final NetworkCandidate networkCandidate);
 
   /**
    * Return the name of the tournament template file.

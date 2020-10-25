@@ -1,5 +1,6 @@
 package com.jstevenperry.sportsnet.ncaabb.plugins;
 
+import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.TeamCoordinate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
@@ -40,6 +41,13 @@ public class TournamentRunnerPlugin2019 extends AbstractNcaaBbTournamentRunnerPl
     createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 0, 1, "Fairleigh Dickinson");
     // TODO: Add other matchups here
     return coordinateSeasonDataMap;
+  }
+
+  @Override
+  protected String[] generateTournamentResultsFileHeader(final NetworkCandidate networkCandidate) {
+    return new String[] {
+      String.format("Tournament year: %d", getTournamentYear())
+    };
   }
 
   @Override

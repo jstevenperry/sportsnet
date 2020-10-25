@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -114,10 +115,11 @@ public class NetworkPersister {
 
   public static String generateNetworkFileNameBase(final NetworkCandidate networkCandidate) {
     NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
-    return String.format("%s-Net-%s-%s.dl4j",
+    return String.format("%s-Net-%s-%s-%s.dl4j",
       networkParameters.getNetworkType(),
       networkParameters.getNetworkLayout(),
-      networkParameters.getWhenTrained().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-      ));
+      networkParameters.getWhenTrained().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")),
+      LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm"))
+    );
   }
 }

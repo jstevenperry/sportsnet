@@ -1,9 +1,10 @@
 package com.jstevenperry.sportsnet.framework.menus;
 
 public enum SportsnetChoice {
-  UNKNOWN("Unknown", 0),
+  UNKNOWN("Unknown", -1),
   NCAA_MENS_BASKETBALL("NCAA Division I Men's Basketball", 1),
-  NHL("National Hockey League", 2)
+  NHL("National Hockey League", 2),
+  QUIT("Quit", 0)
   ;
 
   private final String displayName;
