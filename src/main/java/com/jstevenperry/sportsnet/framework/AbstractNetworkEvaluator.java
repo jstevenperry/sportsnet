@@ -83,7 +83,7 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
         }
         log.debug(String.format("Training Data Sample:\n%s", Arrays.toString(feature)));
       }
-      Evaluation eval = new Evaluation(7);
+      Evaluation eval = new Evaluation(networkParameters.getNumberOfOutputs());
       INDArray output = networkCandidate.getMultiLayerNetwork().output(evaluationData.getFeatures());
       eval.eval(evaluationData.getLabels(), output, evaluationData.getExampleMetaData(RecordMetaData.class)); // Note we are passing in the test set metadata here
       networkParameters.setNetworkAccuracy(eval.accuracy());
