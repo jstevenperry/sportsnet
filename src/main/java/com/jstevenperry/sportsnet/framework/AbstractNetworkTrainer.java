@@ -27,7 +27,7 @@ import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
-import org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler;
+import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
@@ -121,7 +121,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     trainingData.shuffle(); // Shake things up
     DataSet evaluationData = evaluationDataIterator.next();
     evaluationData.shuffle(); // Shake things up
-    DataNormalization normalizer = new NormalizerMinMaxScaler(-1, 1);
+//    DataNormalization normalizer = new NormalizerMinMaxScaler(-1, 1);
+    DataNormalization normalizer = new NormalizerStandardize();
     normalizeTrainingData(trainingData, evaluationData, normalizer);
     networkParameters.setNormalizer(normalizer);
 
