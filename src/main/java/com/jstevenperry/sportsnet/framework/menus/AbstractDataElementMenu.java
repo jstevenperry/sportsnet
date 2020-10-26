@@ -53,7 +53,12 @@ public abstract class AbstractDataElementMenu {
           break;
         }
         processUserChoice(ret, userChoice);
-      } else {
+      } else if (userInput.equalsIgnoreCase("ALL")) {
+        //
+        // Clear out the current choices, and add all values
+        ret.clear();
+        ret.addAll(values());
+      } else{
         String message = String.format("Not a valid value: %s", userInput);
         log.warn(message);
       }
@@ -68,7 +73,7 @@ public abstract class AbstractDataElementMenu {
   }
 
   private List<AbstractDataElementChoice> filter(final List<AbstractDataElementChoice> values,
-                                                    final List<AbstractDataElementChoice> selectedElements) {
+                                                 final List<AbstractDataElementChoice> selectedElements) {
     List<AbstractDataElementChoice> ret = values;
     if (selectedElements != null && !selectedElements.isEmpty()) {
       ret = values.stream().filter(dataElementMenuChoice -> !selectedElements.contains(dataElementMenuChoice))
