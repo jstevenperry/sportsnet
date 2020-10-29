@@ -1,6 +1,5 @@
 package com.jstevenperry.sportsnet.nhl.plugins;
 
-import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.TeamCoordinate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
@@ -19,6 +18,7 @@ public class TournamentRunnerPlugin2019 extends AbstractNhlTournamentRunnerPlugi
   public Integer getTournamentYear() {
     return 2019;
   }
+
 
   @Override
   protected Map<TeamCoordinate, NhlSeasonData> buildTeamCoordinateMap() {
@@ -51,13 +51,6 @@ public class TournamentRunnerPlugin2019 extends AbstractNhlTournamentRunnerPlugi
   @Override
   public List<Double> seasonDataAsDoubleList(final NhlSeasonData seasonData, final Double resultClass, final boolean isTraining) {
     return NhlSeasonData.asDoubleList(seasonData, resultClass, isTraining);
-  }
-
-  @Override
-  protected String[] generateTournamentResultsFileHeader(final NetworkCandidate networkCandidate) {
-    return new String[] {
-      String.format("Tournament year: %d", getTournamentYear())
-    };
   }
 
 }

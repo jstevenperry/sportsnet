@@ -31,11 +31,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
@@ -55,6 +58,19 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     this.seasonDataDao = seasonDataDao;
   }
 
+  public Map<TeamCoordinate, T> getTeamCoordinateSeasonDataMap() {
+    if (teamCoordinateSeasonDataMap == null) {
+      String message = "Team Coordinate SeasonData map is null. Did you forget to call setTeamCoordinateSeasonDataMap in the tournament plugin constructor?";
+      log.error(message);
+      throw new RuntimeException(message);
+    }
+    return teamCoordinateSeasonDataMap;
+  }
+
+  public void setTeamCoordinateSeasonDataMap(final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
+    this.teamCoordinateSeasonDataMap = teamCoordinateSeasonDataMap;
+  }
+
   /**
    * Return the tournament year handled by the plugin subclass
    */
@@ -66,6 +82,8 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
    * when it simulates a tournament.
    */
   protected abstract String getTournamentResultsTemplateFileName();
+
+  protected abstract String getNetworkType();
 
   /**
    * Build the TeamCoordinate->SeasonData map, specific to a tournament year.
@@ -94,94 +112,6 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     }
     return ret;
   }
-
-  /**
-   * Generate the document showing the tournament results
-   *
-   * @param teamCoordinateSeasonDataMap The map with every game played in the tournament and the TeamCoordindates
-   *                                    of the games. This can be used to visualize the tournament.
-   */
-  private void visualizeTournamentResults(final NetworkCandidate networkCandidate,
-                                          final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
-    //
-    // Read the tournament results template, which contains team coordinates in specific spots in the
-    // template that can be replaced with the actual team names that held those coordinates during any
-    // specific instance of the tournament so the results can be visualized in "bracket" style.
-    List<String[]> templateRecords = readTournamentTemplateFile();
-    //
-    // Replace the TeamCoordinates in the template with the actual team names for the specific tournament
-    // that was simulated and write out the file so the user can open it up and visualize the results.
-    writeTournamentResultsFile(networkCandidate, templateRecords, teamCoordinateSeasonDataMap);
-  }
-
-  private List<String[]> readTournamentTemplateFile() {
-    //
-    // Open and read the tournament results template CSV, which contains the template for visualizing the tournament results
-    String tournamentResultsTemplateFileName = getTournamentResultsTemplateFileName();
-    //
-    // List<String[]> contains the template file, which will be filled in by using the teamCoordinateSeasonDataMap
-    // to map from team coordinates in the template to team names
-    List<String[]> templateRecords = new ArrayList<>();
-    InputStream inputStream = AbstractTournamentRunnerPlugin.class.getResourceAsStream(tournamentResultsTemplateFileName);
-    try (BufferedReader tournamentResultsTemplateReader = new BufferedReader(new InputStreamReader(inputStream))) {
-      CSVReader csvReader = new CSVReader(tournamentResultsTemplateReader, ',', '"');
-      String[] line = csvReader.readNext();
-      while (line != null) {
-        templateRecords.add(line);
-        line = csvReader.readNext();
-      }
-    } catch (IOException e) {
-      String message = String.format("Error reading tournament results template file %s", tournamentResultsTemplateFileName);
-      log.error(message, e);
-      throw new RuntimeException(message, e);
-    }
-    return templateRecords;
-  }
-
-  private void writeTournamentResultsFile(final NetworkCandidate networkCandidate,
-                                          final List<String[]> templateRecords,
-                                          final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
-    //
-    // Open and write out the tournament results template for this specific tournament result
-    String tournamentResultsFileName = NetworkUtils.fetchSimulationDirectoryAndCreateIfNecessary(networkCandidate.getNetworkParameters().getNetworkType())
-      + File.separatorChar + NetworkPersister.generateNetworkFileNameBase(networkCandidate) + ".csv";
-    try (BufferedWriter tournamentResultsWriter = new BufferedWriter(new FileWriter(tournamentResultsFileName))) {
-      CSVWriter csvWriter = new CSVWriter(tournamentResultsWriter);
-      csvWriter.writeNext(generateTournamentResultsFileHeader(networkCandidate));
-      //
-      // Read each line in the templateRecords list and translate from team coordinates like [0,1,0] to
-      // a team name using the teamCoordinateSeasonDataMap
-      for (String[] templateRecord : templateRecords) {
-        for (int cellIndex = 0; cellIndex < templateRecord.length; cellIndex++) {
-          String cell = templateRecord[cellIndex];
-          if (TeamCoordinate.looksLikeTeamCoordinate(cell)) {
-            //
-            // Looks like a TeamCoordinate cell, map it after removing brackets (ironic, huh?)
-            TeamCoordinate teamCoordinate = TeamCoordinate.parseCoordinates(
-              StringUtils.remove(StringUtils.remove(cell, '['), ']')
-            );
-            //
-            // Replace the coordinates with the name of the team that had those coordinates in this incarnation of the tournament
-            templateRecord[cellIndex] = teamCoordinateSeasonDataMap.get(teamCoordinate).getTeamName();
-          }
-        }
-        //
-        // Done with that record, write it out
-        csvWriter.writeNext(templateRecord);
-      }
-      log.info("writeTournamentResultsFile(): Wrote file: {}", tournamentResultsFileName);
-    } catch (IOException e) {
-      String message = String.format("Error writing tournament results output file %s", tournamentResultsFileName);
-      log.error(message, e);
-      throw new RuntimeException(message, e);
-    }
-  }
-
-  /**
-   * Generate the header line in the results file to identify important information
-   * about the results such as the tournament year and so on.
-   */
-  protected abstract String[] generateTournamentResultsFileHeader(final NetworkCandidate networkCandidate);
 
   /**
    * Return the name of the tournament template file.
@@ -233,7 +163,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
   /**
    * Using the specified list of GameCoordinates, run the tournament.
    */
-  public void runTournament(final List<GameCoordinate> gameList, final NetworkCandidate networkCandidate) {
+  public void runTournament(final List<GameCoordinate> gameList, final List<NetworkCandidate> networkCandidates) {
     gameList.forEach(gameCoordinate -> {
       //
       // Get the home team from the GameCoordinate
@@ -244,25 +174,46 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
       T awayTeamSeasonData = getTeamCoordinateSeasonDataMap().get(awayTeamCoordinate);
       awayTeamCoordinate.setName(awayTeamSeasonData.getTeamName());
       //
-      // Now compute two sets of records to eliminate positional bias
+      // Run all networks for this match up and average the results to compute the winner.
+      runAllNetworksAndComputeWinner(networkCandidates, homeTeamCoordinate, homeTeamSeasonData, awayTeamCoordinate, awayTeamSeasonData);
+    });
+    //
+    // Generate tournament results document
+    visualizeTournamentResults();
+  }
+
+  private void runAllNetworksAndComputeWinner(final List<NetworkCandidate> networkCandidates,
+                                              final TeamCoordinate homeTeamCoordinate,
+                                              final T homeTeamSeasonData,
+                                              final TeamCoordinate awayTeamCoordinate,
+                                              final T awayTeamSeasonData) {
+    int homeTeamWins = 0;
+    int awayTeamWins = 0;
+    for (NetworkCandidate networkCandidate : networkCandidates) {
       MultiLayerNetwork network = networkCandidate.getMultiLayerNetwork();
       //
       // Compute RecordReaderDataSetIterator from the two sets of season data
       Optional<RecordReaderDataSetIterator> recordReaderDataSetIteratorMaybe = computeRecordIterator(homeTeamSeasonData, awayTeamSeasonData, networkCandidate.getNetworkParameters());
-      recordReaderDataSetIteratorMaybe.ifPresent(readerDataSetIterator -> {
+      if (recordReaderDataSetIteratorMaybe.isPresent()) {
         DataNormalization normalizer = networkCandidate.getNetworkParameters().getNormalizer();
-        DataSet tournamentData = readerDataSetIterator.next();
+        DataSet tournamentData = recordReaderDataSetIteratorMaybe.get().next();
         normalizer.transform(tournamentData);
         INDArray indArrayResults = network.output(tournamentData.getFeatures());
         //
         // Figure out who we declare the winner and compute their TeamCoordinates according to the algorithm
         TeamCoordinate winningTeamCoordinate = computeWinner(indArrayResults.toDoubleMatrix(), homeTeamCoordinate, awayTeamCoordinate);
-        setWinner(getTeamCoordinateSeasonDataMap().get(winningTeamCoordinate), homeTeamCoordinate, awayTeamCoordinate);
-      });
-    });
-    //
-    // Generate tournament results document
-    visualizeTournamentResults(networkCandidate, getTeamCoordinateSeasonDataMap());
+        if (winningTeamCoordinate.equals(homeTeamCoordinate)) {
+          homeTeamWins++;
+        } else {
+          awayTeamWins++;
+        }
+      }
+    }
+    // Compute the winningTeamCoordinate based on the which team has the most votes (tie goes to home team)
+    TeamCoordinate teamCoordinate = computeNextRoundCoordinates(homeTeamCoordinate, homeTeamWins, awayTeamCoordinate, awayTeamWins);
+    T winnerSeasonData = (homeTeamWins > awayTeamWins) ? homeTeamSeasonData : awayTeamSeasonData;
+    teamCoordinate.setName(winnerSeasonData.getTeamName());
+    getTeamCoordinateSeasonDataMap().put(teamCoordinate, winnerSeasonData);
   }
 
   private TeamCoordinate computeWinner(final double[][] results,
@@ -297,7 +248,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
       // Home team is the winner
       winner = homeTeamCoordinate;
     } else if (homeTeamVictories == awayTeamVictories) {
-      // Whichever has the highest probabilty for the same number of victories (that is, the network is more sure)
+      // Whichever has the highest probability for the same number of victories (that is, the network is more sure)
       winner = (homeTeamProbability > awayTeamProbability) ? homeTeamCoordinate : awayTeamCoordinate;
     } else {
       // Away team is winner
@@ -313,20 +264,14 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     return winner;
   }
 
-  private void setWinner(final T winnerSeasonData,
-                         final TeamCoordinate homeTeamCoordinate,
-                         final TeamCoordinate awayTeamCoordindate) {
-    TeamCoordinate teamCoordinate = computeNextRoundCoordinates(homeTeamCoordinate, awayTeamCoordindate);
-    teamCoordinate.setName(winnerSeasonData.getTeamName());
-    getTeamCoordinateSeasonDataMap().put(teamCoordinate, winnerSeasonData);
-  }
-
   private TeamCoordinate computeNextRoundCoordinates(final TeamCoordinate homeTeamCoordinate,
-                                                     final TeamCoordinate awayTeamCoordindate) {
-    TeamCoordinate ret = new TeamCoordinate();
+                                                     final int homeWinNetworkVotes,
+                                                     final TeamCoordinate awayTeamCoordinate,
+                                                     final int awayWinNetworkVotes) {
+    TeamCoordinate ret = new TeamCoordinate().setAwayWinNetworkVotes(awayWinNetworkVotes).setHomeWinNetworkVotes(homeWinNetworkVotes);
     switch (homeTeamCoordinate.getRound()) {
       case 0:
-        ret.setIndex(awayTeamCoordindate.getIndex());
+        ret.setIndex(awayTeamCoordinate.getIndex());
         ret.setRegion(homeTeamCoordinate.getRegion());
         break;
       case 1:
@@ -394,17 +339,105 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     coordinateSeasonDataMap.put(teamCoordinate, seasonData);
   }
 
-  public Map<TeamCoordinate, T> getTeamCoordinateSeasonDataMap() {
-    if (teamCoordinateSeasonDataMap == null) {
-      String message = "Team Coordinate SeasonData map is null. Did you forget to call setTeamCoordinateSeasonDataMap in the tournament plugin constructor?";
-      log.error(message);
-      throw new RuntimeException(message);
-    }
-    return teamCoordinateSeasonDataMap;
+  /**
+   * Generate the document showing the tournament results
+   */
+  private void visualizeTournamentResults() {
+    //
+    // Read the tournament results template, which contains team coordinates in specific spots in the
+    // template that can be replaced with the actual team names that held those coordinates during any
+    // specific instance of the tournament so the results can be visualized in "bracket" style.
+    List<String[]> templateRecords = readTournamentTemplateFile();
+    //
+    // Replace the TeamCoordinates in the template with the actual team names for the specific tournament
+    // that was simulated and write out the file so the user can open it up and visualize the results.
+    writeTournamentResultsFile(templateRecords, getTeamCoordinateSeasonDataMap());
   }
 
-  public void setTeamCoordinateSeasonDataMap(final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
-    this.teamCoordinateSeasonDataMap = teamCoordinateSeasonDataMap;
+  private List<String[]> readTournamentTemplateFile() {
+    //
+    // Open and read the tournament results template CSV, which contains the template for visualizing the tournament results
+    String tournamentResultsTemplateFileName = getTournamentResultsTemplateFileName();
+    //
+    // List<String[]> contains the template file, which will be filled in by using the teamCoordinateSeasonDataMap
+    // to map from team coordinates in the template to team names
+    List<String[]> templateRecords = new ArrayList<>();
+    InputStream inputStream = AbstractTournamentRunnerPlugin.class.getResourceAsStream(tournamentResultsTemplateFileName);
+    try (BufferedReader tournamentResultsTemplateReader = new BufferedReader(new InputStreamReader(inputStream))) {
+      CSVReader csvReader = new CSVReader(tournamentResultsTemplateReader, ',', '"');
+      String[] line = csvReader.readNext();
+      while (line != null) {
+        templateRecords.add(line);
+        line = csvReader.readNext();
+      }
+    } catch (IOException e) {
+      String message = String.format("Error reading tournament results template file %s", tournamentResultsTemplateFileName);
+      log.error(message, e);
+      throw new RuntimeException(message, e);
+    }
+    return templateRecords;
+  }
+
+  private void writeTournamentResultsFile(final List<String[]> templateRecords,
+                                          final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
+    //
+    // Open and write out the tournament results template for this specific tournament result
+    String tournamentResultsFileName = NetworkUtils.fetchSimulationDirectoryAndCreateIfNecessary(getNetworkType()) + File.separatorChar
+      + getNetworkType() + "-TournamentYear_" + getTournamentYear() + "-"
+      + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")) + ".csv";
+    try (BufferedWriter tournamentResultsWriter = new BufferedWriter(new FileWriter(tournamentResultsFileName))) {
+      CSVWriter csvWriter = new CSVWriter(tournamentResultsWriter);
+      csvWriter.writeNext(new String[]{
+        String.format("Tournament year: %d", getTournamentYear())
+      });
+      //
+      // Read each line in the templateRecords list and translate from team coordinates like [0,1,0] to
+      // a team name using the teamCoordinateSeasonDataMap
+      for (String[] templateRecord : templateRecords) {
+        for (int cellIndex = 0; cellIndex < templateRecord.length; cellIndex++) {
+          String cell = templateRecord[cellIndex];
+          if (TeamCoordinate.looksLikeTeamCoordinate(cell)) {
+            //
+            // Looks like a TeamCoordinate cell, map it after removing brackets (ironic, huh?)
+            TeamCoordinate teamCoordinate = TeamCoordinate.parseCoordinates(
+              StringUtils.remove(StringUtils.remove(cell, '['), ']')
+            );
+            //
+            // Replace the coordinates with the name of the team that had those coordinates in this incarnation of the tournament
+            T winningTeamSeasonData = teamCoordinateSeasonDataMap.get(teamCoordinate);
+            TeamCoordinate winningTeamCoordinate = findWinningTeamCoordinate(teamCoordinateSeasonDataMap, teamCoordinate);
+            templateRecord[cellIndex] = String.format("%s (%d/%d)",
+              winningTeamSeasonData.getTeamName(),
+              winningTeamCoordinate.getHomeWinNetworkVotes(),
+              winningTeamCoordinate.getAwayWinNetworkVotes());
+          }
+        }
+        //
+        // Done with that record, write it out
+        csvWriter.writeNext(templateRecord);
+      }
+      log.info("writeTournamentResultsFile(): Wrote file: {}", tournamentResultsFileName);
+    } catch (IOException e) {
+      String message = String.format("Error writing tournament results output file %s", tournamentResultsFileName);
+      log.error(message, e);
+      throw new RuntimeException(message, e);
+    }
+  }
+
+  private TeamCoordinate findWinningTeamCoordinate(final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap, final TeamCoordinate teamCoordinate) {
+    TeamCoordinate ret = teamCoordinate;
+    Set<TeamCoordinate> keySet = teamCoordinateSeasonDataMap.keySet();
+    for (TeamCoordinate winningTeamCoordinate : keySet) {
+      if (winningTeamCoordinate.equals(teamCoordinate)) {
+        ret = winningTeamCoordinate;
+        break;
+      }
+    }
+    if (ret == null) {
+      // Did not find the team coordinate we were looking for (for some reason), return the default
+      log.error("Could not find winning team coordinate: {}, returning the default", teamCoordinate);
+    }
+    return ret;
   }
 
 }

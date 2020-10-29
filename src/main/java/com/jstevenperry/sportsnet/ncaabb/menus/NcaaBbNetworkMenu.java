@@ -11,6 +11,9 @@ import com.jstevenperry.sportsnet.ncaabb.persistence.NcaaBbTournamentResultFlatF
 import org.springframework.context.ApplicationContext;
 
 public class NcaaBbNetworkMenu extends AbstractNetworkMenu<NcaaBbSeasonData> {
+
+  public static final String NETWORK_TYPE = "NCAABB";
+
   public NcaaBbNetworkMenu(final ApplicationContext applicationContext) {
     //
     // Invoke superclass constructor, passing it everything it needs
@@ -39,6 +42,6 @@ public class NcaaBbNetworkMenu extends AbstractNetworkMenu<NcaaBbSeasonData> {
 
   @Override
   public String getNetworkType() {
-    return "NCAABB";
+    return NETWORK_TYPE;
   }
 }

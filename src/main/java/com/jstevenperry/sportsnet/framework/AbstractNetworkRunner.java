@@ -3,7 +3,6 @@ package com.jstevenperry.sportsnet.framework;
 import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import com.jstevenperry.sportsnet.framework.model.GameCoordinate;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
-import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -57,21 +56,15 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
                                  final List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins) throws IOException {
     //
     // Get the network the user wants to run
-    Optional<NetworkCandidate> selectedNetwork = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.ACTION_WORK_WITH);
-    if (selectedNetwork.isPresent()) {
-      NetworkCandidate networkCandidate = selectedNetwork.get();
-      NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
+    List<NetworkCandidate> selectedNetworks = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.Action.RUN);
+    if (!selectedNetworks.isEmpty()) {
       //
       // Prompt the user for the tournament plugin they want to run
       Optional<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPluginMaybe = selectPluginToRunMenu(scanner, tournamentRunnerPlugins);
       if (tournamentRunnerPluginMaybe.isPresent()) {
         AbstractTournamentRunnerPlugin<T> tournamentRunnerPlugin = tournamentRunnerPluginMaybe.get();
-        //
-        // If the network is valid for the specified tournament year, then run the tournament
-        if (networkParameters.isValidYearForTournamentPrediction(tournamentRunnerPlugin.getTournamentYear())) {
-          List<GameCoordinate> gameList = tournamentRunnerPlugin.createTournamentGameList();
-          tournamentRunnerPlugin.runTournament(gameList, networkCandidate);
-        }
+        List<GameCoordinate> gameList = tournamentRunnerPlugin.createTournamentGameList();
+        tournamentRunnerPlugin.runTournament(gameList, selectedNetworks);
       }
     } else {
       log.info("No network selected, quitting.");

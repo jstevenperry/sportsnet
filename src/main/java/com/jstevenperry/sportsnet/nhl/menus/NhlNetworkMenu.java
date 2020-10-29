@@ -12,6 +12,8 @@ import org.springframework.context.ApplicationContext;
 
 public class NhlNetworkMenu extends AbstractNetworkMenu<NhlSeasonData> {
 
+  public static final String NETWORK_TYPE = "NHL";
+
   public NhlNetworkMenu(final ApplicationContext applicationContext) {
     super(
       applicationContext.getBean(NhlSeasonDataFlatFileDao.class),
@@ -38,7 +40,7 @@ public class NhlNetworkMenu extends AbstractNetworkMenu<NhlSeasonData> {
 
   @Override
   public String getNetworkType() {
-    return "NHL";
+    return NETWORK_TYPE;
   }
 
 }

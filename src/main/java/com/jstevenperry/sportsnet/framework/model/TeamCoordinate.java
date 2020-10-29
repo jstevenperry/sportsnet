@@ -16,6 +16,8 @@ public class TeamCoordinate {
   private int round;
   private int index;
   private String name; // optional
+  private int homeWinNetworkVotes;
+  private int awayWinNetworkVotes;
 
   public static TeamCoordinate parseCoordinates(final String stringCoordinates) {
     TeamCoordinate ret = new TeamCoordinate();
@@ -95,5 +97,23 @@ public class TeamCoordinate {
       ", index=" + index +
       ", name='" + name + '\'' +
       '}';
+  }
+
+  public int getHomeWinNetworkVotes() {
+    return homeWinNetworkVotes;
+  }
+
+  public TeamCoordinate setHomeWinNetworkVotes(final int homeWinNetworkVotes) {
+    this.homeWinNetworkVotes = homeWinNetworkVotes;
+    return this;
+  }
+
+  public int getAwayWinNetworkVotes() {
+    return awayWinNetworkVotes;
+  }
+
+  public TeamCoordinate setAwayWinNetworkVotes(final int awayWinNetworkVotes) {
+    this.awayWinNetworkVotes = awayWinNetworkVotes;
+    return this;
   }
 }

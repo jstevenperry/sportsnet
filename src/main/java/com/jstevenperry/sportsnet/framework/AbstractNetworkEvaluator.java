@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> extends AbstractNetworkBase<T> {
 
@@ -57,9 +56,9 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
                           final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
     //
     // Get the network the user wants to run
-    Optional<NetworkCandidate> selectedNetwork = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.ACTION_WORK_WITH);
-    if (selectedNetwork.isPresent()) {
-      NetworkCandidate networkCandidate = selectedNetwork.get();
+    List<NetworkCandidate> selectedNetwork = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.Action.EVALUATE);
+    if (!selectedNetwork.isEmpty()) {
+      NetworkCandidate networkCandidate = selectedNetwork.get(0); // There should be only one
       NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
       //
       // Prompt the user for the year(s) they want to evaluate

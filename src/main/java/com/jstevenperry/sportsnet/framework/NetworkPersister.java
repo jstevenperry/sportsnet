@@ -13,8 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class NetworkPersister {
 
@@ -22,26 +22,31 @@ public class NetworkPersister {
   private static final Logger log = LoggerFactory.getLogger(NetworkPersister.class);
   private static final byte KEEP_LOOPING = -1;
 
-  public static final String ACTION_PERSIST = "persist";
-  public static final String ACTION_WORK_WITH = "work with";
+  public enum Action {
+    PERSIST,
+    EVALUATE,
+    RUN
+  }
 
   public static void persistNetworks(final BufferedReader scanner,
                                      final List<NetworkCandidate> networkCandidateList) throws IOException {
-    Optional<NetworkCandidate> networkCandidate = displayNetworkSelectionMenu(scanner, networkCandidateList, ACTION_PERSIST);
-    networkCandidate.ifPresent(candidate -> {
-      saveSelectedNetworkOrNot(scanner, candidate);
-      networkCandidateList.remove(candidate);
-    });
+    List<NetworkCandidate> networkCandidates = displayNetworkSelectionMenu(scanner, networkCandidateList, Action.PERSIST);
+    if (!networkCandidates.isEmpty()) {
+      networkCandidates.forEach(networkCandidate -> {
+        saveSelectedNetworkOrNot(scanner, networkCandidate);
+        networkCandidateList.remove(networkCandidate);
+      });
+    }
   }
 
   /**
    * Displays a menu of networks from the networkCandidates list, asks
    * the user to pick one, and returns their choice.
    */
-  public static Optional<NetworkCandidate> displayNetworkSelectionMenu(final BufferedReader scanner,
+  public static List<NetworkCandidate> displayNetworkSelectionMenu(final BufferedReader scanner,
                                                                        final List<NetworkCandidate> networkCandidates,
-                                                                       final String action) throws IOException {
-    Optional<NetworkCandidate> ret = Optional.empty();
+                                                                       final Action action) throws IOException {
+    List<NetworkCandidate> ret = new ArrayList<>();
     byte networkNumber = KEEP_LOOPING;
     while (networkNumber == KEEP_LOOPING && !networkCandidates.isEmpty()) {
       System.out.printf("Enter the number of the network you want to %s (enter 0 to quit):%n", action);
@@ -49,21 +54,30 @@ public class NetworkPersister {
       System.out.println("==> ");
       String line = scanner.readLine();
       if (StringUtils.isNotEmpty(line)) {
-        networkNumber = Byte.parseByte(StringUtils.strip(line));
-        if (networkNumber < 0 || networkNumber > networkCandidates.size()) {
-          networkNumber = KEEP_LOOPING;
-          continue;
+        if (StringUtils.isNumeric(line)) {
+          networkNumber = Byte.parseByte(StringUtils.strip(line));
+          if (networkNumber < 0 || networkNumber > networkCandidates.size()) {
+            // Invalid choice, keep looping
+            log.warn("Invalid choice: {}, please try again.", networkNumber);
+            networkNumber = KEEP_LOOPING;
+            continue;
+          }
+          if (networkNumber == 0) {
+            break;
+          } else {
+            ret.add(networkCandidates.get(networkNumber - 1));
+          }
+        } else if (line.equalsIgnoreCase("ALL")) {
+          if (action == Action.RUN) {
+            // Return all networks
+            ret.addAll(networkCandidates);
+            break;
+          } else {
+            log.error("Selecting ALL networks for action '{}' is not allowed. Please try again.", action);
+            networkNumber = KEEP_LOOPING;
+          }
         }
-        if (networkNumber == 0) {
-          break;
-        }
-      } else {
-        System.out.printf("%s is not a valid choice.%n", line);
-        networkNumber = KEEP_LOOPING;
       }
-    }
-    if (networkNumber != 0) {
-      ret = Optional.of(networkCandidates.get(networkNumber - 1));
     }
     return ret;
   }
