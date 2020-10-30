@@ -155,6 +155,7 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
         trainedNetwork.ifPresent(networkCandidate -> {
           unsavedNetworks.add(networkCandidate);
           networkParameters = networkCandidate.getNetworkParameters();
+          networkParameters.setNetworkSaved(false);
         });
         break;
       case EVALUATE_NETWORK:
