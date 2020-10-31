@@ -128,6 +128,10 @@ public class NetworkProperties {
     return getStringPropertyValue("date.prologue", "Through Games");
   }
 
+  public static Double getDropoutProbability() {
+    return getDoublePropertyValue("dropout.probability", 0.25);
+  }
+
   public static Integer getEpochBreakIterationCount() {
     return getIntegerPropertyValue("epoch.break.iteration.count", 3000);
   }
