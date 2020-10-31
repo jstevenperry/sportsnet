@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
   private static final Logger log = LoggerFactory.getLogger(AbstractNetworkMenu.class);
@@ -40,7 +39,7 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
    * training runs (it's a pain to have to re-enter everything all
    * the time).
    */
-  private NetworkParameters networkParameters;
+  private NetworkParameters networkParametersGlobal;
 
   public AbstractNetworkMenu(final SeasonDataDao<T> seasonDataDao,
                              final TournamentResultDao tournamentResultDao,
@@ -151,22 +150,18 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
         }
         break;
       case TRAIN_NETWORK:
-        Optional<NetworkCandidate> trainedNetwork = networkTrainer.go(
-          networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType()
+        NetworkCandidate trainedNetwork = networkTrainer.go(
+          networkParametersGlobal, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType()
         );
-        trainedNetwork.ifPresent(networkCandidate -> {
-          unsavedNetworks.add(networkCandidate);
-          networkParameters = networkCandidate.getNetworkParameters();
-        });
+        unsavedNetworks.add(trainedNetwork);
+        networkParametersGlobal = trainedNetwork.getNetworkParameters();
+        networkParametersGlobal.setNetworkSaved(false); // Reset, this is a shared object
         break;
       case TRAIN_NETWORK_BATCH:
-        Optional<NetworkParameters> networkParametersOptional = networkTrainer.goBatch(
-          networkParameters, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType()
+        networkParametersGlobal = networkTrainer.goBatch(
+          networkParametersGlobal, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType()
         );
-        if (networkParametersOptional.isPresent()) {
-          networkParameters = networkParametersOptional.get();
-          networkParameters.setNetworkSaved(false);
-        }
+        networkParametersGlobal.setNetworkSaved(false); // Reset, this is a shared object
         break;
       case EVALUATE_NETWORK:
         networkEvaluator.go(
