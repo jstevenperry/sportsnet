@@ -40,7 +40,7 @@ public abstract class AbstractDataElementMenu {
         System.out.println("(To use these choices just press enter)");
         System.out.printf("To remove a choice enter -NUMBER (for example, -%d removes %s from your selections)%n", ret.get(0).getOrdinalValue(), ret.get(0).getName());
       }
-      System.out.printf("Enter the number of the %s you want to select (enter 0 to quit): %n", thing);
+      System.out.printf("Enter the number of the %s you want to select (enter ALL to select all data elements, enter 0 to quit): %n", thing);
       displayMenuItems(filter(values(), ret));
       userInput = scanner.readLine();
       if (StringUtils.isEmpty(userInput)) {
