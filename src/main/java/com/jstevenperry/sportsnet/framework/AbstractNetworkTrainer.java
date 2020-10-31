@@ -216,17 +216,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       // Fit the model against the training data for a single epoch
       network.fit(trainingData);
       if (epochCount % networkEvaluationIndex == 0) {
-        //
-        // The network evaluator
-        Evaluation eval = new Evaluation(networkParameters.getNumberOfOutputs());
-        //
-        // Evaluate the model on the training set to see how well the model fits.
-        // If the model fits then stop training early.
-        INDArray output = network.output(evaluationData.getFeatures());
-        eval.eval(evaluationData.getLabels(), output, evaluationData.getExampleMetaData(RecordMetaData.class));
-        double accuracy = eval.accuracy();
-        log.debug("Network accuracy: {}", accuracy);
-        double networkError = 1.0 - accuracy;
+        double networkError = computeNetworkError(networkParameters, evaluationData, network);
         if (networkError < NetworkProperties.getMaxNetworkError()) {
           // Network is trained, we're done here
           log.info("Network trained after {} epochs.", epochCount);
@@ -235,7 +225,22 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         }
       }
     }
+    log.info("End of training loop. Network accuracy: {}%", computeNetworkError(networkParameters,evaluationData,network)*100);
     return network;
+  }
+
+  private static double computeNetworkError(final NetworkParameters networkParameters, final DataSet evaluationData, final MultiLayerNetwork network) {
+    //
+    // The network evaluator
+    Evaluation eval = new Evaluation(networkParameters.getNumberOfOutputs());
+    //
+    // Evaluate the model on the training set to see how well the model fits.
+    // If the model fits then stop training early.
+    INDArray output = network.output(evaluationData.getFeatures());
+    eval.eval(evaluationData.getLabels(), output, evaluationData.getExampleMetaData(RecordMetaData.class));
+    double accuracy = eval.accuracy();
+    log.debug("Network accuracy: {}", accuracy);
+    return 1.0 - accuracy;
   }
 
   private static NetworkCandidate keepNetwork(final MultiLayerNetwork network, final NetworkParameters networkParameters) {
