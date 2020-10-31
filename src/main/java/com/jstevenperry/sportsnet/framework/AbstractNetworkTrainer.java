@@ -114,6 +114,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   }
 
   public Optional<NetworkParameters> goBatch(final NetworkParameters networkParametersGlobal,
+                                             final List<NetworkCandidate> networkCandidateList,
                                              final SeasonDataDao<T> seasonDataDao,
                                              final TournamentResultDao tournamentResultDao,
                                              final TournamentParticipantDao tournamentParticipantDao,
@@ -148,8 +149,12 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       log.debug("Training network...");
       MultiLayerNetwork network = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
       //
-      // Save the network if its performance is at or above the threshold
-      saveNetworkIfAboveThreshold(networkParameters, iterationNumber, network);
+      // Save the network if its performance is at or above the threshold.
+      // If the network was not saved, retain it anyway in the networkCandidate list
+      // that is owned by the caller.
+      if (!saveNetworkIfAboveThreshold(networkParameters, iterationNumber, network)) {
+        networkCandidateList.add(new NetworkCandidate(networkParameters,network));
+      }
     }
     return Optional.of(networkParameters);
   }
@@ -192,17 +197,20 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     return model;
   }
 
-  private static void saveNetworkIfAboveThreshold(final NetworkParameters networkParameters, final int iterationNumber, final MultiLayerNetwork network) {
+  private static boolean saveNetworkIfAboveThreshold(final NetworkParameters networkParameters, final int iterationNumber, final MultiLayerNetwork network) {
+    boolean ret = false; // Network not saved
     double performanceThreshold = NetworkProperties.getPerformanceThreshold().doubleValue();
     if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
       log.info(String.format("Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, keeping network.",
         iterationNumber, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
       Optional<NetworkCandidate> keptNetworkMaybe = keepNetwork(network, networkParameters);
       keptNetworkMaybe.ifPresent(NetworkPersister::saveNetwork);
+      ret = true;
     } else {
       log.info(String.format("Iteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f), discarding network.",
         iterationNumber, networkParameters.getNetworkAccuracy() * 100, performanceThreshold));
     }
+    return ret;
   }
 
   private static void normalizeTrainingData(final DataSet trainingData, final DataSet testData, final DataNormalization normalizer) {

@@ -151,15 +151,17 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
         }
         break;
       case TRAIN_NETWORK:
-        Optional<NetworkCandidate> trainedNetwork = networkTrainer.go(networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType());
+        Optional<NetworkCandidate> trainedNetwork = networkTrainer.go(
+          networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType()
+        );
         trainedNetwork.ifPresent(networkCandidate -> {
           unsavedNetworks.add(networkCandidate);
           networkParameters = networkCandidate.getNetworkParameters();
         });
         break;
       case TRAIN_NETWORK_BATCH:
-        Optional<NetworkParameters> networkParametersOptional = networkTrainer.goBatch(networkParameters, seasonDataDao,
-          tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType()
+        Optional<NetworkParameters> networkParametersOptional = networkTrainer.goBatch(
+          networkParameters, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType()
         );
         if (networkParametersOptional.isPresent()) {
           networkParameters = networkParametersOptional.get();
@@ -167,10 +169,14 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
         }
         break;
       case EVALUATE_NETWORK:
-        networkEvaluator.go(scanner, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNetworkType());
+        networkEvaluator.go(
+          scanner, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNetworkType()
+        );
         break;
       case RUN_NETWORK:
-        networkRunner.go(scanner, unsavedNetworks, seasonDataDao, getNetworkType());
+        networkRunner.go(
+          scanner, unsavedNetworks, seasonDataDao, getNetworkType()
+        );
         break;
       case PERSIST_UNSAVED_NETWORKS:
         if (unsavedNetworks.isEmpty()) {
