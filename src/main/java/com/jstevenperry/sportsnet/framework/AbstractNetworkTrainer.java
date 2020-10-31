@@ -30,7 +30,6 @@ import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
 import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
 import org.nd4j.linalg.learning.config.IUpdater;
-import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -235,7 +234,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   }
 
   private static NetworkCandidate keepNetwork(final MultiLayerNetwork network, final NetworkParameters networkParameters) {
-    NetworkCandidate ret = new NetworkCandidate(networkParameters, network);
+    NetworkCandidate ret = new NetworkCandidate(networkParameters.copy(), network);
     networkParameters.setWhenTrained(LocalDateTime.now());
     log.info(String.format("Network %s retained.", network.toString()));
     return ret;
@@ -244,10 +243,10 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   private static boolean saveNetworkIfAboveThreshold(final NetworkParameters networkParameters, final int iterationNumber, final MultiLayerNetwork network) {
     boolean ret = false; // Network not saved
     double performanceThreshold = NetworkProperties.getPerformanceThreshold().doubleValue();
+    NetworkCandidate keptNetwork = keepNetwork(network, networkParameters);
     if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
       log.info(String.format("Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, keeping network.",
         iterationNumber, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
-      NetworkCandidate keptNetwork = keepNetwork(network, networkParameters);
       ret = NetworkPersister.saveNetwork(keptNetwork);
     } else {
       log.info(String.format("Iteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f), discarding network.",
@@ -271,10 +270,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       log.debug(String.format("normalizeTrainingData(): Training Data:\n%s", Arrays.toString(feature)));
     }
     normalizer.transform(testData);         // Apply normalization to the test data. This is using statistics calculated from the *training* set
-//    double[][] testDataFeatures = testData.getFeatures().toDoubleMatrix();
-//    for (double[] feature : testDataFeatures) {
-//      log.debug(String.format("normalizeTrainingData(): Test Data:\n%s", Arrays.toString(feature)));
-//    }
     log.debug("Normalizing data...DONE");
   }
 
@@ -396,28 +391,34 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   }
 
   private static Activation scanActivationFunction(final BufferedReader scanner, final Activation activation) throws IOException {
-    Activation ret = (activation == null) ? Activation.TANH : activation;
-    Optional<ActivationFunctionMenu.ActivationFunctionChoice> menuChoice = ActivationFunctionMenu.go(scanner, activation);
-    if (menuChoice.isPresent()) {
-      ret = menuChoice.get().getActivation();
+    Activation ret = null;
+    while (ret == null) {
+      Optional<ActivationFunctionMenu.ActivationFunctionChoice> menuChoice = ActivationFunctionMenu.go(scanner, activation);
+      if (menuChoice.isPresent()) {
+        ret = menuChoice.get().getActivation();
+      }
     }
     return ret;
   }
 
   private static IUpdater scanUpdaterFunction(final BufferedReader scanner, final IUpdater updater) throws IOException {
-    IUpdater ret = (updater == null) ? new Nesterovs() : updater;
-    Optional<UpdaterMenu.UpdaterChoice> menuChoice = UpdaterMenu.go(scanner, updater);
-    if (menuChoice.isPresent()) {
-      ret = menuChoice.get().getUpdater();
+    IUpdater ret = null;
+    while (ret == null) {
+      Optional<UpdaterMenu.UpdaterChoice> menuChoice = UpdaterMenu.go(scanner, updater);
+      if (menuChoice.isPresent()) {
+        ret = menuChoice.get().getUpdater();
+      }
     }
     return ret;
   }
 
   private static WeightInit scanWeightInitFunction(final BufferedReader scanner, final WeightInit weightInit) throws IOException {
-    WeightInit ret = (weightInit == null) ? WeightInit.XAVIER : weightInit;
-    Optional<WeightInitMenu.WeightInitChoice> menuChoice = WeightInitMenu.go(scanner, weightInit);
-    if (menuChoice.isPresent()) {
-      ret = menuChoice.get().getWeightInit();
+    WeightInit ret = null;
+    while (ret == null) {
+      Optional<WeightInitMenu.WeightInitChoice> menuChoice = WeightInitMenu.go(scanner, weightInit);
+      if (menuChoice.isPresent()) {
+        ret = menuChoice.get().getWeightInit();
+      }
     }
     return ret;
   }
@@ -445,10 +446,12 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   }
 
   private static LossFunctions.LossFunction scanLossFunction(final BufferedReader scanner, final LossFunctions.LossFunction lossFunction) throws IOException {
-    LossFunctions.LossFunction ret = (lossFunction == null) ? LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD : lossFunction;
-    Optional<LossFunctionMenu.LossFunctionChoice> menuChoice = LossFunctionMenu.go(scanner, lossFunction);
-    if (menuChoice.isPresent()) {
-      ret = menuChoice.get().getLossFunction();
+    LossFunctions.LossFunction ret = null;
+    while (ret == null) {
+      Optional<LossFunctionMenu.LossFunctionChoice> menuChoice = LossFunctionMenu.go(scanner, lossFunction);
+      if (menuChoice.isPresent()) {
+        ret = menuChoice.get().getLossFunction();
+      }
     }
     return ret;
   }
