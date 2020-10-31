@@ -28,7 +28,7 @@ public class NetworkParameters implements Serializable {
   private LocalDateTime whenTrained;
   private double networkAccuracy;
   private boolean networkSaved;
-  private double l2RegularizationLambda;
+  private double l2RegularizationLambda = 0.0005; // Do not allow this to be zero 
   private DataNormalization normalizer;
   private String networkType;
 
