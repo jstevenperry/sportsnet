@@ -42,6 +42,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> extends AbstractNetworkBase<T> {
@@ -193,10 +194,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   private static MultiLayerConfiguration configureNetwork(final NetworkParameters networkParameters) {
     log.debug("Configuring network...");
     NeuralNetConfiguration.Builder builder = new NeuralNetConfiguration.Builder()
-      .seed(6)
+      .seed(new Random(-238).nextInt(100))
       .activation(networkParameters.getActivationFunction())
       .weightInit(networkParameters.getWeightInit())
       .updater(networkParameters.getUpdater())
+      .dropOut(NetworkProperties.getDropoutProbability())
       .l2(networkParameters.getL2RegularizationLambda());
     NeuralNetConfiguration.ListBuilder listBuilder = builder.list();
     int[] networkLayout = NetworkUtils.parseNetworkStructure(networkParameters.getNetworkLayout());
