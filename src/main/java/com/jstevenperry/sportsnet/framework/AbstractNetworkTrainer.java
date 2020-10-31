@@ -69,21 +69,21 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   protected abstract List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner,
                                                                            final List<AbstractDataElementChoice> choices) throws IOException;// {
 
-  private static Optional<NetworkCandidate> keepNetwork(final MultiLayerNetwork network, final NetworkParameters networkParameters) {
-    Optional<NetworkCandidate> ret;
+  private static NetworkCandidate keepNetwork(final MultiLayerNetwork network, final NetworkParameters networkParameters) {
+    NetworkCandidate ret;
     networkParameters.setWhenTrained(LocalDateTime.now());
-    ret = Optional.of(new NetworkCandidate(networkParameters, network));
+    ret = new NetworkCandidate(networkParameters, network);
     log.info(String.format("Network %s retained.", network.toString()));
     return ret;
   }
 
-  public Optional<NetworkCandidate> go(final NetworkParameters networkParametersGlobal,
+  public NetworkCandidate go(final NetworkParameters networkParametersGlobal,
                                        final SeasonDataDao<T> seasonDataDao,
                                        final TournamentResultDao tournamentResultDao,
                                        final TournamentParticipantDao tournamentParticipantDao,
                                        final Integer numberOfOutputClasses,
                                        final String networkType) throws IOException, InterruptedException {
-    Optional<NetworkCandidate> ret;
+    NetworkCandidate ret;
     NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
     networkParameters.setNetworkType(networkType);
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
@@ -113,7 +113,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     return ret;
   }
 
-  public Optional<NetworkParameters> goBatch(final NetworkParameters networkParametersGlobal,
+  public NetworkParameters goBatch(final NetworkParameters networkParametersGlobal,
                                              final List<NetworkCandidate> networkCandidateList,
                                              final SeasonDataDao<T> seasonDataDao,
                                              final TournamentResultDao tournamentResultDao,
@@ -153,10 +153,10 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       // If the network was not saved, retain it anyway in the networkCandidate list
       // that is owned by the caller.
       if (!saveNetworkIfAboveThreshold(networkParameters, iterationNumber, network)) {
-        networkCandidateList.add(new NetworkCandidate(networkParameters,network));
+        networkCandidateList.add(keepNetwork(network,networkParameters));
       }
     }
-    return Optional.of(networkParameters);
+    return networkParameters;
   }
 
   private static MultiLayerNetwork goInternal(final MultiLayerConfiguration configuration,
@@ -203,9 +203,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
       log.info(String.format("Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, keeping network.",
         iterationNumber, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
-      Optional<NetworkCandidate> keptNetworkMaybe = keepNetwork(network, networkParameters);
-      keptNetworkMaybe.ifPresent(NetworkPersister::saveNetwork);
-      ret = true;
+      NetworkCandidate keptNetwork = keepNetwork(network, networkParameters);
+      ret = NetworkPersister.saveNetwork(keptNetwork);
     } else {
       log.info(String.format("Iteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f), discarding network.",
         iterationNumber, networkParameters.getNetworkAccuracy() * 100, performanceThreshold));
