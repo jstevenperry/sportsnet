@@ -69,21 +69,12 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   protected abstract List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner,
                                                                            final List<AbstractDataElementChoice> choices) throws IOException;// {
 
-  private static NetworkCandidate keepNetwork(final MultiLayerNetwork network, final NetworkParameters networkParameters) {
-    NetworkCandidate ret;
-    networkParameters.setWhenTrained(LocalDateTime.now());
-    ret = new NetworkCandidate(networkParameters, network);
-    log.info(String.format("Network %s retained.", network.toString()));
-    return ret;
-  }
-
   public NetworkCandidate go(final NetworkParameters networkParametersGlobal,
-                                       final SeasonDataDao<T> seasonDataDao,
-                                       final TournamentResultDao tournamentResultDao,
-                                       final TournamentParticipantDao tournamentParticipantDao,
-                                       final Integer numberOfOutputClasses,
-                                       final String networkType) throws IOException, InterruptedException {
-    NetworkCandidate ret;
+                             final SeasonDataDao<T> seasonDataDao,
+                             final TournamentResultDao tournamentResultDao,
+                             final TournamentParticipantDao tournamentParticipantDao,
+                             final Integer numberOfOutputClasses,
+                             final String networkType) throws IOException, InterruptedException {
     NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
     networkParameters.setNetworkType(networkType);
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
@@ -108,18 +99,22 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     //
     // Train the network. If nothing goes wrong, return the trained network.
     log.info("Training network...");
-    MultiLayerNetwork network = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
-    ret = keepNetwork(network, networkParameters);
-    return ret;
+    int numberOfUserSpecifiedEpochs = networkParameters.getNumberOfEpochs();
+    MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
+    // Restore the value for next time since it will be set to the actual number used, and the user may not want that next time
+    networkParameters.setNumberOfEpochs(numberOfUserSpecifiedEpochs);
+    //
+    // Return the trained network
+    return keepNetwork(trainedNetwork, networkParameters);
   }
 
   public NetworkParameters goBatch(final NetworkParameters networkParametersGlobal,
-                                             final List<NetworkCandidate> networkCandidateList,
-                                             final SeasonDataDao<T> seasonDataDao,
-                                             final TournamentResultDao tournamentResultDao,
-                                             final TournamentParticipantDao tournamentParticipantDao,
-                                             final Integer numberOfOutputClasses,
-                                             final String networkType) throws IOException, InterruptedException {
+                                   final List<NetworkCandidate> networkCandidateList,
+                                   final SeasonDataDao<T> seasonDataDao,
+                                   final TournamentResultDao tournamentResultDao,
+                                   final TournamentParticipantDao tournamentParticipantDao,
+                                   final Integer numberOfOutputClasses,
+                                   final String networkType) throws IOException, InterruptedException {
     NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
     networkParameters.setNetworkType(networkType);
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
@@ -147,13 +142,13 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       //
       // Train the network. If nothing goes wrong, return the trained network.
       log.debug("Training network...");
-      MultiLayerNetwork network = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
+      MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
       //
       // Save the network if its performance is at or above the threshold.
       // If the network was not saved, retain it anyway in the networkCandidate list
       // that is owned by the caller.
-      if (!saveNetworkIfAboveThreshold(networkParameters, iterationNumber, network)) {
-        networkCandidateList.add(keepNetwork(network,networkParameters));
+      if (!saveNetworkIfAboveThreshold(networkParameters, iterationNumber, trainedNetwork)) {
+        networkCandidateList.add(keepNetwork(trainedNetwork, networkParameters));
       }
     }
     return networkParameters;
@@ -164,37 +159,86 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                               final RecordReaderDataSetIterator trainingDataIterator,
                                               final RecordReaderDataSetIterator evaluationDataIterator) {
     log.info("Training network...");
+    //
+    // Prepare the data
     trainingDataIterator.setCollectMetaData(true);
     DataSet trainingData = trainingDataIterator.next();
-    trainingData.shuffle(); // Shake things up
     DataSet evaluationData = evaluationDataIterator.next();
-    evaluationData.shuffle(); // Shake things up
-//    DataNormalization normalizer = new NormalizerMinMaxScaler(-1, 1);
     DataNormalization normalizer = new NormalizerStandardize();
     normalizeTrainingData(trainingData, evaluationData, normalizer);
     networkParameters.setNormalizer(normalizer);
-
-    int numberOfEpochs = networkParameters.getNumberOfEpochs();
-    int printIterationIndex = numberOfEpochs / 10;
-    MultiLayerNetwork model = new MultiLayerNetwork(configuration);
-    model.init();
-    model.setListeners(new PerformanceListener(printIterationIndex, true));
     //
-    // Fit the model
-    for (int epoch = 0; epoch < networkParameters.getNumberOfEpochs(); epoch++) {
-      model.fit(trainingData);
-    }
-
-    // Evaluate the model on the test set
+    // The training loop, returns the trained network model
+    MultiLayerNetwork trainedNetwork = trainNetwork(configuration, networkParameters, trainingData, trainingData);
+    //
+    // Evaluate the model on the evaluation set to see how well the trained model performs against unknown data
     Evaluation eval = new Evaluation(networkParameters.getNumberOfOutputs());
-    INDArray output = model.output(evaluationData.getFeatures());
+    INDArray output = trainedNetwork.output(evaluationData.getFeatures());
     eval.eval(evaluationData.getLabels(), output, evaluationData.getExampleMetaData(RecordMetaData.class)); // Note we are passing in the test set metadata here
     networkParameters.setNetworkAccuracy(eval.accuracy());
     log.info(String.format("Evaluator stats: %s", eval.stats()));
     log.info(String.format("Network accuracy: %f%%", eval.accuracy() * 100.0));
-    log.info(networkParameters.toString());
+    log.info(networkParameters.toStringAbbreviated());
     log.info("Training network...DONE");
-    return model;
+
+    return trainedNetwork;
+  }
+
+  /**
+   * The network training loop. It uses the user-supplied number of epochs as a starting
+   * place and attempts to train the network to below the threshold specified in
+   * NetworkProperties. This method will try up to:
+   * (user-supplied epochs value) x (max.network.iterations in NetworkProperties)
+   * and if it can train the network before it reaches that value it breaks out early.
+   * If it cannot it still returns the trained network, albeit one that did not train
+   * below the threshold (the user may still want it anyway).
+   */
+  private static MultiLayerNetwork trainNetwork(final MultiLayerConfiguration configuration,
+                                                final NetworkParameters networkParameters,
+                                                final DataSet trainingData,
+                                                final DataSet evaluationData) {
+    //
+    // Compute the number of epochs at which the network will be periodically evaluated
+    int networkEvaluationIndex = networkParameters.getNumberOfEpochs() / 10;
+    int maxTrainingEpochs = networkParameters.getNumberOfEpochs() * NetworkProperties.getMaxNetworkIterations();
+    networkParameters.setNumberOfEpochs(maxTrainingEpochs); // Assume network could not be trained early
+    //
+    // Create the model to be trained
+    MultiLayerNetwork network = new MultiLayerNetwork(configuration);
+    network.init();
+    network.setListeners(new PerformanceListener(maxTrainingEpochs / 10, true));
+    for (int epochCount = 0; epochCount < maxTrainingEpochs; epochCount++) {
+      //
+      // Fit the model against the training data for a single epoch
+      network.fit(trainingData);
+      if (epochCount % networkEvaluationIndex == 0) {
+        //
+        // The network evaluator
+        Evaluation eval = new Evaluation(networkParameters.getNumberOfOutputs());
+        //
+        // Evaluate the model on the training set to see how well the model fits.
+        // If the model fits then stop training early.
+        INDArray output = network.output(evaluationData.getFeatures());
+        eval.eval(evaluationData.getLabels(), output, evaluationData.getExampleMetaData(RecordMetaData.class));
+        double accuracy = eval.accuracy();
+        log.debug("Network accuracy: {}", accuracy);
+        double networkError = 1.0 - accuracy;
+        if (networkError < NetworkProperties.getMaxNetworkError()) {
+          // Network is trained, we're done here
+          log.info("Network trained after {} epochs.", epochCount);
+          networkParameters.setNumberOfEpochs(epochCount);
+          break;
+        }
+      }
+    }
+    return network;
+  }
+
+  private static NetworkCandidate keepNetwork(final MultiLayerNetwork network, final NetworkParameters networkParameters) {
+    NetworkCandidate ret = new NetworkCandidate(networkParameters, network);
+    networkParameters.setWhenTrained(LocalDateTime.now());
+    log.info(String.format("Network %s retained.", network.toString()));
+    return ret;
   }
 
   private static boolean saveNetworkIfAboveThreshold(final NetworkParameters networkParameters, final int iterationNumber, final MultiLayerNetwork network) {
