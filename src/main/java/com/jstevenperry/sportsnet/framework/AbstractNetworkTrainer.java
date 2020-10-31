@@ -77,12 +77,48 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     return ret;
   }
 
-  public Optional<NetworkParameters> go(final NetworkParameters networkParametersGlobal,
+  public Optional<NetworkCandidate> go(final NetworkParameters networkParametersGlobal,
                                        final SeasonDataDao<T> seasonDataDao,
                                        final TournamentResultDao tournamentResultDao,
                                        final TournamentParticipantDao tournamentParticipantDao,
                                        final Integer numberOfOutputClasses,
                                        final String networkType) throws IOException, InterruptedException {
+    Optional<NetworkCandidate> ret;
+    NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
+    networkParameters.setNetworkType(networkType);
+    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+    //
+    // Fetch the network configuration parameters (reuse NetworkParameters so user doesn't have to re-enter everything each time)
+    fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses);
+    log.info("Network parameters acquired.");
+    //
+    // Get the season data for the teams in the training years
+    List<Integer> yearsToTrain = networkParameters.getYearsToTrainAndEvaluateNetwork().get(0);
+    log.info("Pulling training data...");
+    RecordReaderDataSetIterator trainingDataIterator = createIterator(yearsToTrain, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+    //
+    // Get the season data for the teams in the evaluation years
+    List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
+    log.info("Pulling evaluation data...");
+    RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+    //
+    // Create the network definition
+    log.info("Configuring network...");
+    MultiLayerConfiguration configuration = configureNetwork(networkParameters);
+    //
+    // Train the network. If nothing goes wrong, return the trained network.
+    log.info("Training network...");
+    MultiLayerNetwork network = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
+    ret = keepNetwork(network, networkParameters);
+    return ret;
+  }
+
+  public Optional<NetworkParameters> goBatch(final NetworkParameters networkParametersGlobal,
+                                             final SeasonDataDao<T> seasonDataDao,
+                                             final TournamentResultDao tournamentResultDao,
+                                             final TournamentParticipantDao tournamentParticipantDao,
+                                             final Integer numberOfOutputClasses,
+                                             final String networkType) throws IOException, InterruptedException {
     NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
     networkParameters.setNetworkType(networkType);
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
@@ -158,14 +194,14 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
 
   private static void saveNetworkIfAboveThreshold(final NetworkParameters networkParameters, final int iterationNumber, final MultiLayerNetwork network) {
     double performanceThreshold = NetworkProperties.getPerformanceThreshold().doubleValue();
-    if (networkParameters.getNetworkAccuracy()*100 >= performanceThreshold) {
+    if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
       log.info(String.format("Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, keeping network.",
-        iterationNumber, performanceThreshold, networkParameters.getNetworkAccuracy()*100));
+        iterationNumber, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
       Optional<NetworkCandidate> keptNetworkMaybe = keepNetwork(network, networkParameters);
       keptNetworkMaybe.ifPresent(NetworkPersister::saveNetwork);
     } else {
       log.info(String.format("Iteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f), discarding network.",
-        iterationNumber, networkParameters.getNetworkAccuracy()*100, performanceThreshold));
+        iterationNumber, networkParameters.getNetworkAccuracy() * 100, performanceThreshold));
     }
   }
 

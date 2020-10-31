@@ -3,7 +3,9 @@ package com.jstevenperry.sportsnet.framework.menus;
 import com.jstevenperry.sportsnet.framework.AbstractNetworkEvaluator;
 import com.jstevenperry.sportsnet.framework.AbstractNetworkRunner;
 import com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer;
+import com.jstevenperry.sportsnet.framework.NetworkPersister;
 import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
+import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
@@ -16,10 +18,14 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
   private static final Logger log = LoggerFactory.getLogger(AbstractNetworkMenu.class);
+
+  private final List<NetworkCandidate> unsavedNetworks = new ArrayList<>();
 
   // Dependencies go here
   private final SeasonDataDao<T> seasonDataDao;
@@ -130,30 +136,48 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
     NetworkChoice ret = menuChoice;
     switch (menuChoice) {
       case QUIT:
-        while (true) {
-          System.out.println("Are you sure you want to quit (y/n)?");
-          String input = StringUtils.strip(scanner.readLine());
-          if (input.equalsIgnoreCase("y")) {
-            break;
-          } else if (input.equalsIgnoreCase("n")) {
-            // Set the return value to UNKNOWN so the main menu displays again
-            ret = NetworkChoice.UNKNOWN;
-            break;
+        if (unsavedNetworks.size() > 0) {
+          while (true) {
+            System.out.println("You have unsaved networks. Are you sure you want to quit (y/n)?");
+            String input = StringUtils.strip(scanner.readLine());
+            if (input.equalsIgnoreCase("y")) {
+              break;
+            } else if (input.equalsIgnoreCase("n")) {
+              // Set the return value to UNKNOWN so the main menu displays again
+              ret = NetworkChoice.UNKNOWN;
+              break;
+            }
           }
         }
         break;
       case TRAIN_NETWORK:
-        Optional<NetworkParameters> trainedNetwork = networkTrainer.go(networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType());
-        if (trainedNetwork.isPresent()) {
-          networkParameters = trainedNetwork.get();
+        Optional<NetworkCandidate> trainedNetwork = networkTrainer.go(networkParameters, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType());
+        trainedNetwork.ifPresent(networkCandidate -> {
+          unsavedNetworks.add(networkCandidate);
+          networkParameters = networkCandidate.getNetworkParameters();
+        });
+        break;
+      case TRAIN_NETWORK_BATCH:
+        Optional<NetworkParameters> networkParametersOptional = networkTrainer.goBatch(networkParameters, seasonDataDao,
+          tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType()
+        );
+        if (networkParametersOptional.isPresent()) {
+          networkParameters = networkParametersOptional.get();
           networkParameters.setNetworkSaved(false);
         }
         break;
       case EVALUATE_NETWORK:
-        networkEvaluator.go(scanner, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNetworkType());
+        networkEvaluator.go(scanner, unsavedNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNetworkType());
         break;
       case RUN_NETWORK:
-        networkRunner.go(scanner, seasonDataDao, getNetworkType());
+        networkRunner.go(scanner, unsavedNetworks, seasonDataDao, getNetworkType());
+        break;
+      case PERSIST_UNSAVED_NETWORKS:
+        if (unsavedNetworks.isEmpty()) {
+          System.out.println("No networks to save.");
+        } else {
+          NetworkPersister.persistNetworks(scanner, unsavedNetworks);
+        }
         break;
       case LIST_SAVED_NETWORKS:
         NetworkUtils.displayNetworks(getNetworkType());
