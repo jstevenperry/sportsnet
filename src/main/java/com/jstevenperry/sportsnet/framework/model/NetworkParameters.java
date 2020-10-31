@@ -276,6 +276,22 @@ public class NetworkParameters implements Serializable {
       String.format("\tData Elements             : %s%n", StringUtils.join(getSelectedElements(), ','));
   }
 
+  public String toStringAbbreviated() {
+    return String.format("Network info%n") +
+      String.format("\tNetwork structure         : %s%n", getNetworkLayout()) +
+      String.format("\tTraining Years            : %s%n", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(0), ',')) +
+      String.format("\tEvaluation Years          : %s%n", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(1), ',')) +
+      String.format("\tActivation function       : %s%n", getActivationFunction().name()) +
+      String.format("\tUpdater function          : %s%n", getUpdater()) +
+      String.format("\tLoss function             : %s%n", getLossFunction()) +
+      String.format("\tWeight init function      : %s%n", getWeightInit()) +
+      String.format("\tNumber of inputs          : %d%n", getNumberOfInputs()) +
+      String.format("\tNumber of outputs         : %d%n", getNumberOfOutputs()) +
+      String.format("\tNumber of training epochs : %d%n", getNumberOfEpochs()) +
+      String.format("\tNetwork accuracy          : %5.5f%%%n", getNetworkAccuracy() * 100.0) +
+      String.format("\tL2 Regularization Lambda  : %5.5f%n", getL2RegularizationLambda());
+  }
+
   public double getL2RegularizationLambda() {
     return l2RegularizationLambda;
   }
