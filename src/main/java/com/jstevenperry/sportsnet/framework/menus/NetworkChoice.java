@@ -3,9 +3,14 @@ package com.jstevenperry.sportsnet.framework.menus;
 public enum NetworkChoice {
   UNKNOWN("That is not a choice", -1),
   TRAIN_NETWORK("Train a new neural network", 1),
-  LIST_SAVED_NETWORKS("List saved networks", 3),
-  RUN_NETWORK("Run a trained neural network", 4),
-  EVALUATE_NETWORK("Evaluate a trained neural network", 6),
+  TRAIN_NETWORK_BATCH("Train a new neural network (BATCH MODE)", 2),
+  PERSIST_UNSAVED_NETWORKS("Persist unsaved neural network(s)", 3),
+  LIST_SAVED_NETWORKS("List saved networks", 4),
+  EVALUATE_NETWORK("Evaluate a trained neural network", 5),
+  // 6
+  // 7
+  // 8
+  RUN_NETWORK("Run a trained neural network", 9),
   QUIT("Go back to the previous menu", 0);
 
   private final String displayValue;
