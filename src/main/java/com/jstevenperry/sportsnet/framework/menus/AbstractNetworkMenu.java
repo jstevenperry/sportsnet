@@ -183,6 +183,11 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
       case LIST_SAVED_NETWORKS:
         NetworkUtils.displayNetworks(getNetworkType());
         break;
+      case CLEAR_UNSAVED_NETWORKS:
+        log.info("Discarding {} unsaved networks...", unsavedNetworks.size());
+        unsavedNetworks.clear();
+        log.info("Done.");
+        break;
     }
     return ret;
   }

@@ -7,7 +7,7 @@ public enum NetworkChoice {
   PERSIST_UNSAVED_NETWORKS("Persist unsaved neural network(s)", 3),
   LIST_SAVED_NETWORKS("List saved networks", 4),
   EVALUATE_NETWORK("Evaluate a trained neural network", 5),
-  // 6
+  CLEAR_UNSAVED_NETWORKS("Clear unsaved networks", 6),
   // 7
   // 8
   RUN_NETWORK("Run a trained neural network", 9),
