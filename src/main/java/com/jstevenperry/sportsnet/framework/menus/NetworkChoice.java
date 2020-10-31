@@ -3,14 +3,13 @@ package com.jstevenperry.sportsnet.framework.menus;
 public enum NetworkChoice {
   UNKNOWN("That is not a choice", -1),
   TRAIN_NETWORK("Train a new neural network", 1),
-  PERSIST_UNSAVED_NETWORKS("Persist unsaved neural network(s)", 2),
   LIST_SAVED_NETWORKS("List saved networks", 3),
   RUN_NETWORK("Run a trained neural network", 4),
   EVALUATE_NETWORK("Evaluate a trained neural network", 6),
   QUIT("Go back to the previous menu", 0);
 
-  private String displayValue;
-  private int ordinalValue;
+  private final String displayValue;
+  private final int ordinalValue;
 
   NetworkChoice(final String displayValue, final int ordinalValue) {
     this.displayValue = displayValue;

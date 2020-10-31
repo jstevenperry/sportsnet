@@ -108,12 +108,12 @@ public class NetworkPersister {
   /**
    * Saves the specified network and returns true if successful, false otherwise.
    */
-  private static boolean saveNetwork(final NetworkCandidate networkCandidate) {
+  public static boolean saveNetwork(final NetworkCandidate networkCandidate) {
     boolean ret = false;
     NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
     String networkFileName = NetworkUtils.fetchNetworkDirectoryAndCreateIfNecessary(networkCandidate.getNetworkParameters().getNetworkType())
       + File.separatorChar + generateNetworkFileNameBase(networkCandidate) + ".zip";
-    System.out.printf("Saving network: %s as %s%n", networkParameters.getNetworkLayout(), networkFileName);
+    log.info("Saving network: {} as {}", networkParameters.getNetworkLayout(), networkFileName);
     try {
       File modelFile = new File(networkFileName);
       ModelSerializer.writeModel(networkCandidate.getMultiLayerNetwork(), modelFile, true);

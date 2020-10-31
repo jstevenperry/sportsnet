@@ -22,7 +22,6 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
   private static final Logger log = LoggerFactory.getLogger(AbstractNetworkRunner.class);
 
   public void go(final BufferedReader scanner,
-                 final List<NetworkCandidate> networkCandidateList,
                  final SeasonDataDao<T> seasonDataDao,
                  final String networkType) throws IOException {
     //
@@ -30,9 +29,7 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
     List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks(networkType);
     //
     // Add loaded networks to networkCandidateList
-    List<NetworkCandidate> allNetworks = new ArrayList<>();
-    allNetworks.addAll(savedNetworks);
-    allNetworks.addAll(networkCandidateList);
+    List<NetworkCandidate> allNetworks = new ArrayList<>(savedNetworks);
     if (!allNetworks.isEmpty()) {
       //
       // Load plugins

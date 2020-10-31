@@ -27,7 +27,6 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
   private static final Logger log = LoggerFactory.getLogger(AbstractNetworkEvaluator.class);
 
   public void go(final BufferedReader scanner,
-                 final List<NetworkCandidate> networkCandidateList,
                  final SeasonDataDao<T> seasonDataDao,
                  final TournamentResultDao tournamentResultDao,
                  final TournamentParticipantDao tournamentParticipantDao,
@@ -37,9 +36,7 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
     List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks(networkType);
     //
     // Add loaded networks to networkCandidateList
-    List<NetworkCandidate> allNetworks = new ArrayList<>();
-    allNetworks.addAll(savedNetworks);
-    allNetworks.addAll(networkCandidateList);
+    List<NetworkCandidate> allNetworks = new ArrayList<>(savedNetworks);
     if (!allNetworks.isEmpty()) {
       //
       // Ask the user what they want to do

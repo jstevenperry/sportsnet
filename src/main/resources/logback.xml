@@ -15,7 +15,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.jstevenperry.sportsnet" level="DEBUG"/>
+    <logger name="com.jstevenperry.sportsnet" level="INFO"/>
     <logger name="org.deeplearning4j.optimize.listeners" level="DEBUG"/>
 
     <root level="WARN">
