@@ -15,14 +15,15 @@
  */
 package com.jstevenperry.sportsnet.framework.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This class is an abstraction over a single properties file.
@@ -37,11 +38,11 @@ import java.util.logging.Logger;
  */
 public class PropertiesFile {
 
-  private static final Logger log = Logger.getLogger(PropertiesFile.class.getName());
+  private static final Logger log = LoggerFactory.getLogger(PropertiesFile.class);
 
   private String propertiesFileName;
 
-  private Properties properties;
+  private final Properties properties;
 
   /**
    * Constructor - call this constructor to "wrap" a Properties file with this class.
@@ -66,7 +67,7 @@ public class PropertiesFile {
     } catch (IOException e) {
       String message =
           "Exception while reading properties file '" + propertiesFileName + "':" + e.getLocalizedMessage();
-      log.log(Level.SEVERE, message, e);
+      log.error(message, e);
       // Let's nip this in the bud
       throw new RuntimeException(message, e);
     }
@@ -86,21 +87,18 @@ public class PropertiesFile {
    */
   public String getProperty(String propertyName) {
     String ret;
-    log.fine("Looking for property '" + propertyName + "'...");
+    log.trace("Looking for property '" + propertyName + "'...");
 
     // Read the property
     ret = properties.getProperty(propertyName);
 
-    log.fine("Property value is '" + ret + "'");
+    log.trace("Property value is '" + ret + "'");
 
     return ret;
   }
 
   /**
    * Adds a property to this Properties file.
-   * 
-   * @param propertyName
-   * @param propertyValue
    */
   public void putProperty(String propertyName, String propertyValue) {
     properties.put(propertyName, propertyValue);
@@ -111,8 +109,6 @@ public class PropertiesFile {
    * the COPYRIGHT statement.
    * 
    * All properties that have been added will be stored as well.
-   * 
-   * @param makeBackup
    */
   public void save(boolean makeBackup) {
     String outputFileName = this.propertiesFileName + ((makeBackup) ? ".bak" : "");
@@ -128,7 +124,7 @@ public class PropertiesFile {
       properties.store(fileOutputStream, fetchCopyright());
     } catch (IOException e) {
       String message = "Exception occurred: " + e.getLocalizedMessage();
-      log.log(Level.SEVERE, message, e);
+      log.error(message, e);
     }
   }
 
