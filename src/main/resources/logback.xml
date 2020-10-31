@@ -16,7 +16,7 @@
     </appender>
 
     <logger name="com.jstevenperry.sportsnet" level="INFO"/>
-    <logger name="org.deeplearning4j.optimize.listeners" level="DEBUG"/>
+    <logger name="org.deeplearning4j.optimize.listeners" level="INFO"/>
 
     <root level="WARN">
         <appender-ref ref="STDOUT" />
