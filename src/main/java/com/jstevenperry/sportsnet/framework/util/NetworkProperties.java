@@ -68,27 +68,30 @@ public class NetworkProperties {
    */
   private static final String PROPERTIES_FILE_NAME = "network.properties";
 
+  private static long cacheExpirationTime;
+
   /**
    * Lazy-loads the underlying properties file.
    * 
    * @return PropertiesFile file object.
    */
   private static PropertiesFile getPropertiesFile() {
-    if (propertiesFile == null) {
+    if (propertiesFile == null || System.currentTimeMillis() > cacheExpirationTime) {
+      cacheExpirationTime = System.currentTimeMillis() + 30000; // 30 seconds
       String propertiesFileNameFromEnvironmentVariable = System.getProperty(NETWORK_PROPERTIES_FILE);
       if (StringUtils.isNotEmpty(propertiesFileNameFromEnvironmentVariable)) {
-        log.info(String.format("Override found for property (%s). Attempting to load properties file: %s", NETWORK_PROPERTIES_FILE, propertiesFileNameFromEnvironmentVariable));
+        log.trace(String.format("Override found for property (%s). Attempting to load properties file: %s", NETWORK_PROPERTIES_FILE, propertiesFileNameFromEnvironmentVariable));
         try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(propertiesFileNameFromEnvironmentVariable))){
           Properties properties = new Properties();
           properties.load(bufferedInputStream);
           propertiesFile = new PropertiesFile(properties);
-          log.info(String.format("Base directory: '%s' (doesn't mean everything is okay, but is a good sign).", propertiesFile.getProperty(BASE_DIRECTORY)));
+          log.trace(String.format("Base directory: '%s' (doesn't mean everything is okay, but is a good sign).", propertiesFile.getProperty(BASE_DIRECTORY)));
         } catch (IOException e) {
-          String errorMessage = String.format("Error attempting to read file '%s'", propertiesFileNameFromEnvironmentVariable, e);
+          String errorMessage = String.format("Error attempting to read file '%s'", propertiesFileNameFromEnvironmentVariable);
           log.error(errorMessage, e);
           throw new RuntimeException(errorMessage, e);
         }
-        log.info(String.format("Loaded properties file: %s", propertiesFileNameFromEnvironmentVariable));
+        log.debug(String.format("Loaded properties file: %s", propertiesFileNameFromEnvironmentVariable));
       } else {
         log.warn("System property {} not set, attempting to load network properties file: {} from the classpath...", NETWORK_PROPERTIES_FILE, PROPERTIES_FILE_NAME);
         propertiesFile = new PropertiesFile(PROPERTIES_FILE_NAME);
@@ -161,7 +164,7 @@ public class NetworkProperties {
   }
 
   public static Double getMaxNetworkError() {
-    return getDoublePropertyValue("max.network.error", 0.0075);
+    return getDoublePropertyValue("max.network.error", 0.01); // 1%
   }
 
   public static Double getMaxNetworkErrorUptrend() {
