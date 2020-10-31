@@ -114,15 +114,18 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                    final TournamentParticipantDao tournamentParticipantDao,
                                    final Integer numberOfOutputClasses,
                                    final String networkType) throws IOException, InterruptedException {
-    NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal.copy();
+    NetworkParameters networkParameters = (networkParametersGlobal == null) ? new NetworkParameters() : networkParametersGlobal;
     networkParameters.setNetworkType(networkType);
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+    //
+    // Get the number of batch iterations to use
     int numberOfTrainingIterations = scanNumberOfTrainingIterations(bufferedReader);
     int iterationNumber = 0;
     //
     // Fetch the network configuration parameters (reuse NetworkParameters so user doesn't have to re-enter everything each time)
     fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses);
     log.info("Network parameters acquired.");
+    int numberOfUserSpecifiedEpochs = networkParameters.getNumberOfEpochs();
     //
     // Get the season data for the teams in the training years
     List<Integer> yearsToTrain = networkParameters.getYearsToTrainAndEvaluateNetwork().get(0);
@@ -150,6 +153,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         networkCandidateList.add(keepNetwork(trainedNetwork, networkParameters));
       }
     }
+    // Restore the value for next time since it will be set to the actual number used, and the user may not want that next time
+    networkParameters.setNumberOfEpochs(numberOfUserSpecifiedEpochs);
     return networkParameters;
   }
 
