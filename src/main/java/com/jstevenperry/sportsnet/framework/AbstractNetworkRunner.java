@@ -27,6 +27,7 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
                  final String networkType) throws IOException {
     //
     // Load saved networks
+    log.info("Loading networks, please be patient...");
     List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks(networkType);
     //
     // Add loaded networks to networkCandidateList

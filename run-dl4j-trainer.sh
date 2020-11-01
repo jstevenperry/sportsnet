@@ -6,6 +6,8 @@
 PROGRAM_VERSION=1.0.0
 # Set DEBUG to something other than true to turn it off
 DEBUG=true
+# Suppress annoying message about something that I don't give a crap about
+export ND4J_IGNORE_AVX=true
 # Add network.properties.file system property to JAVA_OPTS to use an external properties file.
 # Lame, but at least gives you a way to run the code without having to rebuild the network
 # every time you tweak the network.properties file.
@@ -31,9 +33,9 @@ function usage {
 # Change this to match your source location (so your .class files can be found).
 ROOT_DIR=./target
 # Set the location of your network.properties
-NETWORK_PROPERTIES_FILE=/Users/sperry/Dropbox/Documents/PerryFamily/Layla/ScienceFair-2020-21/software/network.properties
+NETWORK_PROPERTIES_FILE=/Users/sperry/Dropbox/Stuff/Research_And_Development/sportsnet/network.properties
 if [[ "$DEBUG" == "true" ]]; then echo "Network properties file: $NETWORK_PROPERTIES_FILE"; fi
-JAVA_OPTS=-Dnetwork.properties.file=$NETWORK_PROPERTIES_FILE
+JAVA_OPTS="-Dnetwork.properties.file=${NETWORK_PROPERTIES_FILE}"
 #JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home
 
 # Make sure ROOT_DIR is set or bail out

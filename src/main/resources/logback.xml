@@ -16,6 +16,7 @@
     </appender>
 
     <logger name="com.jstevenperry.sportsnet" level="INFO"/>
+<!--    <logger name="com.jstevenperry.sportsnet.framework.util.NetworkUtils" level="DEBUG"/>-->
     <logger name="org.deeplearning4j.optimize.listeners" level="INFO"/>
 
     <root level="WARN">

@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -37,7 +38,7 @@ public class NetworkUtils {
     String[] dl4jNetworkFileNames = networkDirectory.list((dir, name) -> name.endsWith(DL4J_NETWORK_EPILOGUE));
     if (dl4jNetworkFileNames != null && dl4jNetworkFileNames.length > 0) {
       String[] networkFileNames = new String[dl4jNetworkFileNames.length];
-      log.info(String.format("Found %d networks at %s", dl4jNetworkFileNames.length, networkDirectoryName));
+      log.debug(String.format("Found %d networks at %s", dl4jNetworkFileNames.length, networkDirectoryName));
       int index = 0;
       //
       // Need the full path to the network file
@@ -83,6 +84,11 @@ public class NetworkUtils {
     System.out.printf("%9s%21s%11s(%%)%35s%10s%45s%30s%15s%n",
       "Network #", "When Trained", "Accuracy", "Layer Structure", "Saved?", "Years (Training)", "Updater", "No. Epochs");
     int index = 0;
+    log.debug("Sorting networks...");
+    //
+    // Sort the list, then present it
+    Collections.sort(networkCandidates);
+    log.debug("Rendering networks suitable for display...");
     for (NetworkCandidate networkCandidate : networkCandidates) {
       NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
       System.out.printf("%9d%21s%13.2f%%%35s%10s%45s%30s%15d%n",
@@ -100,6 +106,7 @@ public class NetworkUtils {
 
   public static void displayNetworks(final String networkType) throws IOException {
     BufferedReader scanner = new BufferedReader(new InputStreamReader(System.in));
+    log.info("Loading networks for display (this could take a minute, please be patient)...");
     List<NetworkCandidate> networkCandidates = loadNetworks(networkType);
     if (networkCandidates.size() > 0) {
       while (true) {
