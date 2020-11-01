@@ -152,9 +152,9 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       if (!saveNetworkIfAboveThreshold(networkParameters, iterationNumber, trainedNetwork)) {
         networkCandidateList.add(keepNetwork(trainedNetwork, networkParameters));
       }
+      // Restore the value for next time since it will be set to the actual number used, and the user may not want that next time
+      networkParameters.setNumberOfEpochs(numberOfUserSpecifiedEpochs);
     }
-    // Restore the value for next time since it will be set to the actual number used, and the user may not want that next time
-    networkParameters.setNumberOfEpochs(numberOfUserSpecifiedEpochs);
     return networkParameters;
   }
 
@@ -225,7 +225,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         }
       }
     }
-    log.info("End of training loop. Network accuracy: {}%", computeNetworkError(networkParameters,evaluationData,network)*100);
+    log.info(String.format("End of training loop. Network error: %2.4f%%", computeNetworkError(networkParameters, evaluationData, network) * 100));
     return network;
   }
 
@@ -255,11 +255,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     double performanceThreshold = NetworkProperties.getPerformanceThreshold().doubleValue();
     NetworkCandidate keptNetwork = keepNetwork(network, networkParameters);
     if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
-      log.info(String.format("Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, keeping network.",
+      log.info(String.format("Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, saving network.",
         iterationNumber, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
       ret = NetworkPersister.saveNetwork(keptNetwork);
     } else {
-      log.info(String.format("Iteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f), discarding network.",
+      log.info(String.format("Iteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f).",
         iterationNumber, networkParameters.getNetworkAccuracy() * 100, performanceThreshold));
     }
     return ret;
