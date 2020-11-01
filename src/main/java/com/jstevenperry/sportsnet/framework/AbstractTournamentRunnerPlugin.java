@@ -211,7 +211,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     }
     // Compute the winningTeamCoordinate based on the which team has the most votes (tie goes to home team)
     TeamCoordinate teamCoordinate = computeNextRoundCoordinates(homeTeamCoordinate, homeTeamWins, awayTeamCoordinate, awayTeamWins);
-    T winnerSeasonData = (homeTeamWins > awayTeamWins) ? homeTeamSeasonData : awayTeamSeasonData;
+    T winnerSeasonData = (homeTeamWins >= awayTeamWins) ? homeTeamSeasonData : awayTeamSeasonData;
     teamCoordinate.setName(winnerSeasonData.getTeamName());
     getTeamCoordinateSeasonDataMap().put(teamCoordinate, winnerSeasonData);
   }
@@ -406,10 +406,15 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
             // Replace the coordinates with the name of the team that had those coordinates in this incarnation of the tournament
             T winningTeamSeasonData = teamCoordinateSeasonDataMap.get(teamCoordinate);
             TeamCoordinate winningTeamCoordinate = findWinningTeamCoordinate(teamCoordinateSeasonDataMap, teamCoordinate);
-            templateRecord[cellIndex] = String.format("%s (%d/%d)",
-              winningTeamSeasonData.getTeamName(),
-              winningTeamCoordinate.getHomeWinNetworkVotes(),
-              winningTeamCoordinate.getAwayWinNetworkVotes());
+            // Opening rounds have no votes either way, no need to compute network confidence for those.
+            if (winningTeamCoordinate.getAwayWinNetworkVotes() == 0 && winningTeamCoordinate.getHomeWinNetworkVotes() == 0) {
+              templateRecord[cellIndex] = String.format("%s", winningTeamSeasonData.getTeamName());
+            } else {
+              templateRecord[cellIndex] = String.format("%s (%3.2f%%)",
+                winningTeamSeasonData.getTeamName(),
+                computeNetworkConfidence(winningTeamCoordinate.getHomeWinNetworkVotes(), winningTeamCoordinate.getAwayWinNetworkVotes())
+              );
+            }
           }
         }
         //
@@ -422,6 +427,18 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
       log.error(message, e);
       throw new RuntimeException(message, e);
     }
+  }
+
+  private double computeNetworkConfidence(final int lhs, final int rhs) {
+    double numerator;
+    double denominator = Double.max(lhs + rhs, 1.0);
+    // Larger number goes on top
+    if (lhs >= rhs) {
+      numerator = 1.0 * lhs;
+    } else {
+      numerator = 1.0 * rhs;
+    }
+    return numerator * 100.0 / denominator;
   }
 
   private TeamCoordinate findWinningTeamCoordinate(final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap, final TeamCoordinate teamCoordinate) {
