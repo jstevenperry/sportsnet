@@ -43,7 +43,7 @@ public abstract class AbstractDataElementMenu {
       System.out.printf("Enter the number of the %s you want to select (enter ALL to select all data elements, enter 0 to quit): %n", thing);
       displayMenuItems(filter(values(), ret));
       userInput = scanner.readLine();
-      if (StringUtils.isEmpty(userInput)) {
+      if (StringUtils.isEmpty(userInput) && !ret.isEmpty()) {
         // User wants their previous choices, we're done here
         break;
       } else if (isNumeric(userInput)) {
