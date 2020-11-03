@@ -24,14 +24,14 @@ public class UpdaterMenu {
 
   private static final Logger log = LoggerFactory.getLogger(UpdaterMenu.class);
 
-  public static Optional<UpdaterChoice> go(final BufferedReader scanner, final IUpdater updater) throws IOException {
+  public static Optional<UpdaterChoice> go(final BufferedReader scanner, final UpdaterChoice updaterChoice) throws IOException {
     String thing = "weight updater function";
-    Optional<UpdaterChoice> ret = UpdaterChoice.from(updater);
+    Optional<UpdaterChoice> ret = Optional.ofNullable(updaterChoice);
     String userInput = null;
     while (StringUtils.isEmpty(userInput)) {
       System.out.printf("Enter the number of the %s you want to use: %n", thing);
-      if (updater != null) {
-        System.out.printf("Press enter to use the %s you used last time: %s%n", thing, updater);
+      if (updaterChoice != null) {
+        System.out.printf("Press enter to use the %s you used last time: %s%n", thing, updaterChoice);
       }
       displayMenuItems(UpdaterChoice.values());
       userInput = scanner.readLine();
@@ -62,7 +62,7 @@ public class UpdaterMenu {
     int numberOfRows = choices.length / numberOfColumns + choices.length % numberOfColumns;
     for (int row = 0; row < numberOfRows; row++) {
       for (int column = 0; column < numberOfColumns; column++) {
-        int index = row+(column*numberOfRows);
+        int index = row + (column * numberOfRows);
         if (index < choices.length) {
           UpdaterChoice choice = choices[index];
           System.out.printf("%2d - %10s", choice.getOrdinal(), choice.name());
@@ -72,7 +72,7 @@ public class UpdaterMenu {
       System.out.print('\n');
     }
   }
-  
+
   public enum UpdaterChoice {
     ADA_DELTA(new AdaDelta(), 1),
     ADA_GRAD(new AdaGrad(NetworkProperties.getLearningRuleLearningRate()), 2),
@@ -123,5 +123,9 @@ public class UpdaterMenu {
       return ordinal;
     }
 
+    @Override
+    public String toString() {
+      return String.format("%s (%1.2f)", name(), getUpdater().getLearningRate(0, 0));
+    }
   }
 }
