@@ -195,7 +195,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
       // Compute RecordReaderDataSetIterator from the two sets of season data
       Optional<RecordReaderDataSetIterator> recordReaderDataSetIteratorMaybe = computeRecordIterator(homeTeamSeasonData, awayTeamSeasonData, networkCandidate.getNetworkParameters());
       if (recordReaderDataSetIteratorMaybe.isPresent()) {
-        DataNormalization normalizer = networkCandidate.getNetworkParameters().getNormalizer();
+        DataNormalization normalizer = networkCandidate.getNetworkParameters().getNormalizer().getDataNormalization();
         DataSet tournamentData = recordReaderDataSetIteratorMaybe.get().next();
         normalizer.transform(tournamentData);
         INDArray indArrayResults = network.output(tournamentData.getFeatures());

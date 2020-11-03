@@ -1,10 +1,10 @@
 package com.jstevenperry.sportsnet.framework.model;
 
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
+import com.jstevenperry.sportsnet.framework.menus.DataNormalizationMenu;
 import org.apache.commons.lang3.StringUtils;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
@@ -29,7 +29,7 @@ public class NetworkParameters implements Serializable {
   private double networkAccuracy;
   private boolean networkSaved;
   private double l2RegularizationLambda = 0.0005; // Do not allow this to be zero 
-  private DataNormalization normalizer;
+  private DataNormalizationMenu.DataNormalizationChoice normalizer;
   private String networkType;
 
   private static String listToCsvString(final List<Integer> integerList) {
@@ -289,6 +289,7 @@ public class NetworkParameters implements Serializable {
       String.format("\tNumber of outputs         : %d%n", getNumberOfOutputs()) +
       String.format("\tNumber of training epochs : %d%n", getNumberOfEpochs()) +
       String.format("\tNetwork accuracy          : %5.5f%%%n", getNetworkAccuracy() * 100.0) +
+      String.format("\tNormalizer                : %s%n", getNormalizer()) +
       String.format("\tL2 Regularization Lambda  : %5.5f%n", getL2RegularizationLambda());
   }
 
@@ -301,11 +302,11 @@ public class NetworkParameters implements Serializable {
     return this;
   }
 
-  public DataNormalization getNormalizer() {
+  public DataNormalizationMenu.DataNormalizationChoice getNormalizer() {
     return normalizer;
   }
 
-  public NetworkParameters setNormalizer(final DataNormalization normalizer) {
+  public NetworkParameters setNormalizer(final DataNormalizationMenu.DataNormalizationChoice normalizer) {
     this.normalizer = normalizer;
     return this;
   }

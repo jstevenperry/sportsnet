@@ -2,6 +2,7 @@ package com.jstevenperry.sportsnet.framework;
 
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
 import com.jstevenperry.sportsnet.framework.menus.ActivationFunctionMenu;
+import com.jstevenperry.sportsnet.framework.menus.DataNormalizationMenu;
 import com.jstevenperry.sportsnet.framework.menus.LossFunctionMenu;
 import com.jstevenperry.sportsnet.framework.menus.UpdaterMenu;
 import com.jstevenperry.sportsnet.framework.menus.WeightInitMenu;
@@ -16,6 +17,7 @@ import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.datavec.api.records.metadata.RecordMetaData;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
+import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
@@ -28,7 +30,6 @@ import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
-import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
@@ -82,6 +83,10 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses);
     log.info("Network parameters acquired.");
     //
+    // Get the number of epochs
+    Integer numberOfEpochs = scanNumberOfEpochs(bufferedReader, networkParameters.getNumberOfEpochs());
+    networkParameters.setNumberOfEpochs(numberOfEpochs);
+    //
     // Get the season data for the teams in the training years
     List<Integer> yearsToTrain = networkParameters.getYearsToTrainAndEvaluateNetwork().get(0);
     log.info("Pulling training data...");
@@ -102,6 +107,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
     // Restore the value for next time since it will be set to the actual number used, and the user may not want that next time
     networkParameters.setNumberOfEpochs(numberOfUserSpecifiedEpochs);
+    log.info("Training network...DONE.");
     //
     // Return the trained network
     return keepNetwork(trainedNetwork, networkParameters);
@@ -119,7 +125,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
     //
     // Get the number of batch iterations to use
-    int numberOfTrainingIterations = scanNumberOfTrainingIterations(bufferedReader);
+    int numberOfTrainingIterations = NetworkProperties.getMaxLearningIterations();
     int iterationNumber = 0;
     //
     // Fetch the network configuration parameters (reuse NetworkParameters so user doesn't have to re-enter everything each time)
@@ -158,19 +164,69 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     return networkParameters;
   }
 
+  private void fetchNetworkParameters(final BufferedReader scanner,
+                                      final NetworkParameters networkParameters,
+                                      final TournamentParticipantDao tournamentParticipantDao,
+                                      final Integer numberOfOutputClasses) throws IOException {
+    System.out.println("This is the Train Network Menu.");
+    //
+    // Get number of outputs
+    networkParameters.setNumberOfOutputs(numberOfOutputClasses);
+    //
+    // Get the selected Elements
+    List<AbstractDataElementChoice> dataElementMenuChoices = scanDataElementChoice(scanner, networkParameters.getSelectedElements());
+    if (dataElementMenuChoices.size() != 0) {
+      networkParameters.setSelectedElements(dataElementMenuChoices);
+      //
+      // Get number of inputs
+      networkParameters.setNumberOfInputs(dataElementMenuChoices.size());
+      //
+      // Fetch years to train and evaluate the network
+      scanYearsToTrainAndEvaluateNetwork(scanner, networkParameters, tournamentParticipantDao);
+      //
+      // Get the network layout in HL1xHL2xHL3x...HLn format, where HL1 is the first hidden layer, HLn is the nth.
+      String networkLayout = scanNetworkLayout(scanner, networkParameters.getNetworkLayout(), networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
+      networkParameters.setNetworkLayout(networkLayout);
+      //
+      // Get the activation function
+      Activation activation = scanActivationFunction(scanner, networkParameters.getActivationFunction());
+      networkParameters.setActivationFunction(activation);
+      //
+      // Get the Loss function
+      LossFunctions.LossFunction lossFunction = scanLossFunction(scanner, networkParameters.getLossFunction());
+      networkParameters.setLossFunction(lossFunction);
+      //
+      // Get the WeightInit function
+      WeightInit weightInit = scanWeightInitFunction(scanner, networkParameters.getWeightInit());
+      networkParameters.setWeightInit(weightInit);
+      //
+      // Get the weight updater function
+      IUpdater updater = scanUpdaterFunction(scanner, networkParameters.getUpdater());
+      networkParameters.setUpdater(updater);
+      //
+      // Get the L2 Regularization Lambda value
+      double l2RegularizationLambda = scanL2RegularizationLambda(scanner, networkParameters.getL2RegularizationLambda());
+      networkParameters.setL2RegularizationLambda(l2RegularizationLambda);
+      //
+      // Get the Normalizer to use
+      DataNormalizationMenu.DataNormalizationChoice dataNormalization = scanDataNormalization(scanner, networkParameters.getNormalizer());
+      networkParameters.setNormalizer(dataNormalization);
+    } else {
+      log.error("No data elements selected. Cannot train the network.");
+    }
+  }
+
   private static MultiLayerNetwork goInternal(final MultiLayerConfiguration configuration,
                                               final NetworkParameters networkParameters,
                                               final RecordReaderDataSetIterator trainingDataIterator,
                                               final RecordReaderDataSetIterator evaluationDataIterator) {
-    log.info("Training network...");
     //
     // Prepare the data
     trainingDataIterator.setCollectMetaData(true);
     DataSet trainingData = trainingDataIterator.next();
     DataSet evaluationData = evaluationDataIterator.next();
-    DataNormalization normalizer = new NormalizerStandardize();
+    DataNormalization normalizer = networkParameters.getNormalizer().getDataNormalization();
     normalizeTrainingData(trainingData, evaluationData, normalizer);
-    networkParameters.setNormalizer(normalizer);
     //
     // The training loop, returns the trained network model
     MultiLayerNetwork trainedNetwork = trainNetwork(configuration, networkParameters, trainingData, trainingData);
@@ -183,8 +239,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     log.info(String.format("Evaluator stats: %s", eval.stats()));
     log.info(String.format("Network accuracy: %f%%", eval.accuracy() * 100.0));
     log.info(networkParameters.toStringAbbreviated());
-    log.info("Training network...DONE");
-
     return trainedNetwork;
   }
 
@@ -286,12 +340,13 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   private static MultiLayerConfiguration configureNetwork(final NetworkParameters networkParameters) {
     log.debug("Configuring network...");
     NeuralNetConfiguration.Builder builder = new NeuralNetConfiguration.Builder()
-      .seed(new Random(-238).nextInt(100))
+      .seed(new Random(-2).nextInt(100))
       .activation(networkParameters.getActivationFunction())
       .weightInit(networkParameters.getWeightInit())
       .updater(networkParameters.getUpdater())
       .dropOut(NetworkProperties.getDropoutProbability())
-      .l2(networkParameters.getL2RegularizationLambda());
+      .l2(networkParameters.getL2RegularizationLambda())
+      .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer);
     NeuralNetConfiguration.ListBuilder listBuilder = builder.list();
     int[] networkLayout = NetworkUtils.parseNetworkStructure(networkParameters.getNetworkLayout());
     for (int index = 0; index < networkLayout.length - 2; index++) {
@@ -488,57 +543,16 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     return ret;
   }
 
-
-  private void fetchNetworkParameters(final BufferedReader scanner,
-                                      final NetworkParameters networkParameters,
-                                      final TournamentParticipantDao tournamentParticipantDao,
-                                      final Integer numberOfOutputClasses) throws IOException {
-    System.out.println("This is the Train Network Menu.");
-    //
-    // Get number of outputs
-    networkParameters.setNumberOfOutputs(numberOfOutputClasses);
-    //
-    // Get the selected Elements
-    List<AbstractDataElementChoice> dataElementMenuChoices = scanDataElementChoice(scanner, networkParameters.getSelectedElements());
-    if (dataElementMenuChoices.size() != 0) {
-      networkParameters.setSelectedElements(dataElementMenuChoices);
-      //
-      // Get number of inputs
-      networkParameters.setNumberOfInputs(dataElementMenuChoices.size());
-      //
-      // Fetch years to train and evaluate the network
-      scanYearsToTrainAndEvaluateNetwork(scanner, networkParameters, tournamentParticipantDao);
-      //
-      // Get the network layout in HL1xHL2xHL3x...HLn format, where HL1 is the first hidden layer, HLn is the nth.
-      String networkLayout = scanNetworkLayout(scanner, networkParameters.getNetworkLayout(), networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
-      networkParameters.setNetworkLayout(networkLayout);
-      //
-      // Get the activation function
-      Activation activation = scanActivationFunction(scanner, networkParameters.getActivationFunction());
-      networkParameters.setActivationFunction(activation);
-      //
-      // Get the Loss function
-      LossFunctions.LossFunction lossFunction = scanLossFunction(scanner, networkParameters.getLossFunction());
-      networkParameters.setLossFunction(lossFunction);
-      //
-      // Get the number of epochs
-      Integer numberOfEpochs = scanNumberOfEpochs(scanner, networkParameters.getNumberOfEpochs());
-      networkParameters.setNumberOfEpochs(numberOfEpochs);
-      //
-      // Get the WeightInit function
-      WeightInit weightInit = scanWeightInitFunction(scanner, networkParameters.getWeightInit());
-      networkParameters.setWeightInit(weightInit);
-      //
-      // Get the weight updater function
-      IUpdater updater = scanUpdaterFunction(scanner, networkParameters.getUpdater());
-      networkParameters.setUpdater(updater);
-      //
-      // Get the L2 Regularization Lambda value
-      double l2RegularizationLambda = scanL2RegularizationLambda(scanner, networkParameters.getL2RegularizationLambda());
-      networkParameters.setL2RegularizationLambda(l2RegularizationLambda);
-    } else {
-      log.error("No data elements selected. Cannot train the network.");
+  private static DataNormalizationMenu.DataNormalizationChoice scanDataNormalization(final BufferedReader scanner,
+                                                                                     final DataNormalizationMenu.DataNormalizationChoice dataNormalization) throws IOException {
+    DataNormalizationMenu.DataNormalizationChoice ret = null;
+    while (ret == null) {
+      Optional<DataNormalizationMenu.DataNormalizationChoice> menuChoice = DataNormalizationMenu.go(scanner,dataNormalization);
+      if (menuChoice.isPresent()) {
+        ret = menuChoice.get();
+      }
     }
+    return ret;
   }
 
   private int scanNumberOfTrainingIterations(final BufferedReader scanner) throws IOException {

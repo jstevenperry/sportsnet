@@ -71,7 +71,7 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
       log.info("Pulling evaluation data...");
       RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
       DataSet evaluationData = evaluationDataIterator.next();
-      networkParameters.getNormalizer().transform(evaluationData);     // Apply normalization to the training data
+      networkParameters.getNormalizer().getDataNormalization().transform(evaluationData);     // Apply normalization to the training data
       double[][] trainingDataFeatures = evaluationData.getFeatures().toDoubleMatrix();
       // Dump out a few records as a sanity check
       int sampleSize = 5;

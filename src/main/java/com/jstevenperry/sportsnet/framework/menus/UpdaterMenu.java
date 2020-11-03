@@ -1,5 +1,6 @@
 package com.jstevenperry.sportsnet.framework.menus;
 
+import com.jstevenperry.sportsnet.framework.util.NetworkProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.nd4j.linalg.learning.config.AMSGrad;
 import org.nd4j.linalg.learning.config.AdaDelta;
@@ -74,15 +75,15 @@ public class UpdaterMenu {
   
   public enum UpdaterChoice {
     ADA_DELTA(new AdaDelta(), 1),
-    ADA_GRAD(new AdaGrad(), 2),
-    ADAM(new Adam(), 3),
-    ADA_MAX(new AdaMax(), 4),
-    AMS_GRAD(new AMSGrad(), 5),
-    NADAM(new Nadam(), 6),
-    NESTEROVS(new Nesterovs(0.01, 0.09), 7),
+    ADA_GRAD(new AdaGrad(NetworkProperties.getLearningRuleLearningRate()), 2),
+    ADAM(new Adam(NetworkProperties.getLearningRuleLearningRate()), 3),
+    ADA_MAX(new AdaMax(NetworkProperties.getLearningRuleLearningRate()), 4),
+    AMS_GRAD(new AMSGrad(NetworkProperties.getLearningRuleLearningRate()), 5),
+    NADAM(new Nadam(NetworkProperties.getLearningRuleLearningRate()), 6),
+    NESTEROVS(new Nesterovs(NetworkProperties.getLearningRuleLearningRate(), NetworkProperties.getLearningRuleMomentumMax()), 7),
     NOOP(new NoOp(), 8),
-    RMS_PROP(new RmsProp(), 9),
-    SGD(new Sgd(0.0005), 10);
+    RMS_PROP(new RmsProp(NetworkProperties.getLearningRuleLearningRate()), 9),
+    SGD(new Sgd(NetworkProperties.getLearningRuleLearningRate()), 10);
 
     private final IUpdater updater;
     private final int ordinal;
