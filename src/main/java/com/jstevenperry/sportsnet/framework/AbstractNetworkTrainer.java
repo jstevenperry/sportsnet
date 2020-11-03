@@ -30,7 +30,6 @@ import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
-import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,13 +124,13 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
     //
     // Get the number of batch iterations to use
-    int numberOfTrainingIterations = NetworkProperties.getMaxLearningIterations();
+    int numberOfTrainingIterations = NetworkProperties.getMaxNetworkIterations();
+    networkParameters.setNumberOfEpochs(NetworkProperties.getMaxLearningIterations());
     int iterationNumber = 0;
     //
     // Fetch the network configuration parameters (reuse NetworkParameters so user doesn't have to re-enter everything each time)
     fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses);
     log.info("Network parameters acquired.");
-    int numberOfUserSpecifiedEpochs = networkParameters.getNumberOfEpochs();
     //
     // Get the season data for the teams in the training years
     List<Integer> yearsToTrain = networkParameters.getYearsToTrainAndEvaluateNetwork().get(0);
@@ -158,8 +157,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       if (!saveNetworkIfAboveThreshold(networkParameters, iterationNumber, trainedNetwork)) {
         networkCandidateList.add(keepNetwork(trainedNetwork, networkParameters));
       }
-      // Restore the value for next time since it will be set to the actual number used, and the user may not want that next time
-      networkParameters.setNumberOfEpochs(numberOfUserSpecifiedEpochs);
     }
     return networkParameters;
   }
@@ -201,7 +198,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       networkParameters.setWeightInit(weightInit);
       //
       // Get the weight updater function
-      IUpdater updater = scanUpdaterFunction(scanner, networkParameters.getUpdater());
+      UpdaterMenu.UpdaterChoice updater = scanUpdaterFunction(scanner, networkParameters.getUpdater());
       networkParameters.setUpdater(updater);
       //
       // Get the L2 Regularization Lambda value
@@ -257,14 +254,14 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                                 final DataSet evaluationData) {
     //
     // Compute the number of epochs at which the network will be periodically evaluated
-    int networkEvaluationIndex = networkParameters.getNumberOfEpochs() / 10;
+    int networkEvaluationIndex = Integer.min(networkParameters.getNumberOfEpochs() / 10, NetworkProperties.getEpochBreakIterationCount());
     int maxTrainingEpochs = networkParameters.getNumberOfEpochs() * NetworkProperties.getMaxNetworkIterations();
     networkParameters.setNumberOfEpochs(maxTrainingEpochs); // Assume network could not be trained early
     //
     // Create the model to be trained
     MultiLayerNetwork network = new MultiLayerNetwork(configuration);
     network.init();
-    network.setListeners(new PerformanceListener(maxTrainingEpochs / 10, true));
+    network.setListeners(new PerformanceListener(networkEvaluationIndex, true));
     for (int epochCount = 0; epochCount < maxTrainingEpochs; epochCount++) {
       //
       // Fit the model against the training data for a single epoch
@@ -276,6 +273,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
           log.info("Network trained after {} epochs.", epochCount);
           networkParameters.setNumberOfEpochs(epochCount);
           break;
+        } else {
+          log.info("Network error: {}", networkError);
         }
       }
     }
@@ -343,7 +342,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       .seed(new Random(-2).nextInt(100))
       .activation(networkParameters.getActivationFunction())
       .weightInit(networkParameters.getWeightInit())
-      .updater(networkParameters.getUpdater())
+      .updater(networkParameters.getUpdater().getUpdater())
       .dropOut(NetworkProperties.getDropoutProbability())
       .l2(networkParameters.getL2RegularizationLambda())
       .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer);
@@ -466,12 +465,13 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     return ret;
   }
 
-  private static IUpdater scanUpdaterFunction(final BufferedReader scanner, final IUpdater updater) throws IOException {
-    IUpdater ret = null;
+  private static UpdaterMenu.UpdaterChoice scanUpdaterFunction(final BufferedReader scanner,
+                                                               final UpdaterMenu.UpdaterChoice updaterChoice) throws IOException {
+    UpdaterMenu.UpdaterChoice ret = null;
     while (ret == null) {
-      Optional<UpdaterMenu.UpdaterChoice> menuChoice = UpdaterMenu.go(scanner, updater);
+      Optional<UpdaterMenu.UpdaterChoice> menuChoice = UpdaterMenu.go(scanner, updaterChoice);
       if (menuChoice.isPresent()) {
-        ret = menuChoice.get().getUpdater();
+        ret = menuChoice.get();
       }
     }
     return ret;
@@ -547,7 +547,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                                                                      final DataNormalizationMenu.DataNormalizationChoice dataNormalization) throws IOException {
     DataNormalizationMenu.DataNormalizationChoice ret = null;
     while (ret == null) {
-      Optional<DataNormalizationMenu.DataNormalizationChoice> menuChoice = DataNormalizationMenu.go(scanner,dataNormalization);
+      Optional<DataNormalizationMenu.DataNormalizationChoice> menuChoice = DataNormalizationMenu.go(scanner, dataNormalization);
       if (menuChoice.isPresent()) {
         ret = menuChoice.get();
       }
