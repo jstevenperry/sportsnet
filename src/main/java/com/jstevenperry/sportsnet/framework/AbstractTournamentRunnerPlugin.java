@@ -197,6 +197,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
       if (recordReaderDataSetIteratorMaybe.isPresent()) {
         DataNormalization normalizer = networkCandidate.getNetworkParameters().getNormalizer().getDataNormalization();
         DataSet tournamentData = recordReaderDataSetIteratorMaybe.get().next();
+        normalizer.fit(tournamentData);
         normalizer.transform(tournamentData);
         INDArray indArrayResults = network.output(tournamentData.getFeatures());
         //
