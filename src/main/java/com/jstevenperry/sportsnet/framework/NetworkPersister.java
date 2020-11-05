@@ -132,8 +132,8 @@ public class NetworkPersister {
     return String.format("%s-Net-%s-%s-%s.dl4j",
       networkParameters.getNetworkType(),
       networkParameters.getNetworkLayout(),
-      networkParameters.getWhenTrained().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")),
-      LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm"))
+      networkParameters.getWhenTrained().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")),
+      LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
     );
   }
 }
