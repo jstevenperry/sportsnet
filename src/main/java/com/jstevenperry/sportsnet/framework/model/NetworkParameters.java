@@ -31,6 +31,7 @@ public class NetworkParameters implements Serializable {
   private double l2RegularizationLambda = 0.0005; // Do not allow this to be zero 
   private DataNormalizationMenu.DataNormalizationChoice normalizer;
   private String networkType;
+  private double dropoutProbability;
 
   private static String listToCsvString(final List<Integer> integerList) {
     String ret = StringUtils.EMPTY;
@@ -60,7 +61,8 @@ public class NetworkParameters implements Serializable {
       .setWhenTrained(getWhenTrained())
       .setL2RegularizationLambda(getL2RegularizationLambda())
       .setNormalizer(getNormalizer())
-      .setNetworkType(getNetworkType());
+      .setNetworkType(getNetworkType())
+      .setDropoutProbability(getDropoutProbability());
     ret.getYearsToTrainAndEvaluateNetwork().get(0).addAll(getYearsToTrainAndEvaluateNetwork().get(0));
     ret.getYearsToTrainAndEvaluateNetwork().get(1).addAll(getYearsToTrainAndEvaluateNetwork().get(1));
     return ret;
@@ -273,6 +275,7 @@ public class NetworkParameters implements Serializable {
       String.format("\tL2 Regularization Lambda  : %5.5f%n", getL2RegularizationLambda()) +
       String.format("\tNormalizer                : %s%n", getNormalizer()) +
       String.format("\tNetwork type              : %s%n", getNetworkType()) +
+      String.format("\tDropout probability       : %3.2f%%%n", getDropoutProbability()*100) +
       String.format("\tData Elements             : %s%n", StringUtils.join(getSelectedElements(), ','));
   }
 
@@ -290,6 +293,7 @@ public class NetworkParameters implements Serializable {
       String.format("\tNumber of training epochs : %d%n", getNumberOfEpochs()) +
       String.format("\tNetwork accuracy          : %5.5f%%%n", getNetworkAccuracy() * 100.0) +
       String.format("\tNormalizer                : %s%n", getNormalizer()) +
+      String.format("\tDropout probability       : %3.2f%%%n", getDropoutProbability()*100) +
       String.format("\tL2 Regularization Lambda  : %5.5f%n", getL2RegularizationLambda());
   }
 
@@ -317,6 +321,15 @@ public class NetworkParameters implements Serializable {
 
   public NetworkParameters setNetworkType(final String networkType) {
     this.networkType = networkType;
+    return this;
+  }
+
+  public double getDropoutProbability() {
+    return dropoutProbability;
+  }
+
+  public NetworkParameters setDropoutProbability(final double dropoutProbability) {
+    this.dropoutProbability = dropoutProbability;
     return this;
   }
 }
