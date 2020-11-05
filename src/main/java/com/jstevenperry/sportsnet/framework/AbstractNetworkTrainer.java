@@ -137,6 +137,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     //
     // Get the season data for the teams in the evaluation years
     List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
+    int numberOfEpochs = networkParameters.getNumberOfEpochs();
     while (iterationNumber++ < numberOfTrainingIterations) {
       log.debug("Pulling training data...");
       RecordReaderDataSetIterator trainingDataIterator = createIterator(yearsToTrain, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
@@ -157,6 +158,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       if (!saveNetworkIfAboveThreshold(networkParameters, iterationNumber, trainedNetwork)) {
         networkCandidateList.add(keepNetwork(trainedNetwork, networkParameters));
       }
+      // Reset to original user-specified number
+      networkParameters.setNumberOfEpochs(numberOfEpochs);
     }
     return networkParameters;
   }
@@ -166,6 +169,9 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                       final TournamentParticipantDao tournamentParticipantDao,
                                       final Integer numberOfOutputClasses) throws IOException {
     System.out.println("This is the Train Network Menu.");
+    //
+    // Set the dropout probability
+    networkParameters.setDropoutProbability(NetworkProperties.getDropoutProbability());
     //
     // Get number of outputs
     networkParameters.setNumberOfOutputs(numberOfOutputClasses);
@@ -261,7 +267,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     // Create the model to be trained
     MultiLayerNetwork network = new MultiLayerNetwork(configuration);
     network.init();
-    network.setListeners(new PerformanceListener(networkEvaluationIndex, true));
+    network.setListeners(new PerformanceListener(networkParameters.getNumberOfEpochs(), true));
     for (int epochCount = 0; epochCount < maxTrainingEpochs; epochCount++) {
       //
       // Fit the model against the training data for a single epoch
@@ -274,7 +280,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
           networkParameters.setNumberOfEpochs(epochCount);
           break;
         } else {
-          log.info("Network error: {}", networkError);
+          log.info("Epoch number: {}, Network error: {}", epochCount, networkError);
         }
       }
     }
