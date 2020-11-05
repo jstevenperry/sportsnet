@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class DataNormalizationMenu {
 
@@ -66,17 +67,17 @@ public class DataNormalizationMenu {
   }
 
   public enum DataNormalizationChoice {
-    NORMALIZER_STANDARDIZE(new NormalizerStandardize(), 1),
-    NORMALIZER_ZERO_TO_ONE(new NormalizerMinMaxScaler(0, 1), 2),
-    NORMALIZER_NEGATIVE_ONE_TO_ONE(new NormalizerMinMaxScaler(-1, 1), 3),
+    NORMALIZER_STANDARDIZE(NormalizerStandardize::new, 1),
+    NORMALIZER_ZERO_TO_ONE(() -> new NormalizerMinMaxScaler(0, 1), 2),
+    NORMALIZER_NEGATIVE_ONE_TO_ONE(() -> new NormalizerMinMaxScaler(-1, 1), 3),
     ;
 
-    private final DataNormalization dataNormalization;
+    private final Supplier<DataNormalization> dataNormalizationSupplier;
     private final int ordinal;
 
-    DataNormalizationChoice(final DataNormalization dataNormalization, final int ordinal) {
+    DataNormalizationChoice(final Supplier<DataNormalization> dataNormalizationSupplier, final int ordinal) {
 
-      this.dataNormalization = dataNormalization;
+      this.dataNormalizationSupplier = dataNormalizationSupplier;
       this.ordinal = ordinal;
     }
 
@@ -103,7 +104,7 @@ public class DataNormalizationMenu {
     }
 
     public DataNormalization getDataNormalization() {
-      return dataNormalization;
+      return dataNormalizationSupplier.get();
     }
 
     public int getOrdinal() {
