@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class UpdaterMenu {
 
@@ -74,22 +75,22 @@ public class UpdaterMenu {
   }
 
   public enum UpdaterChoice {
-    ADA_DELTA(new AdaDelta(), 1),
-    ADA_GRAD(new AdaGrad(NetworkProperties.getLearningRuleLearningRate()), 2),
-    ADAM(new Adam(NetworkProperties.getLearningRuleLearningRate()), 3),
-    ADA_MAX(new AdaMax(NetworkProperties.getLearningRuleLearningRate()), 4),
-    AMS_GRAD(new AMSGrad(NetworkProperties.getLearningRuleLearningRate()), 5),
-    NADAM(new Nadam(NetworkProperties.getLearningRuleLearningRate()), 6),
-    NESTEROVS(new Nesterovs(NetworkProperties.getLearningRuleLearningRate(), NetworkProperties.getLearningRuleMomentumMax()), 7),
-    NOOP(new NoOp(), 8),
-    RMS_PROP(new RmsProp(NetworkProperties.getLearningRuleLearningRate()), 9),
-    SGD(new Sgd(NetworkProperties.getLearningRuleLearningRate()), 10);
+    ADA_DELTA(AdaDelta::new, 1),
+    ADA_GRAD(() -> new AdaGrad(NetworkProperties.getLearningRuleLearningRate(), NetworkProperties.getLearningRuleLearningRate() / 1e5), 2),
+    ADAM(() -> new Adam(NetworkProperties.getLearningRuleLearningRate(), Adam.DEFAULT_ADAM_BETA1_MEAN_DECAY, Adam.DEFAULT_ADAM_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 3),
+    ADA_MAX(() -> new AdaMax(NetworkProperties.getLearningRuleLearningRate(), AdaMax.DEFAULT_ADAMAX_BETA1_MEAN_DECAY, AdaMax.DEFAULT_ADAMAX_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 4),
+    AMS_GRAD(() -> new AMSGrad(NetworkProperties.getLearningRuleLearningRate(), AMSGrad.DEFAULT_AMSGRAD_BETA1_MEAN_DECAY, AMSGrad.DEFAULT_AMSGRAD_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 5),
+    NADAM(() -> new Nadam(NetworkProperties.getLearningRuleLearningRate(), Nadam.DEFAULT_NADAM_BETA1_MEAN_DECAY, Nadam.DEFAULT_NADAM_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 6),
+    NESTEROVS(() -> new Nesterovs(NetworkProperties.getLearningRuleLearningRate(), NetworkProperties.getLearningRuleMomentumMax()), 7),
+    NOOP(NoOp::new, 8),
+    RMS_PROP(() -> new RmsProp(NetworkProperties.getLearningRuleLearningRate()), 9),
+    SGD(() -> new Sgd(NetworkProperties.getLearningRuleLearningRate()), 10);
 
-    private final IUpdater updater;
+    private final Supplier<IUpdater> updaterSupplier;
     private final int ordinal;
 
-    UpdaterChoice(final IUpdater updater, final int ordinal) {
-      this.updater = updater;
+    UpdaterChoice(final Supplier<IUpdater> updaterCreator, final int ordinal) {
+      this.updaterSupplier = updaterCreator;
       this.ordinal = ordinal;
     }
 
@@ -116,7 +117,7 @@ public class UpdaterMenu {
     }
 
     public IUpdater getUpdater() {
-      return updater;
+      return updaterSupplier.get();
     }
 
     public int getOrdinal() {
@@ -125,7 +126,7 @@ public class UpdaterMenu {
 
     @Override
     public String toString() {
-      return String.format("%s (%1.2f)", name(), getUpdater().getLearningRate(0, 0));
+      return String.format("%s (%1.5f)", name(), getUpdater().getLearningRate(0, 0));
     }
   }
 }
