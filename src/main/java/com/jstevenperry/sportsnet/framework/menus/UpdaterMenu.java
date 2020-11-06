@@ -25,9 +25,9 @@ public class UpdaterMenu {
 
   private static final Logger log = LoggerFactory.getLogger(UpdaterMenu.class);
 
-  public static Optional<UpdaterChoice> go(final BufferedReader scanner, final UpdaterChoice updaterChoice) throws IOException {
+  public static Optional<IUpdater> go(final BufferedReader scanner, final IUpdater updaterChoice) throws IOException {
     String thing = "weight updater function";
-    Optional<UpdaterChoice> ret = Optional.ofNullable(updaterChoice);
+    Optional<IUpdater> ret = Optional.ofNullable(updaterChoice);
     String userInput = null;
     while (StringUtils.isEmpty(userInput)) {
       System.out.printf("Enter the number of the %s you want to use: %n", thing);
@@ -44,7 +44,7 @@ public class UpdaterMenu {
         Optional<UpdaterChoice> menuChoice = UpdaterChoice.from(userChoice);
         if (menuChoice.isPresent()) {
           log.debug("You chose updater function: " + menuChoice.get());
-          ret = menuChoice;
+          ret = Optional.ofNullable(menuChoice.get().getUpdater());
         } else {
           System.out.printf("%d is not a valid choice, please choose from the list.%n", userChoice);
           userInput = null;

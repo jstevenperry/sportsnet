@@ -30,6 +30,7 @@ import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
+import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,12 +156,13 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       // Save the network if its performance is at or above the threshold.
       // If the network was not saved, retain it anyway in the networkCandidate list
       // that is owned by the caller.
-      if (!saveNetworkIfAboveThreshold(networkParameters, iterationNumber, trainedNetwork)) {
-        networkCandidateList.add(keepNetwork(trainedNetwork, networkParameters));
-      }
+      NetworkCandidate networkCandidate = keepNetwork(trainedNetwork, networkParameters);
+      networkCandidateList.add(networkCandidate);
+      saveNetworkIfAboveThreshold(networkCandidate, iterationNumber);
       // Reset to original user-specified number
       networkParameters.setNumberOfEpochs(numberOfEpochs);
     }
+    NetworkUtils.displayNetworkList(networkCandidateList);
     return networkParameters;
   }
 
@@ -204,7 +206,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       networkParameters.setWeightInit(weightInit);
       //
       // Get the weight updater function
-      UpdaterMenu.UpdaterChoice updater = scanUpdaterFunction(scanner, networkParameters.getUpdater());
+      IUpdater updater = scanUpdaterFunction(scanner, networkParameters.getUpdater());
       networkParameters.setUpdater(updater);
       //
       // Get the L2 Regularization Lambda value
@@ -304,24 +306,22 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
 
   private static NetworkCandidate keepNetwork(final MultiLayerNetwork network, final NetworkParameters networkParameters) {
     NetworkCandidate ret = new NetworkCandidate(networkParameters.copy(), network);
-    networkParameters.setWhenTrained(LocalDateTime.now());
+    ret.getNetworkParameters().setWhenTrained(LocalDateTime.now());
     log.info(String.format("Network %s retained.", network.toString()));
     return ret;
   }
 
-  private static boolean saveNetworkIfAboveThreshold(final NetworkParameters networkParameters, final int iterationNumber, final MultiLayerNetwork network) {
-    boolean ret = false; // Network not saved
+  private static void saveNetworkIfAboveThreshold(final NetworkCandidate networkCandidate, final int iterationNumber) {
     double performanceThreshold = NetworkProperties.getPerformanceThreshold().doubleValue();
-    NetworkCandidate keptNetwork = keepNetwork(network, networkParameters);
+    NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
     if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
       log.info(String.format("Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, saving network.",
         iterationNumber, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
-      ret = NetworkPersister.saveNetwork(keptNetwork);
+      NetworkPersister.saveNetwork(networkCandidate);
     } else {
       log.info(String.format("Iteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f).",
         iterationNumber, networkParameters.getNetworkAccuracy() * 100, performanceThreshold));
     }
-    return ret;
   }
 
   private static void normalizeTrainingData(final DataSet trainingData, final DataSet testData, final DataNormalization normalizer) {
@@ -348,7 +348,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       .seed(new Random(-2).nextInt(100))
       .activation(networkParameters.getActivationFunction())
       .weightInit(networkParameters.getWeightInit())
-      .updater(networkParameters.getUpdater().getUpdater())
+      .updater(networkParameters.getUpdater())
       .dropOut(NetworkProperties.getDropoutProbability())
       .l2(networkParameters.getL2RegularizationLambda())
       .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer);
@@ -471,11 +471,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     return ret;
   }
 
-  private static UpdaterMenu.UpdaterChoice scanUpdaterFunction(final BufferedReader scanner,
-                                                               final UpdaterMenu.UpdaterChoice updaterChoice) throws IOException {
-    UpdaterMenu.UpdaterChoice ret = null;
+  private static IUpdater scanUpdaterFunction(final BufferedReader scanner,
+                                                               final IUpdater updaterChoice) throws IOException {
+    IUpdater ret = null;
     while (ret == null) {
-      Optional<UpdaterMenu.UpdaterChoice> menuChoice = UpdaterMenu.go(scanner, updaterChoice);
+      Optional<IUpdater> menuChoice = UpdaterMenu.go(scanner, updaterChoice);
       if (menuChoice.isPresent()) {
         ret = menuChoice.get();
       }

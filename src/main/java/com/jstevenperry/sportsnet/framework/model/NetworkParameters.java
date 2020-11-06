@@ -2,10 +2,10 @@ package com.jstevenperry.sportsnet.framework.model;
 
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
 import com.jstevenperry.sportsnet.framework.menus.DataNormalizationMenu;
-import com.jstevenperry.sportsnet.framework.menus.UpdaterMenu;
 import org.apache.commons.lang3.StringUtils;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import java.io.Serializable;
@@ -23,7 +23,7 @@ public class NetworkParameters implements Serializable {
   private LossFunctions.LossFunction lossFunction;
   private Integer numberOfEpochs;
   private WeightInit weightInit;
-  private UpdaterMenu.UpdaterChoice updater;
+  private IUpdater updater;
   private List<AbstractDataElementChoice> selectedElements;
   private LocalDateTime whenTrained;
   private double networkAccuracy;
@@ -126,11 +126,11 @@ public class NetworkParameters implements Serializable {
     return this;
   }
 
-  public UpdaterMenu.UpdaterChoice getUpdater() {
+  public IUpdater getUpdater() {
     return updater;
   }
 
-  public NetworkParameters setUpdater(final UpdaterMenu.UpdaterChoice updater) {
+  public NetworkParameters setUpdater(final IUpdater updater) {
     this.updater = updater;
     return this;
   }
