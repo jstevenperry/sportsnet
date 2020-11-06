@@ -472,7 +472,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   }
 
   private static IUpdater scanUpdaterFunction(final BufferedReader scanner,
-                                                               final IUpdater updaterChoice) throws IOException {
+                                              final IUpdater updaterChoice) throws IOException {
     IUpdater ret = null;
     while (ret == null) {
       Optional<IUpdater> menuChoice = UpdaterMenu.go(scanner, updaterChoice);
