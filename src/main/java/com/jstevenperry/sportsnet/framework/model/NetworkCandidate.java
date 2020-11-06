@@ -38,13 +38,15 @@ public class NetworkCandidate implements Comparable<NetworkCandidate> {
 
   @Override
   public int compareTo(@NotNull final NetworkCandidate that) {
-    int result = this.getNetworkParameters().getWhenTrained().toLocalDate().compareTo(that.getNetworkParameters().getWhenTrained().toLocalDate());
+    NetworkParameters thisNetworkParameters = this.getNetworkParameters();
+    NetworkParameters thatNetworkParameters = that.getNetworkParameters();
+    int result = thisNetworkParameters.getWhenTrained().toLocalDate().compareTo(thatNetworkParameters.getWhenTrained().toLocalDate());
     if (result == 0) {
       // Largest first
-      result = Double.compare(that.getNetworkParameters().getNetworkAccuracy(), this.getNetworkParameters().getNetworkAccuracy());
+      result = Double.compare(thatNetworkParameters.getNetworkAccuracy(), thisNetworkParameters.getNetworkAccuracy());
     }
     if (result == 0) {
-      result = this.getNetworkParameters().getNetworkLayout().compareTo(that.getNetworkParameters().getNetworkLayout());
+      result = thisNetworkParameters.getNetworkLayout().compareTo(thatNetworkParameters.getNetworkLayout());
     }
     return result;
   }
