@@ -230,7 +230,7 @@ public class NetworkUtils {
         throw new RuntimeException(errorMessage, e);
       }
     }
-    log.info(String.format("Network layer structure: %s", NetworkUtils.generateLayerStructureString(structure)));
+    log.debug(String.format("Network layer structure: %s", NetworkUtils.generateLayerStructureString(structure)));
 
     return structure.stream().mapToInt(Integer::intValue).toArray();
   }
