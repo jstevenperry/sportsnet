@@ -34,7 +34,6 @@ public class NhlSeasonData extends AbstractSeasonData {
   private int goalsAgainst;
   private int shootOutWins;
   private int shootOutLosses;
-  private double simpleRatingSystem;
   private double strengthOfSchedule;
   private double goalsPerGame;
   private int evenStrengthGoals;
@@ -197,15 +196,6 @@ public class NhlSeasonData extends AbstractSeasonData {
 
   public NhlSeasonData setShootOutLosses(final int shootOutLosses) {
     this.shootOutLosses = shootOutLosses;
-    return this;
-  }
-
-  public double getSimpleRatingSystem() {
-    return simpleRatingSystem;
-  }
-
-  public NhlSeasonData setSimpleRatingSystem(final double simpleRatingSystem) {
-    this.simpleRatingSystem = simpleRatingSystem;
     return this;
   }
 

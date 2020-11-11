@@ -12,6 +12,8 @@ public abstract class AbstractSeasonData {
   //
   private BigDecimal wonLostPercentage;
 
+  private double simpleRatingSystem;
+
   public Integer getYear() {
     return year;
   }
@@ -38,4 +40,14 @@ public abstract class AbstractSeasonData {
     this.wonLostPercentage = wonLostPercentage;
     return this;
   }
+
+  public double getSimpleRatingSystem() {
+    return simpleRatingSystem;
+  }
+
+  public AbstractSeasonData setSimpleRatingSystem(final double simpleRatingSystem) {
+    this.simpleRatingSystem = simpleRatingSystem;
+    return this;
+  }
+
 }
