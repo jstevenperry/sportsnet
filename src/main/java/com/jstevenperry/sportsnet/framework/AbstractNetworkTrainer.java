@@ -157,8 +157,15 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       // If the network was not saved, retain it anyway in the networkCandidate list
       // that is owned by the caller.
       NetworkCandidate networkCandidate = keepNetwork(trainedNetwork, networkParameters);
-      networkCandidateList.add(networkCandidate);
-      saveNetworkIfAboveThreshold(networkCandidate, iterationNumber);
+      //
+      // Only keep networks in memory that are above the keep threshold to avoid running out of memory for large batch runs.
+      if (networkCandidate.getNetworkParameters().getNetworkAccuracy() * 100 >= NetworkProperties.getPerformanceThresholdNetworkKeep().doubleValue()) {
+        log.info("Iteration: {}, network retained.", iterationNumber);
+        networkCandidateList.add(networkCandidate);
+        saveNetworkIfAboveThreshold(networkCandidate, iterationNumber);
+      } else {
+        log.info("Iteration: {}, network discarded.", iterationNumber);
+      }
       // Reset to original user-specified number
       networkParameters.setNumberOfEpochs(numberOfEpochs);
     }
@@ -307,7 +314,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
   private static NetworkCandidate keepNetwork(final MultiLayerNetwork network, final NetworkParameters networkParameters) {
     NetworkCandidate ret = new NetworkCandidate(networkParameters.copy(), network);
     ret.getNetworkParameters().setWhenTrained(LocalDateTime.now());
-    log.info(String.format("Network %s retained.", network.toString()));
     return ret;
   }
 
