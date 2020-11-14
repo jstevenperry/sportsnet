@@ -23,111 +23,96 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
 
   private static final Logger log = LoggerFactory.getLogger(NcaaBbSeasonDataFlatFileDao.class);
 
-  private static final int SEASON_DATA_NUMBER_OF_FIELDS = 25;
-  private static final String SEASON_DATA_FILE_NAME = "/ncaabb/season_data.csv";
-
-  private static final int WON_LOSS_PERCENTAGE_NUMBER_OF_FIELDS = 6;
-  private static final String WON_LOST_PERCENTAGE_FILE_NAME = "/ncaabb/won_lost_percentage.csv";
+  private static final int SEASON_DATA_NUMBER_OF_FIELDS = 38;
+  private static final String[][] SEASON_DATA_FILE_NAMES =  {
+    {"2011", "/ncaabb/SeasonData-2010-2011.csv"},
+    {"2012", "/ncaabb/SeasonData-2011-2012.csv"},
+    {"2013", "/ncaabb/SeasonData-2012-2013.csv"},
+    {"2014", "/ncaabb/SeasonData-2013-2014.csv"},
+    {"2015", "/ncaabb/SeasonData-2014-2015.csv"},
+    {"2016", "/ncaabb/SeasonData-2015-2016.csv"},
+    {"2017", "/ncaabb/SeasonData-2016-2017.csv"},
+    {"2018", "/ncaabb/SeasonData-2017-2018.csv"},
+    {"2019", "/ncaabb/SeasonData-2018-2019.csv"},
+    {"2020", "/ncaabb/SeasonData-2019-2020.csv"}
+  };
 
   private final Map<Integer, Map<String, NcaaBbSeasonData>> database = new HashMap<>();
 
 
   public NcaaBbSeasonDataFlatFileDao() {
     loadData(database);
-    updateWonLostPercentage(database);
   }
 
   private static void loadData(final Map<Integer, Map<String, NcaaBbSeasonData>> database) {
-    InputStream inputStream = NcaaBbSeasonDataFlatFileDao.class.getResourceAsStream(NcaaBbSeasonDataFlatFileDao.SEASON_DATA_FILE_NAME);
-    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-      CSVReader csvReader = new CSVReader(bufferedReader);
-      csvReader.readNext(); // Read header
-      String[] line = csvReader.readNext();
-      while (line != null) {
-        if (line.length == SEASON_DATA_NUMBER_OF_FIELDS) {
-          NcaaBbSeasonData seasonData = parseSeasonDataFileLine(line);
-          Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.computeIfAbsent(seasonData.getYear(), k -> new HashMap<>());
-          teamSeasonDataMap.put(seasonData.getTeamName(), seasonData);
-        } else {
-          throw new RuntimeException(String.format("Expected %d fields, got %d instead.", SEASON_DATA_NUMBER_OF_FIELDS, line.length));
-        }
-        line = csvReader.readNext();
-      }
-    } catch (IOException e) {
-      String message = String.format("Error reading database file name '%s': %s", NcaaBbSeasonDataFlatFileDao.SEASON_DATA_FILE_NAME, e.getLocalizedMessage());
-      log.error(message, e);
-      throw new RuntimeException(message, e);
-    }
-  }
-
-  private static void updateWonLostPercentage(final Map<Integer, Map<String, NcaaBbSeasonData>> database) {
-    InputStream inputStream = NcaaBbSeasonDataFlatFileDao.class.getResourceAsStream(NcaaBbSeasonDataFlatFileDao.WON_LOST_PERCENTAGE_FILE_NAME);
-    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-      CSVReader csvReader = new CSVReader(bufferedReader);
-      csvReader.readNext(); // Read header
-      String[] line = csvReader.readNext();
-      while (line != null) {
-        if (line.length == WON_LOSS_PERCENTAGE_NUMBER_OF_FIELDS) {
-          NcaaBbSeasonData wlSeasonData = parseWonLossPercentageDataFileLine(line);
-          Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.get(wlSeasonData.getYear());
-          String teamName = wlSeasonData.getTeamName();
-          if (teamSeasonDataMap.containsKey(teamName)) {
-            NcaaBbSeasonData seasonData = teamSeasonDataMap.get(teamName);
-            seasonData.setWonLostPercentage(wlSeasonData.getWonLostPercentage());
+    for (final String[] seasonDataEntry : SEASON_DATA_FILE_NAMES) {
+      Integer year = Integer.parseInt(seasonDataEntry[0]);
+      String seasonDataFileName = seasonDataEntry[1];
+      InputStream inputStream = NcaaBbSeasonDataFlatFileDao.class.getResourceAsStream(seasonDataFileName);
+      try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+        CSVReader csvReader = new CSVReader(bufferedReader);
+        csvReader.readNext(); // Read header
+        csvReader.readNext(); // Read header
+        String[] line = csvReader.readNext();
+        while (line != null) {
+          if (line.length == SEASON_DATA_NUMBER_OF_FIELDS) {
+            NcaaBbSeasonData seasonData = parseSeasonDataFileLine(year, line);
+            Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.computeIfAbsent(year, k -> new HashMap<>());
+            teamSeasonDataMap.put(seasonData.getTeamName(), seasonData);
           } else {
-            throw new RuntimeException(String.format("Could not find team: %s in team season data map. Cannot continue.", teamName));
+            throw new RuntimeException(String.format("Expected %d fields, got %d instead.", SEASON_DATA_NUMBER_OF_FIELDS, line.length));
           }
-        } else {
-          throw new RuntimeException(String.format("Expected %d fields, got %d instead.", WON_LOSS_PERCENTAGE_NUMBER_OF_FIELDS, line.length));
+          line = csvReader.readNext();
         }
-        line = csvReader.readNext();
+      } catch (IOException e) {
+        String message = String.format("Error reading database file name '%s': %s", seasonDataFileName, e.getLocalizedMessage());
+        log.error(message, e);
+        throw new RuntimeException(message, e);
       }
-    } catch (IOException e) {
-      String message = String.format("Error reading database file name '%s': %s", NcaaBbSeasonDataFlatFileDao.SEASON_DATA_FILE_NAME, e.getLocalizedMessage());
-      log.error(message, e);
-      throw new RuntimeException(message, e);
     }
   }
 
-  private static NcaaBbSeasonData parseSeasonDataFileLine(final String[] line) {
+  private static NcaaBbSeasonData parseSeasonDataFileLine(final Integer year, final String[] line) {
     NcaaBbSeasonData seasonData = new NcaaBbSeasonData();
-    seasonData.setYear(Integer.parseInt(line[0]));
-    seasonData.setTeamName(StringUtils.trim(line[1]));
-    // Offense
-    seasonData.setAvgPointsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[2]))));
-    seasonData.setScoringMarginPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[3]))));
-    seasonData.setNumFgAttemptsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[4]))));
-    seasonData.setFgPercentage(BigDecimal.valueOf(Double.parseDouble(nice(line[5]))));
-    seasonData.setNum3pPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[6]))));
-    seasonData.setNum3pAttemptsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[7]))));
-    seasonData.setT3pPercentage(BigDecimal.valueOf(Double.parseDouble(nice(line[8]))));
-    seasonData.setNumFtAttemptsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[9]))));
-    seasonData.setFtPercentage(BigDecimal.valueOf(Double.parseDouble(nice(line[10]))));
-    seasonData.setReboundMargin(BigDecimal.valueOf(Double.parseDouble(nice(line[11]))));
-    seasonData.setAssistsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[12]))));
-    seasonData.setAtoRatio(BigDecimal.valueOf(Double.parseDouble(nice(line[13]))));
-    // Defense
-    seasonData.setAvgOpponentPointsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[14]))));
-    seasonData.setNumOppFgAttemptsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[15]))));
-    seasonData.setOppFgPercentage(BigDecimal.valueOf(Double.parseDouble(nice(line[16]))));
-    seasonData.setNumOpp3pAttemptsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[17]))));
-    seasonData.setOpp3pPercentage(BigDecimal.valueOf(Double.parseDouble(nice(line[18]))));
-    seasonData.setBlocksPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[19]))));
-    seasonData.setStealsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[20]))));
-    seasonData.setOppTurnoversPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[21]))));
-    // Errors
-    seasonData.setTurnoversPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[22]))));
-    seasonData.setFoulsPerGame(BigDecimal.valueOf(Double.parseDouble(nice(line[23]))));
-    seasonData.setNumDq(BigDecimal.valueOf(Double.parseDouble(nice(line[24]))));
-
-    return seasonData;
-  }
-
-  private static NcaaBbSeasonData parseWonLossPercentageDataFileLine(final String[] line) {
-    NcaaBbSeasonData seasonData = new NcaaBbSeasonData();
-    seasonData.setYear(Integer.parseInt(line[1]));
-    seasonData.setTeamName(StringUtils.trim(line[2]));
-    seasonData.setWonLostPercentage(BigDecimal.valueOf(Double.parseDouble(nice(line[5]))));
+    seasonData.setYear(year);
+    seasonData.setRank(Integer.parseInt(nice(StringUtils.trim(line[0]))));
+    seasonData.setTeamName(StringUtils.trim(StringUtils.remove(StringUtils.remove(StringUtils.remove(StringUtils.trim(line[1]), '*'), '.'), "NCAA")));
+    seasonData.setGamesPlayed(Integer.parseInt(nice(StringUtils.trim(line[2]))));
+    seasonData.setGamesWon(Integer.parseInt(nice(StringUtils.trim(line[3]))));
+    seasonData.setGamesLost(Integer.parseInt(nice(StringUtils.trim(line[4]))));
+    seasonData.setWonLostPercentage(BigDecimal.valueOf(Double.parseDouble(nice(StringUtils.trim(line[5])))));
+    seasonData.setSimpleRatingSystem(Double.parseDouble(nice(StringUtils.trim(line[6]))));
+    seasonData.setStrengthOfSchedule(Double.parseDouble(nice(StringUtils.trim(line[7]))));
+    // Index 8 - empty cell
+    seasonData.setConferenceWins(Integer.parseInt(nice(StringUtils.trim(line[9]))));
+    seasonData.setConferenceLosses(Integer.parseInt(nice(StringUtils.trim(line[10]))));
+    // Index 11 - empty cell
+    seasonData.setHomeWins(Integer.parseInt(nice(StringUtils.trim(line[12]))));
+    seasonData.setHomeLosses(Integer.parseInt(nice(StringUtils.trim(line[13]))));
+    // Index 14 - empty cell
+    seasonData.setAwayWins(Integer.parseInt(nice(StringUtils.trim(line[15]))));
+    seasonData.setAwayLosses(Integer.parseInt(nice(StringUtils.trim(line[16]))));
+    // Index 17 - empty cell
+    seasonData.setPointsScored(Integer.parseInt(nice(StringUtils.trim(line[18]))));
+    seasonData.setOpponentPointsScored(Integer.parseInt(nice(StringUtils.trim(line[19]))));
+    // Index 20 - empty cell
+    seasonData.setMinutesPlayed(Integer.parseInt(nice(StringUtils.trim(line[21]))));
+    seasonData.setFieldGoals(Integer.parseInt(nice(StringUtils.trim(line[22]))));
+    seasonData.setFieldGoalAttempts(Integer.parseInt(nice(StringUtils.trim(line[23]))));
+    seasonData.setFieldGoalPct(Double.parseDouble(nice(StringUtils.trim(line[24]))));
+    seasonData.setThreePointers(Integer.parseInt(nice(StringUtils.trim(line[25]))));
+    seasonData.setThreePointAttempts(Integer.parseInt(nice(StringUtils.trim(line[26]))));
+    seasonData.setThreePointPct(Double.parseDouble(nice(StringUtils.trim(line[27]))));
+    seasonData.setFreeThrows(Integer.parseInt(nice(StringUtils.trim(line[28]))));
+    seasonData.setFreeThrowAttempts(Integer.parseInt(nice(StringUtils.trim(line[29]))));
+    seasonData.setFreeThrowPct(Double.parseDouble(nice(StringUtils.trim(line[30]))));
+    seasonData.setOffensiveRebounds(Integer.parseInt(nice(StringUtils.trim(line[31]))));
+    seasonData.setTotalRebounds(Integer.parseInt(nice(StringUtils.trim(line[32]))));
+    seasonData.setAssists(Integer.parseInt(nice(StringUtils.trim(line[33]))));
+    seasonData.setSteals(Integer.parseInt(nice(StringUtils.trim(line[34]))));
+    seasonData.setBlocks(Integer.parseInt(nice(StringUtils.trim(line[35]))));
+    seasonData.setTurnovers(Integer.parseInt(nice(StringUtils.trim(line[36]))));
+    seasonData.setPersonalFouls(Integer.parseInt(nice(StringUtils.trim(line[37]))));
 
     return seasonData;
   }
