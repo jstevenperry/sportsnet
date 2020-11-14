@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Component("ncaaBbSeasonDataDao")
@@ -37,14 +38,55 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
     {"2020", "/ncaabb/SeasonData-2019-2020.csv"}
   };
 
-  private final Map<Integer, Map<String, NcaaBbSeasonData>> database = new HashMap<>();
+  private static final String ALIAS_FILE_NAME = "/ncaabb/SeasonData-Alias.csv";
 
+  private final Map<Integer, Map<String, NcaaBbSeasonData>> database;
 
   public NcaaBbSeasonDataFlatFileDao() {
-    loadData(database);
+    final Map<String, String> aliasMap = loadAliases();
+    database = loadData(aliasMap);
   }
 
-  private static void loadData(final Map<Integer, Map<String, NcaaBbSeasonData>> database) {
+  /**
+   * Load the aliases. The team names vary depending on the source,
+   * and they don't always match the names in the tournament results
+   * file (or even with themselves from the same source, Auburn and Auburn NCAA, e.g.).
+   * The aliases file contains an entry for each name in the source data
+   * to the name that matches it in the tournament results.
+   *
+   * If no alias is given, the team name is good as is. If there is an alias
+   * for it, it will be after the comma.
+   *
+   * Examples:
+   * Auburn
+   * Auburn NCAA,Auburn
+   */
+  private static Map<String, String> loadAliases() {
+    Map<String, String> ret = new TreeMap<>();
+    // Read the alias file and build the alias map
+    InputStream inputStream = NcaaBbSeasonDataFlatFileDao.class.getResourceAsStream(ALIAS_FILE_NAME);
+    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+      CSVReader csvReader = new CSVReader(bufferedReader);
+      String[] line = csvReader.readNext();
+      while (line != null) {
+        String teamName = line[0];
+        String alias = teamName;
+        if (line.length > 1) {
+          alias = line[1];
+        }
+        ret.put(teamName, alias);
+        line = csvReader.readNext();
+      }
+    } catch (IOException e) {
+      String message = String.format("Error reading database file name '%s': %s", ALIAS_FILE_NAME, e.getLocalizedMessage());
+      log.error(message, e);
+      throw new RuntimeException(message, e);
+    }
+    return ret;
+  }
+
+  private static Map<Integer, Map<String, NcaaBbSeasonData>> loadData(final Map<String, String> aliasMap) {
+    Map<Integer, Map<String, NcaaBbSeasonData>> ret = new HashMap<>();
     for (final String[] seasonDataEntry : SEASON_DATA_FILE_NAMES) {
       Integer year = Integer.parseInt(seasonDataEntry[0]);
       String seasonDataFileName = seasonDataEntry[1];
@@ -56,8 +98,8 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
         String[] line = csvReader.readNext();
         while (line != null) {
           if (line.length == SEASON_DATA_NUMBER_OF_FIELDS) {
-            NcaaBbSeasonData seasonData = parseSeasonDataFileLine(year, line);
-            Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.computeIfAbsent(year, k -> new HashMap<>());
+            NcaaBbSeasonData seasonData = parseSeasonDataFileLine(year, line, aliasMap);
+            Map<String, NcaaBbSeasonData> teamSeasonDataMap = ret.computeIfAbsent(year, k -> new HashMap<>());
             teamSeasonDataMap.put(seasonData.getTeamName(), seasonData);
           } else {
             throw new RuntimeException(String.format("Expected %d fields, got %d instead.", SEASON_DATA_NUMBER_OF_FIELDS, line.length));
@@ -70,13 +112,15 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
         throw new RuntimeException(message, e);
       }
     }
+    return ret;
   }
 
-  private static NcaaBbSeasonData parseSeasonDataFileLine(final Integer year, final String[] line) {
+  private static NcaaBbSeasonData parseSeasonDataFileLine(final Integer year, final String[] line, final Map<String, String> aliasMap) {
     NcaaBbSeasonData seasonData = new NcaaBbSeasonData();
     seasonData.setYear(year);
     seasonData.setRank(Integer.parseInt(nice(StringUtils.trim(line[0]))));
-    seasonData.setTeamName(StringUtils.trim(StringUtils.remove(StringUtils.remove(StringUtils.remove(StringUtils.trim(line[1]), '*'), '.'), "NCAA")));
+    String teamName = StringUtils.trim(StringUtils.remove(StringUtils.trim(line[1]), '*'));
+    seasonData.setTeamName(fetchTeamNameAlias(teamName, aliasMap));
     seasonData.setGamesPlayed(Integer.parseInt(nice(StringUtils.trim(line[2]))));
     seasonData.setGamesWon(Integer.parseInt(nice(StringUtils.trim(line[3]))));
     seasonData.setGamesLost(Integer.parseInt(nice(StringUtils.trim(line[4]))));
@@ -115,6 +159,16 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
     seasonData.setPersonalFouls(Integer.parseInt(nice(StringUtils.trim(line[37]))));
 
     return seasonData;
+  }
+
+  private static String fetchTeamNameAlias(final String teamName, final Map<String, String> aliasMap) {
+    String ret = aliasMap.get(teamName);
+    if (ret == null) {
+      String message = String.format("Team name %s not found in alias map. Did you forget to add an alias?", teamName);
+      log.error(message);
+      throw new RuntimeException(message);
+    }
+    return ret;
   }
 
   private static String nice(final String string) {
