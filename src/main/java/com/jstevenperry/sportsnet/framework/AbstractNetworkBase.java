@@ -82,6 +82,11 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
       for (TournamentResult tournamentResult : tournamentResults) {
         String winningTeamName = tournamentResult.getWinningTeamName();
         T seasonDataWinning = pullSeasonData(year, winningTeamName, seasonDataDao);
+        if (seasonDataWinning == null) {
+          String message = String.format("Could not locate season data for team %s", winningTeamName);
+          log.error(message);
+          throw new RuntimeException(message);
+        }
         TournamentParticipant tournamentParticipant = tournamentParticipantDao.fetchByYear(winningTeamName, year);
         //
         // Transform the data, then write out the data
@@ -92,6 +97,11 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
         // Losing team
         String losingTeamName = tournamentResult.getLosingTeamName();
         T seasonDataLosing = pullSeasonData(year, losingTeamName, seasonDataDao);
+        if (seasonDataLosing == null) {
+          String message = String.format("Could not locate season data for team %s", losingTeamName);
+          log.error(message);
+          throw new RuntimeException(message);
+        }
         tournamentParticipant = tournamentParticipantDao.fetchByYear(losingTeamName, year);
         //
         // Transform the data, then write out the data
