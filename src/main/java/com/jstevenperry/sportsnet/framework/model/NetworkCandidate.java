@@ -40,10 +40,10 @@ public class NetworkCandidate implements Comparable<NetworkCandidate> {
   public int compareTo(@NotNull final NetworkCandidate that) {
     NetworkParameters thisNetworkParameters = this.getNetworkParameters();
     NetworkParameters thatNetworkParameters = that.getNetworkParameters();
-    int result = thisNetworkParameters.getWhenTrained().toLocalDate().compareTo(thatNetworkParameters.getWhenTrained().toLocalDate());
+    int result = Double.compare(thisNetworkParameters.getNetworkAccuracy(), thatNetworkParameters.getNetworkAccuracy());
     if (result == 0) {
       // Largest first
-      result = Double.compare(thatNetworkParameters.getNetworkAccuracy(), thisNetworkParameters.getNetworkAccuracy());
+      result = thisNetworkParameters.getWhenTrained().toLocalDate().compareTo(thatNetworkParameters.getWhenTrained().toLocalDate());
     }
     if (result == 0) {
       result = thisNetworkParameters.getNetworkLayout().compareTo(thatNetworkParameters.getNetworkLayout());
