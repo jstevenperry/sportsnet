@@ -13,6 +13,7 @@ import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +72,9 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
       log.info("Pulling evaluation data...");
       RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
       DataSet evaluationData = evaluationDataIterator.next();
-      networkParameters.getNormalizer().getDataNormalization().transform(evaluationData);     // Apply normalization to the training data
+      DataNormalization normalization = networkParameters.getNormalizer().getDataNormalization();
+      normalization.fit(evaluationData);           // Collect the statistics (mean/stdev) from the training data. This does not modify the input data
+      normalization.transform(evaluationData);     // Apply normalization to the training data
       double[][] trainingDataFeatures = evaluationData.getFeatures().toDoubleMatrix();
       // Dump out a few records as a sanity check
       int sampleSize = 5;

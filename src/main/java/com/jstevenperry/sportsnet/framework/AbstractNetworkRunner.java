@@ -78,7 +78,7 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
     // Ask the user which plugin they want to run and for what year, and if it's doable, return the plugin
     byte pluginNumber = KEEP_LOOPING;
     while (pluginNumber == KEEP_LOOPING && !tournamentRunnerPlugins.isEmpty()) {
-      System.out.println("Enter the number of the network you want to persist (enter 0 to quit):");
+      System.out.println("Select the year you want to simulate (enter 0 to quit):");
       System.out.println("Plugin#\t\tTournament Year");
       int index = 0;
       for (AbstractTournamentRunnerPlugin<T> tournamentRunnerPlugin : tournamentRunnerPlugins) {

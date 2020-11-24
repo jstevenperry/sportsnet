@@ -7,7 +7,7 @@ import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 
 public abstract class AbstractNcaaBbTournamentRunnerPlugin extends AbstractTournamentRunnerPlugin<NcaaBbSeasonData> {
 
-  public static final String NCAABB_TOURNAMENT_RESULTS_CSV = "/ncaabb/tournament-results.csv";
+  public static final String NCAABB_TOURNAMENT_RESULTS_CSV = "/ncaabb/tournament-results-template.csv";
 
   public AbstractNcaaBbTournamentRunnerPlugin(final SeasonDataDao<NcaaBbSeasonData> seasonDataDao) {
     super(seasonDataDao);

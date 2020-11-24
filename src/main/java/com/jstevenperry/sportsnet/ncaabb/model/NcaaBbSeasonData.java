@@ -16,86 +16,81 @@
 package com.jstevenperry.sportsnet.ncaabb.model;
 
 import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
-import com.jstevenperry.sportsnet.framework.util.StatsUtils;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This class represents the v_season_data view, which is used for pretty much
- * everything. Represents the total stats of a team over the course of the
- * regular season.
- * <p>
- * **Does not include any tournament games for any years.**
- * <p>
- * This is an important premise: that we can accurately predict tournament winners
- * based solely on their regular season performance.
- *
- * @author J Steven Perry
- */
 public class NcaaBbSeasonData extends AbstractSeasonData {
 
-  // Offense
-  private BigDecimal avgPointsPerGame;
-  private BigDecimal scoringMarginPerGame;
-  private BigDecimal numFgAttemptsPerGame;
-  private BigDecimal fgPercentage;
-  private BigDecimal num3pPerGame;
-  private BigDecimal num3pAttemptsPerGame;
-  private BigDecimal t3pPercentage;
-  private BigDecimal numFtAttemptsPerGame;
-  private BigDecimal ftPercentage;
-  private BigDecimal reboundMargin;
-  private BigDecimal assistsPerGame;
-  private BigDecimal atoRatio;
-  // Defense
-  private BigDecimal avgOpponentPointsPerGame;
-  private BigDecimal numOppFgAttemptsPerGame;
-  private BigDecimal oppFgPercentage;
-  private BigDecimal numOpp3pAttemptsPerGame;
-  private BigDecimal opp3pPercentage;
-  private BigDecimal blocksPerGame;
-  private BigDecimal stealsPerGame;
-  private BigDecimal oppTurnoversPerGame;
-  // Errors
-  private BigDecimal turnoversPerGame;
-  private BigDecimal foulsPerGame;
-  private BigDecimal numDq;
+  private int rank;
+  private int gamesPlayed;
+  private int gamesWon;
+  private int gamesLost;
+  private double simpleRatingSystem;
+  private double strengthOfSchedule;
+  private int conferenceWins;
+  private int conferenceLosses;
+  private int homeWins;
+  private int homeLosses;
+  private int awayWins;
+  private int awayLosses;
+  private int pointsScored;
+  private int opponentPointsScored;
+  private int minutesPlayed;
+  private int fieldGoals;
+  private int fieldGoalAttempts;
+  private double fieldGoalPct;
+  private int threePointers;
+  private int threePointAttempts;
+  private double threePointPct;
+  private int freeThrows;
+  private int freeThrowAttempts;
+  private double freeThrowPct;
+  private int offensiveRebounds;
+  private int totalRebounds;
+  private int assists;
+  private int steals;
+  private int blocks;
+  private int turnovers;
+  private int personalFouls;
 
   public static List<Double> asDoubleList(final NcaaBbSeasonData seasonData,
                                           final Double resultClass,
                                           final boolean isTraining) {
     List<Double> ret = new ArrayList<>();
-    // Offense
-    ret.add(seasonData.getAvgPointsPerGame().doubleValue());
-    ret.add(seasonData.getScoringMarginPerGame().doubleValue());
-    ret.add(seasonData.getNumFgAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getFgPercentage().doubleValue());
-    ret.add(seasonData.getNum3pPerGame().doubleValue());
-    ret.add(seasonData.getNum3pAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getT3pPercentage().doubleValue());
-    ret.add(seasonData.getNumFtAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getFtPercentage().doubleValue());
-    ret.add(seasonData.getReboundMargin().doubleValue());
-    ret.add(seasonData.getAssistsPerGame().doubleValue());
-    ret.add(seasonData.getAtoRatio().doubleValue());
-    // Defense
-    ret.add(seasonData.getAvgOpponentPointsPerGame().doubleValue());
-    ret.add(seasonData.getNumOppFgAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getOppFgPercentage().doubleValue());
-    ret.add(seasonData.getNumOpp3pAttemptsPerGame().doubleValue());
-    ret.add(seasonData.getOpp3pPercentage().doubleValue());
-    ret.add(seasonData.getBlocksPerGame().doubleValue());
-    ret.add(seasonData.getStealsPerGame().doubleValue());
-    ret.add(seasonData.getOppTurnoversPerGame().doubleValue());
-    // Errors
-    ret.add(seasonData.getTurnoversPerGame().doubleValue());
-    ret.add(seasonData.getFoulsPerGame().doubleValue());
-    ret.add(seasonData.getNumDq().doubleValue());
     //
+    ret.add((double)seasonData.getRank());
+    ret.add((double) seasonData.getGamesPlayed());
+    ret.add((double) seasonData.getGamesWon());
+    ret.add((double) seasonData.getGamesLost());
     ret.add(seasonData.getWonLostPercentage().doubleValue());
+    ret.add(seasonData.getSimpleRatingSystem());
+    ret.add(seasonData.getStrengthOfSchedule());
+    ret.add((double) seasonData.getConferenceWins());
+    ret.add((double) seasonData.getConferenceLosses());
+    ret.add((double) seasonData.getHomeWins());
+    ret.add((double) seasonData.getHomeLosses());
+    ret.add((double) seasonData.getAwayWins());
+    ret.add((double) seasonData.getAwayLosses());
+    ret.add((double) seasonData.getPointsScored());
+    ret.add((double) seasonData.getOpponentPointsScored());
+    ret.add((double) seasonData.getMinutesPlayed());
+    ret.add((double) seasonData.getFieldGoals());
+    ret.add((double) seasonData.getFieldGoalAttempts());
+    ret.add(seasonData.getFieldGoalPct());
+    ret.add((double) seasonData.getThreePointers());
+    ret.add((double) seasonData.getThreePointAttempts());
+    ret.add(seasonData.getThreePointPct());
+    ret.add((double) seasonData.getFreeThrows());
+    ret.add((double) seasonData.getFreeThrowAttempts());
+    ret.add(seasonData.getFreeThrowPct());
+    ret.add((double) seasonData.getOffensiveRebounds());
+    ret.add((double) seasonData.getTotalRebounds());
+    ret.add((double) seasonData.getAssists());
+    ret.add((double) seasonData.getSteals());
+    ret.add((double) seasonData.getBlocks());
+    ret.add((double) seasonData.getTurnovers());
+    ret.add((double) seasonData.getPersonalFouls());
     // Class - the number of tournament victories
     if (isTraining) {
       ret.add(resultClass);
@@ -107,191 +102,284 @@ public class NcaaBbSeasonData extends AbstractSeasonData {
     // Nothing to do
   }
 
-  public BigDecimal getAvgPointsPerGame() {
-    return avgPointsPerGame;
+  public int getGamesPlayed() {
+    return gamesPlayed;
   }
 
-  public void setAvgPointsPerGame(BigDecimal avgPointsPerGame) {
-    this.avgPointsPerGame = avgPointsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setGamesPlayed(final int gamesPlayed) {
+    this.gamesPlayed = gamesPlayed;
+    return this;
   }
 
-  public BigDecimal getScoringMarginPerGame() {
-    return scoringMarginPerGame;
+  public int getGamesWon() {
+    return gamesWon;
   }
 
-  public void setScoringMarginPerGame(BigDecimal scoringMarginPerGame) {
-    this.scoringMarginPerGame = scoringMarginPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setGamesWon(final int gamesWon) {
+    this.gamesWon = gamesWon;
+    return this;
   }
 
-  public BigDecimal getNumFgAttemptsPerGame() {
-    return numFgAttemptsPerGame;
+  public int getGamesLost() {
+    return gamesLost;
   }
 
-  public void setNumFgAttemptsPerGame(BigDecimal numFgAttemptsPerGame) {
-    this.numFgAttemptsPerGame = numFgAttemptsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setGamesLost(final int gamesLost) {
+    this.gamesLost = gamesLost;
+    return this;
   }
 
-  public BigDecimal getFgPercentage() {
-    return fgPercentage;
+  @Override
+  public double getSimpleRatingSystem() {
+    return simpleRatingSystem;
   }
 
-  public void setFgPercentage(BigDecimal fgPercentage) {
-    this.fgPercentage = fgPercentage.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  @Override
+  public NcaaBbSeasonData setSimpleRatingSystem(final double simpleRatingSystem) {
+    this.simpleRatingSystem = simpleRatingSystem;
+    return this;
   }
 
-  public BigDecimal getNum3pPerGame() {
-    return num3pPerGame;
+  public double getStrengthOfSchedule() {
+    return strengthOfSchedule;
   }
 
-  public void setNum3pPerGame(BigDecimal num3pPerGame) {
-    this.num3pPerGame = num3pPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setStrengthOfSchedule(final double strengthOfSchedule) {
+    this.strengthOfSchedule = strengthOfSchedule;
+    return this;
   }
 
-  public BigDecimal getNum3pAttemptsPerGame() {
-    return (num3pAttemptsPerGame == null) ? BigDecimal.ZERO : num3pAttemptsPerGame;
+  public int getConferenceWins() {
+    return conferenceWins;
   }
 
-  public void setNum3pAttemptsPerGame(BigDecimal num3pAttemptsPerGame) {
-    if (num3pAttemptsPerGame != null)
-      this.num3pAttemptsPerGame = num3pAttemptsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setConferenceWins(final int conferenceWins) {
+    this.conferenceWins = conferenceWins;
+    return this;
   }
 
-  public BigDecimal getT3pPercentage() {
-    return (t3pPercentage == null) ? BigDecimal.ZERO : t3pPercentage;
+  public int getConferenceLosses() {
+    return conferenceLosses;
   }
 
-  public void setT3pPercentage(BigDecimal t3pPercentage) {
-    if (t3pPercentage != null)
-      this.t3pPercentage = t3pPercentage.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setConferenceLosses(final int conferenceLosses) {
+    this.conferenceLosses = conferenceLosses;
+    return this;
   }
 
-  public BigDecimal getNumFtAttemptsPerGame() {
-    return numFtAttemptsPerGame;
+  public int getHomeWins() {
+    return homeWins;
   }
 
-  public void setNumFtAttemptsPerGame(BigDecimal numFtAttemptsPerGame) {
-    this.numFtAttemptsPerGame = numFtAttemptsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setHomeWins(final int homeWins) {
+    this.homeWins = homeWins;
+    return this;
   }
 
-  public BigDecimal getFtPercentage() {
-    return ftPercentage;
+  public int getHomeLosses() {
+    return homeLosses;
   }
 
-  public void setFtPercentage(BigDecimal ftPercentage) {
-    this.ftPercentage = ftPercentage.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setHomeLosses(final int homeLosses) {
+    this.homeLosses = homeLosses;
+    return this;
   }
 
-  public BigDecimal getReboundMargin() {
-    return reboundMargin;
+  public int getAwayWins() {
+    return awayWins;
   }
 
-  public void setReboundMargin(BigDecimal reboundMargin) {
-    this.reboundMargin = reboundMargin.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setAwayWins(final int awayWins) {
+    this.awayWins = awayWins;
+    return this;
   }
 
-  public BigDecimal getAssistsPerGame() {
-    return assistsPerGame;
+  public int getAwayLosses() {
+    return awayLosses;
   }
 
-  public void setAssistsPerGame(BigDecimal assistsPerGame) {
-    this.assistsPerGame = assistsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setAwayLosses(final int awayLosses) {
+    this.awayLosses = awayLosses;
+    return this;
   }
 
-  public BigDecimal getAtoRatio() {
-    return atoRatio;
+  public int getPointsScored() {
+    return pointsScored;
   }
 
-  public void setAtoRatio(BigDecimal atoRatio) {
-    this.atoRatio = atoRatio.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setPointsScored(final int pointsScored) {
+    this.pointsScored = pointsScored;
+    return this;
   }
 
-  public BigDecimal getAvgOpponentPointsPerGame() {
-    return avgOpponentPointsPerGame;
+  public int getOpponentPointsScored() {
+    return opponentPointsScored;
   }
 
-  public void setAvgOpponentPointsPerGame(BigDecimal avgOpponentPointsPerGame) {
-    this.avgOpponentPointsPerGame = avgOpponentPointsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setOpponentPointsScored(final int opponentPointsScored) {
+    this.opponentPointsScored = opponentPointsScored;
+    return this;
   }
 
-  public BigDecimal getNumOppFgAttemptsPerGame() {
-    return numOppFgAttemptsPerGame;
+  public int getMinutesPlayed() {
+    return minutesPlayed;
   }
 
-  public void setNumOppFgAttemptsPerGame(BigDecimal numOppFgAttemptsPerGame) {
-    this.numOppFgAttemptsPerGame = numOppFgAttemptsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setMinutesPlayed(final int minutesPlayed) {
+    this.minutesPlayed = minutesPlayed;
+    return this;
   }
 
-  public BigDecimal getOppFgPercentage() {
-    return oppFgPercentage;
+  public int getFieldGoals() {
+    return fieldGoals;
   }
 
-  public void setOppFgPercentage(BigDecimal oppFgPercentage) {
-    this.oppFgPercentage = oppFgPercentage.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setFieldGoals(final int fieldGoals) {
+    this.fieldGoals = fieldGoals;
+    return this;
   }
 
-  public BigDecimal getNumOpp3pAttemptsPerGame() {
-    return numOpp3pAttemptsPerGame;
+  public int getFieldGoalAttempts() {
+    return fieldGoalAttempts;
   }
 
-  public void setNumOpp3pAttemptsPerGame(BigDecimal numOpp3pAttemptsPerGame) {
-    this.numOpp3pAttemptsPerGame = numOpp3pAttemptsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setFieldGoalAttempts(final int fieldGoalAttempts) {
+    this.fieldGoalAttempts = fieldGoalAttempts;
+    return this;
   }
 
-  public BigDecimal getOpp3pPercentage() {
-    return opp3pPercentage;
+  public double getFieldGoalPct() {
+    return fieldGoalPct;
   }
 
-  public void setOpp3pPercentage(BigDecimal opp3pPercentage) {
-    this.opp3pPercentage = opp3pPercentage.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setFieldGoalPct(final double fieldGoalPct) {
+    this.fieldGoalPct = fieldGoalPct;
+    return this;
   }
 
-  public BigDecimal getBlocksPerGame() {
-    return blocksPerGame;
+  public int getThreePointers() {
+    return threePointers;
   }
 
-  public void setBlocksPerGame(BigDecimal blocksPerGame) {
-    this.blocksPerGame = blocksPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setThreePointers(final int threePointers) {
+    this.threePointers = threePointers;
+    return this;
   }
 
-  public BigDecimal getStealsPerGame() {
-    return stealsPerGame;
+  public int getThreePointAttempts() {
+    return threePointAttempts;
   }
 
-  public void setStealsPerGame(BigDecimal stealsPerGame) {
-    this.stealsPerGame = stealsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setThreePointAttempts(final int threePointAttempts) {
+    this.threePointAttempts = threePointAttempts;
+    return this;
   }
 
-  public BigDecimal getOppTurnoversPerGame() {
-    return (oppTurnoversPerGame == null) ? BigDecimal.ZERO : oppTurnoversPerGame;
+  public double getThreePointPct() {
+    return threePointPct;
   }
 
-  public void setOppTurnoversPerGame(BigDecimal oppTurnoversPerGame) {
-    if (oppTurnoversPerGame != null)
-      this.oppTurnoversPerGame = oppTurnoversPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setThreePointPct(final double threePointPct) {
+    this.threePointPct = threePointPct;
+    return this;
   }
 
-  public BigDecimal getTurnoversPerGame() {
-    return turnoversPerGame;
+  public int getFreeThrows() {
+    return freeThrows;
   }
 
-  public void setTurnoversPerGame(BigDecimal turnoversPerGame) {
-    this.turnoversPerGame = turnoversPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setFreeThrows(final int freeThrows) {
+    this.freeThrows = freeThrows;
+    return this;
   }
 
-  public BigDecimal getFoulsPerGame() {
-    return foulsPerGame;
+  public int getFreeThrowAttempts() {
+    return freeThrowAttempts;
   }
 
-  public void setFoulsPerGame(BigDecimal foulsPerGame) {
-    this.foulsPerGame = foulsPerGame.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setFreeThrowAttempts(final int freeThrowAttempts) {
+    this.freeThrowAttempts = freeThrowAttempts;
+    return this;
   }
 
-  public BigDecimal getNumDq() {
-    return numDq;
+  public double getFreeThrowPct() {
+    return freeThrowPct;
   }
 
-  public void setNumDq(BigDecimal numDq) {
-    this.numDq = numDq.setScale(StatsUtils.SCALE, RoundingMode.HALF_UP);
+  public NcaaBbSeasonData setFreeThrowPct(final double freeThrowPct) {
+    this.freeThrowPct = freeThrowPct;
+    return this;
   }
 
+  public int getOffensiveRebounds() {
+    return offensiveRebounds;
+  }
+
+  public NcaaBbSeasonData setOffensiveRebounds(final int offensiveRebounds) {
+    this.offensiveRebounds = offensiveRebounds;
+    return this;
+  }
+
+  public int getTotalRebounds() {
+    return totalRebounds;
+  }
+
+  public NcaaBbSeasonData setTotalRebounds(final int totalRebounds) {
+    this.totalRebounds = totalRebounds;
+    return this;
+  }
+
+  public int getAssists() {
+    return assists;
+  }
+
+  public NcaaBbSeasonData setAssists(final int assists) {
+    this.assists = assists;
+    return this;
+  }
+
+  public int getSteals() {
+    return steals;
+  }
+
+  public NcaaBbSeasonData setSteals(final int steals) {
+    this.steals = steals;
+    return this;
+  }
+
+  public int getBlocks() {
+    return blocks;
+  }
+
+  public NcaaBbSeasonData setBlocks(final int blocks) {
+    this.blocks = blocks;
+    return this;
+  }
+
+  public int getTurnovers() {
+    return turnovers;
+  }
+
+  public NcaaBbSeasonData setTurnovers(final int turnovers) {
+    this.turnovers = turnovers;
+    return this;
+  }
+
+  public int getPersonalFouls() {
+    return personalFouls;
+  }
+
+  public NcaaBbSeasonData setPersonalFouls(final int personalFouls) {
+    this.personalFouls = personalFouls;
+    return this;
+  }
+
+  public int getRank() {
+    return rank;
+  }
+
+  public NcaaBbSeasonData setRank(final int rank) {
+    this.rank = rank;
+    return this;
+  }
 }

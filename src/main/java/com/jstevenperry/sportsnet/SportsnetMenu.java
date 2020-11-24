@@ -30,6 +30,7 @@ import java.io.InputStreamReader;
 public class SportsnetMenu {
 
   private static final Logger log = LoggerFactory.getLogger(SportsnetMenu.class);
+  private static final String SPORTSNET_VERSION = "2.0.0";
 
   public static void main(final String[] args) {
     SpringApplication.run(SportsnetMenu.class, args);
@@ -78,7 +79,7 @@ public class SportsnetMenu {
     //
     // Show the options and camp out until they decide to quit
     // Use System.out.println() because it just looks better
-    System.out.println("Welcome to Sports Net.");
+    System.out.printf("Welcome to Sports Net v%s.%n", SPORTSNET_VERSION);
     System.out.println("This is the main menu. Choose your sport.");
     for (SportsnetChoice menuItem : SportsnetChoice.values()) {
       if (menuItem.isSuitableForDisplay()) {
