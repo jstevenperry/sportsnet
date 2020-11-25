@@ -253,4 +253,12 @@ public class NetworkUtils {
     }
   }
 
+  public static String nice(final String string) {
+    String ret = "0";
+    if (StringUtils.isNotEmpty(string)) {
+      ret = StringUtils.trim(string);
+    }
+    return ret;
+  }
+
 }

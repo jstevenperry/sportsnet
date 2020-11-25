@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.jstevenperry.sportsnet.framework.util.NetworkUtils.nice;
+
 @Component("nhlSeasonDataDao")
 public class NhlSeasonDataFlatFileDao implements SeasonDataDao<NhlSeasonData> {
 
@@ -111,13 +113,6 @@ public class NhlSeasonDataFlatFileDao implements SeasonDataDao<NhlSeasonData> {
     return seasonData;
   }
 
-  private static String nice(final String string) {
-    String ret = "0";
-    if (StringUtils.isNotEmpty(string)) {
-      ret = StringUtils.trim(string);
-    }
-    return ret;
-  }
 
   @Override
   public List<NhlSeasonData> fetchAllByYear(final Integer year) {
