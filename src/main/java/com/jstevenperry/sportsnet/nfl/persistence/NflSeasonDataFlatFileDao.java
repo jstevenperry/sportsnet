@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 import static com.jstevenperry.sportsnet.framework.util.NetworkUtils.nice;
 
@@ -532,11 +533,22 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
 
   @Override
   public List<NflSeasonData> fetchAllByYear(final Integer year) {
-    return null;
+    Map<String, NflSeasonData> teamSeasonDataMap = database.get(year);
+    List<NflSeasonData> ret = teamSeasonDataMap.keySet()
+      .stream()
+      .map(teamSeasonDataMap::get)
+      .collect(Collectors.toList());
+    log.debug(String.format("fetchAllByYear(%d): Returning %d records.", year, ret.size()));
+    return ret;
   }
 
   @Override
   public NflSeasonData fetchByYearAndTeamName(final Integer year, final String teamName) {
-    return null;
+    NflSeasonData ret;
+    Map<String, NflSeasonData> teamSeasonDataMap = database.get(year);
+    ret = teamSeasonDataMap.get(teamName);
+
+    log.trace("fetchByYearAndTeamName({}, {}): Returning NflSeasonData: {}", year, teamName, ret);
+    return ret;
   }
 }
