@@ -350,6 +350,11 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
       }
 
       @Override
+      public int getNumberOfHeaderLines() {
+        return 1;
+      }
+
+      @Override
       public NflSeasonData parseAndProcessFileLine(final String[] line, final Map<String, NflSeasonData> teamSeasonDataMap) {
         return parseAndProcessRushingOffenseFile(line, teamSeasonDataMap);
       }
