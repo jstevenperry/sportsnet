@@ -1028,4 +1028,111 @@ public class NflSeasonData extends AbstractSeasonData {
   double avgYdPerDrive;
   double avgTimeOfPosession;
   double avgPtsPerPosession;
+
+  @Override
+  public String toString() {
+    return "NflSeasonData{" +
+      "teamOffenseRank=" + teamOffenseRank +
+      ", gamesPlayed=" + gamesPlayed +
+      ", pointsFor=" + pointsFor +
+      ", yards=" + yards +
+      ", plays=" + plays +
+      ", yardsPerPlay=" + yardsPerPlay +
+      ", turnovers=" + turnovers +
+      ", fumblesLost=" + fumblesLost +
+      ", firstDowns=" + firstDowns +
+      ", completedPasses=" + completedPasses +
+      ", passAttempts=" + passAttempts +
+      ", ydPassing=" + ydPassing +
+      ", passingTd=" + passingTd +
+      ", interceptions=" + interceptions +
+      ", netYdPerPassAtt=" + netYdPerPassAtt +
+      ", passing1d=" + passing1d +
+      ", rushingAtt=" + rushingAtt +
+      ", rushingYd=" + rushingYd +
+      ", rushingTd=" + rushingTd +
+      ", rushingYdPerAtt=" + rushingYdPerAtt +
+      ", rushing1d=" + rushing1d +
+      ", penalties=" + penalties +
+      ", penaltyYd=" + penaltyYd +
+      ", firstDownsByPenalty=" + firstDownsByPenalty +
+      ", driveScorePct=" + driveScorePct +
+      ", driveOffensiveToPct=" + driveOffensiveToPct +
+      ", expectedPtsByAllOffense=" + expectedPtsByAllOffense +
+      ", passingOffenseRank=" + passingOffenseRank +
+      ", passCompletionPct=" + passCompletionPct +
+      ", passTdPct=" + passTdPct +
+      ", intPct=" + intPct +
+      ", longestPass=" + longestPass +
+      ", passYdPerAtt=" + passYdPerAtt +
+      ", adjYdPerAtt=" + adjYdPerAtt +
+      ", ydPerCompletion=" + ydPerCompletion +
+      ", yardPerGame=" + yardPerGame +
+      ", passRating=" + passRating +
+      ", offensiveSacks=" + offensiveSacks +
+      ", ydLostSacks=" + ydLostSacks +
+      ", adjNetYdPerPassAtt=" + adjNetYdPerPassAtt +
+      ", sackedWhilePassingPct=" + sackedWhilePassingPct +
+      ", qbLedCombacks=" + qbLedCombacks +
+      ", qbGameWinningDrives=" + qbGameWinningDrives +
+      ", expectedPtsPassingOffense=" + expectedPtsPassingOffense +
+      ", rushingOffenseRank=" + rushingOffenseRank +
+      ", ydRushingPerGame=" + ydRushingPerGame +
+      ", rushingFumbles=" + rushingFumbles +
+      ", expectedPtsRushingOffense=" + expectedPtsRushingOffense +
+      ", kickPuntReturnRank=" + kickPuntReturnRank +
+      ", puntReturns=" + puntReturns +
+      ", puntReturnYd=" + puntReturnYd +
+      ", puntReturnTd=" + puntReturnTd +
+      ", puntReturnLongest=" + puntReturnLongest +
+      ", puntReturnYdPerGame=" + puntReturnYdPerGame +
+      ", kickoffReturns=" + kickoffReturns +
+      ", kickoffReturnYd=" + kickoffReturnYd +
+      ", kickoffReturnTd=" + kickoffReturnTd +
+      ", kickoffReturnLongest=" + kickoffReturnLongest +
+      ", kickoffReturnYdPerGame=" + kickoffReturnYdPerGame +
+      ", allPurposeYd=" + allPurposeYd +
+      ", kickPuntRank=" + kickPuntRank +
+      ", fgAtt=" + fgAtt +
+      ", fgMade=" + fgMade +
+      ", fgLongest=" + fgLongest +
+      ", fgPct=" + fgPct +
+      ", xpAtt=" + xpAtt +
+      ", xpMade=" + xpMade +
+      ", xpPct=" + xpPct +
+      ", kickoffs=" + kickoffs +
+      ", kickoffYd=" + kickoffYd +
+      ", touchbacks=" + touchbacks +
+      ", touchbackPct=" + touchbackPct +
+      ", kickoffAvg=" + kickoffAvg +
+      ", punts=" + punts +
+      ", puntYards=" + puntYards +
+      ", puntLongest=" + puntLongest +
+      ", puntsBlocked=" + puntsBlocked +
+      ", ydPerPunt=" + ydPerPunt +
+      ", scoringOffenseRank=" + scoringOffenseRank +
+      ", twoPtConversionAtt=" + twoPtConversionAtt +
+      ", twoPtConversionMade=" + twoPtConversionMade +
+      ", safety=" + safety +
+      ", ptsPerGame=" + ptsPerGame +
+      ", conversionsRank=" + conversionsRank +
+      ", thirdDownConversionAtt=" + thirdDownConversionAtt +
+      ", thirdDownConversionMade=" + thirdDownConversionMade +
+      ", thirdDownConversionPct=" + thirdDownConversionPct +
+      ", fourthDownConversionAtt=" + fourthDownConversionAtt +
+      ", fourthDownConversionMade=" + fourthDownConversionMade +
+      ", fourthDownConversionPct=" + fourthDownConversionPct +
+      ", redZoneAtt=" + redZoneAtt +
+      ", redZoneTd=" + redZoneTd +
+      ", redZonePct=" + redZonePct +
+      ", driveAveragesRank=" + driveAveragesRank +
+      ", numberOfDrives=" + numberOfDrives +
+      ", numberOfPlays=" + numberOfPlays +
+      ", scoringPct=" + scoringPct +
+      ", avgNumberOfPlaysPerDrive=" + avgNumberOfPlaysPerDrive +
+      ", avgYdPerDrive=" + avgYdPerDrive +
+      ", avgTimeOfPosession=" + avgTimeOfPosession +
+      ", avgPtsPerPosession=" + avgPtsPerPosession +
+      '}';
+  }
 }
