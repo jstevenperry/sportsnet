@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class DataElementMenu extends AbstractDataElementMenu {
+public class NhlDataElementMenu extends AbstractDataElementMenu {
   @Override
   public List<AbstractDataElementChoice> values() {
     return Arrays.stream(DataElementMenuChoiceEnum.values())
