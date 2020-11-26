@@ -10,6 +10,7 @@ import java.util.List;
 public abstract class AbstractNhlTournamentRunnerPlugin extends AbstractTournamentRunnerPlugin<NhlSeasonData> {
   public AbstractNhlTournamentRunnerPlugin(final SeasonDataDao<NhlSeasonData> seasonDataDao) {
     super(seasonDataDao);
+    setTeamCoordinateSeasonDataMap(buildTeamCoordinateMap());
   }
 
   @Override

@@ -10,7 +10,6 @@ import java.util.Map;
 public class TournamentRunnerPlugin2020 extends AbstractNhlTournamentRunnerPlugin {
   public TournamentRunnerPlugin2020(final SeasonDataDao<NhlSeasonData> seasonDataDao) {
     super(seasonDataDao);
-    setTeamCoordinateSeasonDataMap(buildTeamCoordinateMap());
   }
 
   @Override
