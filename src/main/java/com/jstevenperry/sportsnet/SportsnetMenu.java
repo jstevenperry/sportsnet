@@ -4,6 +4,8 @@ import com.jstevenperry.sportsnet.framework.menus.AbstractNetworkMenu;
 import com.jstevenperry.sportsnet.framework.menus.SportsnetChoice;
 import com.jstevenperry.sportsnet.ncaabb.menus.NcaaBbNetworkMenu;
 import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
+import com.jstevenperry.sportsnet.nfl.menus.NflNetworkMenu;
+import com.jstevenperry.sportsnet.nfl.model.NflSeasonData;
 import com.jstevenperry.sportsnet.nhl.menus.NhlNetworkMenu;
 import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
 import org.apache.commons.lang.StringUtils;
@@ -113,6 +115,12 @@ public class SportsnetMenu {
         //
         // Fire up the network Menu.
         nhlNetworkMenu.go();
+        break;
+      case NFL:
+        AbstractNetworkMenu<NflSeasonData> nflNetworkMenu = new NflNetworkMenu(applicationContext);
+        //
+        // Fire up the network menu
+        nflNetworkMenu.go();
         break;
       case QUIT:
         log.info("Quitting...");
