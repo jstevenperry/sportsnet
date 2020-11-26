@@ -4,18 +4,23 @@ import com.jstevenperry.sportsnet.framework.DataElementChoice;
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementMenu;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class NflDataElementMenu extends AbstractDataElementMenu {
   @Override
   public List<AbstractDataElementChoice> values() {
-    return null;
+    return Arrays.stream(NflDataElementMenu.DataElementMenuChoiceEnum.values())
+      .map(NflDataElementMenu.DataElementMenuChoiceEnum::getDataElementChoice)
+      .collect(Collectors.toList());
   }
 
   @Override
   public Optional<AbstractDataElementChoice> from(final int ordinalValue) {
-    return Optional.empty();
+    Optional<NflDataElementMenu.DataElementMenuChoiceEnum> dataElementMenuChoiceEnumMaybe = NflDataElementMenu.DataElementMenuChoiceEnum.from(ordinalValue);
+    return dataElementMenuChoiceEnumMaybe.map(NflDataElementMenu.DataElementMenuChoiceEnum::getDataElementChoice);
   }
 
   public enum DataElementMenuChoiceEnum {
