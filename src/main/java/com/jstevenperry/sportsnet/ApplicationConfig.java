@@ -26,20 +26,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ComponentScan(basePackages = { "com.jstevenperry.sportsnet" })
 public class ApplicationConfig {
-
-//  @Bean(name = "ncaaBbSeasonDataDao")
-//  public SeasonDataDao getNcaaBbSeasonDataDao() {
-//    return new NcaaBbSeasonDataFlatFileDao();
-//  }
-//
-//  @Bean(name = "ncaaBbTournamentResultDao")
-//  public TournamentResultDao getTournamentResultDao() {
-//    return new NcaaBbTournamentResultFlatFileDao();
-//  }
-//
-//  @Bean(name = "ncaaBbTournamentParticipantDao")
-//  public TournamentParticipantDao getTournamentParticipantDao() {
-//    return new NcaaBbTournamentParticipantFlatFileDao();
-//  }
-
+  // Nothing to do
 }
