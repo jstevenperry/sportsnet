@@ -6,6 +6,7 @@ import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Component("nflTournamentParticipantFlatFileDao")
 public class NflTournamentParticipantFlatFileDao implements TournamentParticipantDao {
   private static final Logger log = LoggerFactory.getLogger(NflTournamentParticipantFlatFileDao.class);
 
