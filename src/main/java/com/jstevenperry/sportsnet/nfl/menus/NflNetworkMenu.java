@@ -32,7 +32,7 @@ public class NflNetworkMenu extends AbstractNetworkMenu<NflSeasonData> {
 
   @Override
   public Integer getNumberOfOutputClasses() {
-    return 4;
+    return 5;
   }
 
   @Override
