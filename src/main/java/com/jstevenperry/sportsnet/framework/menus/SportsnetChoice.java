@@ -3,7 +3,8 @@ package com.jstevenperry.sportsnet.framework.menus;
 public enum SportsnetChoice {
   UNKNOWN("Unknown", -1),
   NCAA_MENS_BASKETBALL("NCAA Division I Men's Basketball", 1),
-  NHL("National Hockey League", 2),
+  NHL("National Hockey League (NHL)", 2),
+  NFL("National Football League (NFL)", 3),
   QUIT("Quit", 0)
   ;
 
