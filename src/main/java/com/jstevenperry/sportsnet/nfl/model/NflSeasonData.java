@@ -2,7 +2,125 @@ package com.jstevenperry.sportsnet.nfl.model;
 
 import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NflSeasonData extends AbstractSeasonData {
+  public static List<Double> asDoubleList(final NflSeasonData seasonData, final Double resultClass, final Boolean isTraining) {
+    List<Double> ret = new ArrayList<>();
+
+    ret.add(asDouble(seasonData.getTeamOffenseRank()));
+    ret.add(asDouble(seasonData.getGamesPlayed()));
+    ret.add(asDouble(seasonData.getPointsFor()));
+    ret.add(asDouble(seasonData.getYards()));
+    ret.add(asDouble(seasonData.getPlays()));
+    ret.add(seasonData.getYardsPerPlay());
+    ret.add(asDouble(seasonData.getTurnovers()));
+    ret.add(asDouble(seasonData.getFumblesLost()));
+    ret.add(asDouble(seasonData.getFirstDowns()));
+    ret.add(asDouble(seasonData.getCompletedPasses()));
+    ret.add(asDouble(seasonData.getPassAttempts()));
+    ret.add(asDouble(seasonData.getYdPassing()));
+    ret.add(asDouble(seasonData.getPassingTd()));
+    ret.add(asDouble(seasonData.getInterceptions()));
+    ret.add(seasonData.getNetYdPerPassAtt());
+    ret.add(asDouble(seasonData.getPassing1d()));
+    ret.add(asDouble(seasonData.getRushingAtt()));
+    ret.add(asDouble(seasonData.getRushingYd()));
+    ret.add(asDouble(seasonData.getRushingTd()));
+    ret.add(seasonData.getRushingYdPerAtt());
+    ret.add(asDouble(seasonData.getRushing1d()));
+    ret.add(asDouble(seasonData.getPenalties()));
+    ret.add(asDouble(seasonData.getPenaltyYd()));
+    ret.add(asDouble(seasonData.getFirstDownsByPenalty()));
+    ret.add((seasonData.getDriveScorePct()));
+    ret.add((seasonData.getDriveOffensiveToPct()));
+    ret.add((seasonData.getExpectedPtsByAllOffense()));
+    ret.add(asDouble(seasonData.getPassingOffenseRank()));
+    ret.add((seasonData.getPassCompletionPct()));
+    ret.add((seasonData.getPassTdPct()));
+    ret.add((seasonData.getIntPct()));
+    ret.add(asDouble(seasonData.getLongestPass()));
+    ret.add((seasonData.getPassYdPerAtt()));
+    ret.add((seasonData.getAdjYdPerAtt()));
+    ret.add((seasonData.getYdPerCompletion()));
+    ret.add((seasonData.getYardPerGame()));
+    ret.add((seasonData.getPassRating()));
+    ret.add(asDouble(seasonData.getOffensiveSacks()));
+    ret.add(asDouble(seasonData.getYdLostSacks()));
+    ret.add((seasonData.getAdjNetYdPerPassAtt()));
+    ret.add((seasonData.getSackedWhilePassingPct()));
+    ret.add(asDouble(seasonData.getQbLedCombacks()));
+    ret.add(asDouble(seasonData.getQbGameWinningDrives()));
+    ret.add((seasonData.getExpectedPtsPassingOffense()));
+    ret.add(asDouble(seasonData.getRushingOffenseRank()));
+    ret.add((seasonData.getYdRushingPerGame()));
+    ret.add(asDouble(seasonData.getRushingFumbles()));
+    ret.add((seasonData.getExpectedPtsRushingOffense()));
+    ret.add(asDouble(seasonData.getKickPuntReturnRank()));
+    ret.add(asDouble(seasonData.getPuntReturns()));
+    ret.add(asDouble(seasonData.getPuntReturnYd()));
+    ret.add(asDouble(seasonData.getPuntReturnTd()));
+    ret.add(asDouble(seasonData.getPuntReturnLongest()));
+    ret.add((seasonData.getPuntReturnYdPerGame()));
+    ret.add(asDouble(seasonData.getKickoffReturns()));
+    ret.add(asDouble(seasonData.getKickoffReturnYd()));
+    ret.add(asDouble(seasonData.getKickoffReturnTd()));
+    ret.add(asDouble(seasonData.getKickoffReturnLongest()));
+    ret.add((seasonData.getKickoffReturnYdPerGame()));
+    ret.add(asDouble(seasonData.getAllPurposeYd()));
+    ret.add(asDouble(seasonData.getKickPuntRank()));
+    ret.add(asDouble(seasonData.getFgAtt()));
+    ret.add(asDouble(seasonData.getFgMade()));
+    ret.add(asDouble(seasonData.getFgLongest()));
+    ret.add((seasonData.getFgPct()));
+    ret.add(asDouble(seasonData.getXpAtt()));
+    ret.add(asDouble(seasonData.getXpMade()));
+    ret.add((seasonData.getXpPct()));
+    ret.add(asDouble(seasonData.getKickoffs()));
+    ret.add(asDouble(seasonData.getKickoffYd()));
+    ret.add(asDouble(seasonData.getTouchbacks()));
+    ret.add((seasonData.getTouchbackPct()));
+    ret.add((seasonData.getKickoffAvg()));
+    ret.add(asDouble(seasonData.getPunts()));
+    ret.add(asDouble(seasonData.getPuntYards()));
+    ret.add(asDouble(seasonData.getPuntLongest()));
+    ret.add(asDouble(seasonData.getPuntsBlocked()));
+    ret.add((seasonData.getYdPerPunt()));
+    ret.add(asDouble(seasonData.getScoringOffenseRank()));
+    ret.add(asDouble(seasonData.getTwoPtConversionAtt()));
+    ret.add(asDouble(seasonData.getTwoPtConversionMade()));
+    ret.add(asDouble(seasonData.getSafety()));
+    ret.add((seasonData.getPtsPerGame()));
+    ret.add(asDouble(seasonData.getConversionsRank()));
+    ret.add(asDouble(seasonData.getThirdDownConversionAtt()));
+    ret.add(asDouble(seasonData.getThirdDownConversionMade()));
+    ret.add((seasonData.getThirdDownConversionPct()));
+    ret.add(asDouble(seasonData.getFourthDownConversionAtt()));
+    ret.add(asDouble(seasonData.getFourthDownConversionMade()));
+    ret.add((seasonData.getFourthDownConversionPct()));
+    ret.add(asDouble(seasonData.getRedZoneAtt()));
+    ret.add(asDouble(seasonData.getRedZoneTd()));
+    ret.add((seasonData.getRedZonePct()));
+    ret.add(asDouble(seasonData.getDriveAveragesRank()));
+    ret.add(asDouble(seasonData.getNumberOfDrives()));
+    ret.add(asDouble(seasonData.getNumberOfPlays()));
+    ret.add((seasonData.getScoringPct()));
+    ret.add((seasonData.getAvgNumberOfPlaysPerDrive()));
+    ret.add((seasonData.getAvgYdPerDrive()));
+    ret.add((seasonData.getAvgTimeOfPosession()));
+    ret.add((seasonData.getAvgPtsPerPosession()));
+
+    if (isTraining) {
+      ret.add(resultClass);
+    }
+    return ret;
+  }
+
+  private static Double asDouble(final int intValue) {
+    return Integer.valueOf(intValue).doubleValue();
+  }
+
   public int getTeamOffenseRank() {
     return teamOffenseRank;
   }
