@@ -11,6 +11,9 @@ import com.jstevenperry.sportsnet.nfl.persistence.NflTournamentResultFlatFileDao
 import org.springframework.context.ApplicationContext;
 
 public class NflNetworkMenu extends AbstractNetworkMenu<NflSeasonData> {
+
+  public static final String NETWORK_TYPE = "NFL";
+
   public NflNetworkMenu(final ApplicationContext applicationContext) {
     super(
       applicationContext.getBean(NflSeasonDataFlatFileDao.class),
