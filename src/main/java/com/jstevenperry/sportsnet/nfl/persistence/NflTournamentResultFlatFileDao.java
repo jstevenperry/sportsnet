@@ -20,14 +20,14 @@ public class NflTournamentResultFlatFileDao implements TournamentResultDao {
 
   private static final int NUMBER_OF_FIELDS = 4;
   private static final String[][] TOURNAMENT_RESULT_FILE_NAMES = {
-    {"2012", "/nfl/2012-13-tournament_result.csv"},
-    {"2013", "/nfl/2013-14-tournament_result.csv"},
-    {"2014", "/nfl/2014-15-tournament_result.csv"},
-    {"2015", "/nfl/2015-16-tournament_result.csv"},
-    {"2016", "/nfl/2016-17-tournament_result.csv"},
-    {"2017", "/nfl/2017-18-tournament_result.csv"},
-    {"2018", "/nfl/2018-19-tournament_result.csv"},
-    {"2019", "/nfl/2019-20-tournament_result.csv"},
+    {"2012", "/nfl/2012/2012-2013-tournament_result.csv"},
+    {"2013", "/nfl/2013/2013-2014-tournament_result.csv"},
+    {"2014", "/nfl/2014/2014-2015-tournament_result.csv"},
+    {"2015", "/nfl/2015/2015-2016-tournament_result.csv"},
+    {"2016", "/nfl/2016/2016-2017-tournament_result.csv"},
+    {"2017", "/nfl/2017/2017-2018-tournament_result.csv"},
+    {"2018", "/nfl/2018/2018-2019-tournament_result.csv"},
+    {"2019", "/nfl/2019/2019-2020-tournament_result.csv"},
   };
 
   private final Map<Integer, List<TournamentResult>> database = new HashMap<>();

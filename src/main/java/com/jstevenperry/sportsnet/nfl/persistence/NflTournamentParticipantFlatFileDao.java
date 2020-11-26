@@ -21,14 +21,14 @@ public class NflTournamentParticipantFlatFileDao implements TournamentParticipan
 
   private static final int NUMBER_OF_FIELDS = 2;
   private static final String[][] TOURNAMENT_PARTICIPANT_FILE_NAMES = {
-    {"2012", "/Nfl/2012-13-tournament_participant.csv"},
-    {"2013", "/Nfl/2013-14-tournament_participant.csv"},
-    {"2014", "/Nfl/2014-15-tournament_participant.csv"},
-    {"2015", "/Nfl/2015-16-tournament_participant.csv"},
-    {"2016", "/Nfl/2016-17-tournament_participant.csv"},
-    {"2017", "/Nfl/2017-18-tournament_participant.csv"},
-    {"2018", "/Nfl/2018-19-tournament_participant.csv"},
-    {"2019", "/Nfl/2019-20-tournament_participant.csv"},
+    {"2012", "/nfl/2012/2012-2013-tournament_participant.csv"},
+    {"2013", "/nfl/2013/2013-2014-tournament_participant.csv"},
+    {"2014", "/nfl/2014/2014-2015-tournament_participant.csv"},
+    {"2015", "/nfl/2015/2015-2016-tournament_participant.csv"},
+    {"2016", "/nfl/2016/2016-2017-tournament_participant.csv"},
+    {"2017", "/nfl/2017/2017-2018-tournament_participant.csv"},
+    {"2018", "/nfl/2018/2018-2019-tournament_participant.csv"},
+    {"2019", "/nfl/2019/2019-2020-tournament_participant.csv"},
   };
 
   private final Map<Integer, Map<String, TournamentParticipant>> database = new HashMap<>();
