@@ -56,6 +56,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
 
   public AbstractTournamentRunnerPlugin(final SeasonDataDao<T> seasonDataDao) {
     this.seasonDataDao = seasonDataDao;
+    setTeamCoordinateSeasonDataMap(buildTeamCoordinateMap());
   }
 
   public Map<TeamCoordinate, T> getTeamCoordinateSeasonDataMap() {
