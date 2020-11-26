@@ -5,7 +5,6 @@ import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class TournamentRunnerPlugin2020 extends AbstractNhlTournamentRunnerPlugin {
@@ -45,11 +44,6 @@ public class TournamentRunnerPlugin2020 extends AbstractNhlTournamentRunnerPlugi
     createTeamCoordinateMapping(ret, 3, 1, 2, "Dallas Stars");
     createTeamCoordinateMapping(ret, 3, 1, 3, "Calgary Flames");
     return ret;
-  }
-
-  @Override
-  public List<Double> seasonDataAsDoubleList(final NhlSeasonData seasonData, final Double resultClass, final boolean isTraining) {
-    return NhlSeasonData.asDoubleList(seasonData, resultClass, isTraining);
   }
 
 }

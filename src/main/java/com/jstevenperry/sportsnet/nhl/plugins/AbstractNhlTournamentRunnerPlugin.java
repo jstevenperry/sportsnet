@@ -5,6 +5,8 @@ import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.nhl.menus.NhlNetworkMenu;
 import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
 
+import java.util.List;
+
 public abstract class AbstractNhlTournamentRunnerPlugin extends AbstractTournamentRunnerPlugin<NhlSeasonData> {
   public AbstractNhlTournamentRunnerPlugin(final SeasonDataDao<NhlSeasonData> seasonDataDao) {
     super(seasonDataDao);
@@ -19,9 +21,14 @@ public abstract class AbstractNhlTournamentRunnerPlugin extends AbstractTourname
   protected String getTournamentResultsTemplateFileName() {
     return "/nhl/tournament-results-template.csv";
   }
-  
+
   @Override
   protected String getNetworkType() {
     return NhlNetworkMenu.NETWORK_TYPE;
+  }
+
+  @Override
+  public List<Double> seasonDataAsDoubleList(final NhlSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+    return NhlSeasonData.asDoubleList(seasonData, resultClass, isTraining);
   }
 }
