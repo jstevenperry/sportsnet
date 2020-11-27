@@ -26,6 +26,7 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
   private static final Logger log = LoggerFactory.getLogger(NflSeasonDataFlatFileDao.class);
 
   private static final String[][] SEASON_DATA_FILE_NAMES = {
+    {"2009", "/nfl/2009/2009-Conversions.csv", "/nfl/2009/2009-Drive-Averages.csv", "/nfl/2009/2009-Kick&PuntReturns.csv", "/nfl/2009/2009-Kicking&Punting.csv", "/nfl/2009/2009-Passing-Offense.csv", "/nfl/2009/2009-Rushing-Offense.csv", "/nfl/2009/2009-Scoring-Offense.csv", "/nfl/2009/2009-Team-Offense.csv"},
     {"2010", "/nfl/2010/2010-Conversions.csv", "/nfl/2010/2010-Drive-Averages.csv", "/nfl/2010/2010-Kick&PuntReturns.csv", "/nfl/2010/2010-Kicking&Punting.csv", "/nfl/2010/2010-Passing-Offense.csv", "/nfl/2010/2010-Rushing-Offense.csv", "/nfl/2010/2010-Scoring-Offense.csv", "/nfl/2010/2010-Team-Offense.csv"},
     {"2011", "/nfl/2011/2011-Conversions.csv", "/nfl/2011/2011-Drive-Averages.csv", "/nfl/2011/2011-Kick&PuntReturns.csv", "/nfl/2011/2011-Kicking&Punting.csv", "/nfl/2011/2011-Passing-Offense.csv", "/nfl/2011/2011-Rushing-Offense.csv", "/nfl/2011/2011-Scoring-Offense.csv", "/nfl/2011/2011-Team-Offense.csv"},
     {"2012", "/nfl/2012/2012-Conversions.csv", "/nfl/2012/2012-Drive-Averages.csv", "/nfl/2012/2012-Kick&PuntReturns.csv", "/nfl/2012/2012-Kicking&Punting.csv", "/nfl/2012/2012-Passing-Offense.csv", "/nfl/2012/2012-Rushing-Offense.csv", "/nfl/2012/2012-Scoring-Offense.csv", "/nfl/2012/2012-Team-Offense.csv"},
