@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 /**
  * This is the base class for running networks for a specific tournament.
@@ -165,22 +166,39 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
    * Using the specified list of GameCoordinates, run the tournament.
    */
   public void runTournament(final List<GameCoordinate> gameList, final List<NetworkCandidate> networkCandidates) {
-    gameList.forEach(gameCoordinate -> {
-      //
-      // Get the home team from the GameCoordinate
-      TeamCoordinate homeTeamCoordinate = gameCoordinate.getHome();
-      T homeTeamSeasonData = getTeamCoordinateSeasonDataMap().get(homeTeamCoordinate);
-      homeTeamCoordinate.setName(homeTeamSeasonData.getTeamName());
-      TeamCoordinate awayTeamCoordinate = gameCoordinate.getAway();
-      T awayTeamSeasonData = getTeamCoordinateSeasonDataMap().get(awayTeamCoordinate);
-      awayTeamCoordinate.setName(awayTeamSeasonData.getTeamName());
-      //
-      // Run all networks for this match up and average the results to compute the winner.
-      runAllNetworksAndComputeWinner(networkCandidates, homeTeamCoordinate, homeTeamSeasonData, awayTeamCoordinate, awayTeamSeasonData);
-    });
     //
-    // Generate tournament results document
-    visualizeTournamentResults();
+    // Throw out any networks that are not valid for the tournament year
+    final List<NetworkCandidate> networksToRun = computeValidNetworksForTournamentYear(networkCandidates);
+    if (!networksToRun.isEmpty()) {
+      gameList.forEach(gameCoordinate -> {
+        //
+        // Get the home team from the GameCoordinate
+        TeamCoordinate homeTeamCoordinate = gameCoordinate.getHome();
+        T homeTeamSeasonData = getTeamCoordinateSeasonDataMap().get(homeTeamCoordinate);
+        homeTeamCoordinate.setName(homeTeamSeasonData.getTeamName());
+        TeamCoordinate awayTeamCoordinate = gameCoordinate.getAway();
+        T awayTeamSeasonData = getTeamCoordinateSeasonDataMap().get(awayTeamCoordinate);
+        awayTeamCoordinate.setName(awayTeamSeasonData.getTeamName());
+        //
+        // Run all networks for this match up and average the results to compute the winner.
+        runAllNetworksAndComputeWinner(networkCandidates, homeTeamCoordinate, homeTeamSeasonData, awayTeamCoordinate, awayTeamSeasonData);
+      });
+      //
+      // Generate tournament results document
+      visualizeTournamentResults();
+    } else {
+      log.error("***** SIMULATION CANCELLED *****");
+      log.error("Of the {} networks you specified to run, there are none suitable for tournament year {}.", networkCandidates.size(), getTournamentYear());
+      log.error("***** SIMULATION CANCELLED: SEE PREVIOUS LOG ENTRIES FOR DETAILS. *****");
+    }
+  }
+
+  private List<NetworkCandidate> computeValidNetworksForTournamentYear(final List<NetworkCandidate> networkCandidates) {
+    //
+    // If the network is valid for the tournament year, we're good to go, otherwise throw it out
+    return networkCandidates.stream()
+      .filter(networkCandidate -> networkCandidate.getNetworkParameters().isValidYearForTournamentPrediction(getTournamentYear()))
+      .collect(Collectors.toList());
   }
 
   private void runAllNetworksAndComputeWinner(final List<NetworkCandidate> networkCandidates,
