@@ -1,12 +1,12 @@
-winning_team,winning_score,losing_team,losing_score
-San Francisco 49ers,23,Green Bay Packers,20
-New Orleans Saints,26,Philadelphia Eagles,24
-Indianapolis Colts,45,Kansas City Chiefs,44
-San Diego Chargers,27,Cincinnati Bengals,10
-San Francisco 49ers,23,Carolina Panthers,10
-Seattle Seahawks,23,New Orleans Saints,15
-New England Patriots,43,Indianapolis Colts,22
-Denver Broncos,24,San Diego Chargers,17
-Seattle Seahawks,23,San Francisco 49ers,17
-Denver Broncos,26,New England Patriots,16
-Seattle Seahawks,43,Denver Broncos,8
+Week,Day,Date,Winner/tie,,Loser/tie,,PtsW,PtsL
+WildCard,Sat,January 4,Indianapolis Colts,,Kansas City Chiefs,boxscore,45,44
+WildCard,Sat,January 4,New Orleans Saints,@,Philadelphia Eagles,boxscore,26,24
+WildCard,Sun,January 5,San Diego Chargers,@,Cincinnati Bengals,boxscore,27,10
+WildCard,Sun,January 5,San Francisco 49ers,@,Green Bay Packers,boxscore,23,20
+Division,Sat,January 11,New England Patriots,,Indianapolis Colts,boxscore,43,22
+Division,Sat,January 11,Seattle Seahawks,,New Orleans Saints,boxscore,23,15
+Division,Sun,January 12,Denver Broncos,,San Diego Chargers,boxscore,24,17
+Division,Sun,January 12,San Francisco 49ers,@,Carolina Panthers,boxscore,23,10
+ConfChamp,Sun,January 19,Denver Broncos,,New England Patriots,boxscore,26,16
+ConfChamp,Sun,January 19,Seattle Seahawks,,San Francisco 49ers,boxscore,23,17
+SuperBowl,Sun,February 2,Seattle Seahawks,N,Denver Broncos,boxscore,43,8

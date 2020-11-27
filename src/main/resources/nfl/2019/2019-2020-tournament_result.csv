@@ -1,12 +1,12 @@
-winning_team,winning_score,losing_team,losing_score
-Seattle Seahawks,17,Philadelphia Eagles,9
-Minnesota Vikings,26,New Orleans Saints,20
-Tennessee Titans,20,New England Patriots,13
-Houston Texans,22,Buffalo Bills,19
-Green Bay Packers,28,Seattle Seahawks,23
-San Francisco 49ers,27,Minnesota Vikings,10
-Tennessee Titans,28,Baltimore Ravens,12
-Kansas City Chiefs,51,Houston Texans,31
-San Francisco 49ers,37,Green Bay Packers,20
-Kansas City Chiefs,35,Tennessee Titans,24
-Kansas City Chiefs,31,San Francisco 49ers,20
+Week,Day,Date,Winner/tie,,Loser/tie,,PtsW,PtsL
+WildCard,Sat,January 4,Houston Texans,,Buffalo Bills,boxscore,22,19
+WildCard,Sat,January 4,Tennessee Titans,@,New England Patriots,boxscore,20,13
+WildCard,Sun,January 5,Minnesota Vikings,@,New Orleans Saints,boxscore,26,20
+WildCard,Sun,January 5,Seattle Seahawks,@,Philadelphia Eagles,boxscore,17,9
+Division,Sat,January 11,San Francisco 49ers,,Minnesota Vikings,boxscore,27,10
+Division,Sat,January 11,Tennessee Titans,@,Baltimore Ravens,boxscore,28,12
+Division,Sun,January 12,Green Bay Packers,,Seattle Seahawks,boxscore,28,23
+Division,Sun,January 12,Kansas City Chiefs,,Houston Texans,boxscore,51,31
+ConfChamp,Sun,January 19,Kansas City Chiefs,,Tennessee Titans,boxscore,35,24
+ConfChamp,Sun,January 19,San Francisco 49ers,,Green Bay Packers,boxscore,37,20
+SuperBowl,Sun,February 2,Kansas City Chiefs,N,San Francisco 49ers,boxscore,31,20

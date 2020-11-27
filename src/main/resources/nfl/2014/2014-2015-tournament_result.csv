@@ -1,12 +1,12 @@
-winning_team,winning_score,losing_team,losing_score
-Indianapolis Colts,26,Cincinnati Bengals,10
-Baltimore Ravens,30,Pittsburgh Steelers,17
-Dallas Cowboys,24,Detroit Lions,20
-Carolina Panthers,27,Arizona Cardinals,16
-Indianapolis Colts,24,Denver Broncos,13
-New England Patriots,35,Baltimore Ravens,31
-Green Bay Packers,26,Dallas Cowboys,21
-Seattle Seahawks,31,Carolina Panthers,17
-New England Patriots,45,Indianapolis Colts,7
-Seattle Seahawks,28,Green Bay Packers,22
-New England Patriots,28,Seattle Seahawks,24
+Week,Day,Date,Winner/tie,,Loser/tie,,PtsW,PtsL
+WildCard,Sat,January 3,Carolina Panthers,,Arizona Cardinals,boxscore,27,16
+WildCard,Sat,January 3,Baltimore Ravens,@,Pittsburgh Steelers,boxscore,30,17
+WildCard,Sun,January 4,Indianapolis Colts,,Cincinnati Bengals,boxscore,26,10
+WildCard,Sun,January 4,Dallas Cowboys,,Detroit Lions,boxscore,24,20
+Division,Sat,January 10,New England Patriots,,Baltimore Ravens,boxscore,35,31
+Division,Sat,January 10,Seattle Seahawks,,Carolina Panthers,boxscore,31,17
+Division,Sun,January 11,Green Bay Packers,,Dallas Cowboys,boxscore,26,21
+Division,Sun,January 11,Indianapolis Colts,@,Denver Broncos,boxscore,24,13
+ConfChamp,Sun,January 18,New England Patriots,,Indianapolis Colts,boxscore,45,7
+ConfChamp,Sun,January 18,Seattle Seahawks,,Green Bay Packers,boxscore,28,22
+SuperBowl,Sun,February 1,New England Patriots,N,Seattle Seahawks,boxscore,28,24

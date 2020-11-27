@@ -1,12 +1,12 @@
-winning_team,winning_score,losing_team,losing_score
-Pittsburgh Steelers,30,Miami Dolphins,12
-Houston Texans,27,Oakland Raiders,14
-Green Bay Packers,38,New York Giants,13
-Seattle Seahawks,26,Detroit Lions,6
-Pittsburgh Steelers,18,Kansas City Chiefs,16
-New England Patriots,34,Houston Texans,16
-Green Bay Packers,34,Dallas Cowboys,31
-Atlanta Falcons,36,Seattle Seahawks,20
-New England Patriots,36,Pittsburgh Steelers,17
-Atlanta Falcons,44,Green Bay Packers,21
-New England Patriots,34,Atlanta Falcons,28
+Week,Day,Date,Winner/tie,,Loser/tie,,PtsW,PtsL
+WildCard,Sat,January 7,Houston Texans,,Oakland Raiders,boxscore,27,14
+WildCard,Sat,January 7,Seattle Seahawks,,Detroit Lions,boxscore,26,6
+WildCard,Sun,January 8,Green Bay Packers,,New York Giants,boxscore,38,13
+WildCard,Sun,January 8,Pittsburgh Steelers,,Miami Dolphins,boxscore,30,12
+Division,Sat,January 14,Atlanta Falcons,,Seattle Seahawks,boxscore,36,20
+Division,Sat,January 14,New England Patriots,,Houston Texans,boxscore,34,16
+Division,Sun,January 15,Green Bay Packers,@,Dallas Cowboys,boxscore,34,31
+Division,Sun,January 15,Pittsburgh Steelers,@,Kansas City Chiefs,boxscore,18,16
+ConfChamp,Sun,January 22,Atlanta Falcons,,Green Bay Packers,boxscore,44,21
+ConfChamp,Sun,January 22,New England Patriots,,Pittsburgh Steelers,boxscore,36,17
+SuperBowl,Sun,February 5,New England Patriots,N,Atlanta Falcons,boxscore,34,28
