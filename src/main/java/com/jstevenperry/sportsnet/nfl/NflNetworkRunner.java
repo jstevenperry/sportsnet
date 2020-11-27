@@ -5,6 +5,7 @@ import com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.nfl.model.NflSeasonData;
 import com.jstevenperry.sportsnet.nfl.plugins.NflTournamentPlugin2018;
+import com.jstevenperry.sportsnet.nfl.plugins.NflTournamentPlugin2019;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ public class NflNetworkRunner extends AbstractNetworkRunner<NflSeasonData> {
     //
     // Add plugins here
     ret.add(new NflTournamentPlugin2018(seasonDataDao));
+    ret.add(new NflTournamentPlugin2019(seasonDataDao));
     return ret;
   }
 
