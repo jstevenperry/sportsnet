@@ -20,8 +20,9 @@ import java.util.Map;
 public class NflTournamentResultFlatFileDao implements TournamentResultDao {
   private static final Logger log = LoggerFactory.getLogger(NflTournamentResultFlatFileDao.class);
 
-  private static final int NUMBER_OF_FIELDS = 4;
+  private static final int NUMBER_OF_FIELDS = 9;
   private static final String[][] TOURNAMENT_RESULT_FILE_NAMES = {
+    {"2011", "/nfl/2011/2011-2012-tournament_result.csv"},
     {"2012", "/nfl/2012/2012-2013-tournament_result.csv"},
     {"2013", "/nfl/2013/2013-2014-tournament_result.csv"},
     {"2014", "/nfl/2014/2014-2015-tournament_result.csv"},
@@ -68,10 +69,10 @@ public class NflTournamentResultFlatFileDao implements TournamentResultDao {
   private static TournamentResult parseLine(final Integer year, final String[] line) {
     TournamentResult ret = new TournamentResult();
     ret.setYear(year);
-    ret.setWinningTeamName(StringUtils.remove(StringUtils.trim(line[0]), "*."));
-    ret.setWinningScore(Integer.parseInt(line[1]));
-    ret.setLosingTeamName(StringUtils.remove(StringUtils.remove(StringUtils.trim(line[2]), '*'), '.'));
-    ret.setLosingScore(Integer.parseInt(line[3]));
+    ret.setWinningTeamName(StringUtils.remove(StringUtils.trim(line[3]), "*."));
+    ret.setWinningScore(Integer.parseInt(line[7]));
+    ret.setLosingTeamName(StringUtils.remove(StringUtils.remove(StringUtils.trim(line[5]), '*'), '.'));
+    ret.setLosingScore(Integer.parseInt(line[8]));
     return ret;
   }
 
