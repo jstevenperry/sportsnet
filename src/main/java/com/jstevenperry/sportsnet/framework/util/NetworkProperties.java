@@ -91,7 +91,7 @@ public class NetworkProperties {
           log.error(errorMessage, e);
           throw new RuntimeException(errorMessage, e);
         }
-        log.debug(String.format("Loaded properties file: %s", propertiesFileNameFromEnvironmentVariable));
+        log.info(String.format("Loaded properties file: %s", propertiesFileNameFromEnvironmentVariable));
       } else {
         log.warn("System property {} not set, attempting to load network properties file: {} from the classpath...", NETWORK_PROPERTIES_FILE, PROPERTIES_FILE_NAME);
         propertiesFile = new PropertiesFile(PROPERTIES_FILE_NAME);
