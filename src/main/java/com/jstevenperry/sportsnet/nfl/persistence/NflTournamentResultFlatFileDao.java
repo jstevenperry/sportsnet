@@ -22,6 +22,7 @@ public class NflTournamentResultFlatFileDao implements TournamentResultDao {
 
   private static final int NUMBER_OF_FIELDS = 9;
   private static final String[][] TOURNAMENT_RESULT_FILE_NAMES = {
+    {"2006", "/nfl/2006/2006-2007-tournament_result.csv"},
     {"2007", "/nfl/2007/2007-2008-tournament_result.csv"},
     {"2008", "/nfl/2008/2008-2009-tournament_result.csv"},
     {"2009", "/nfl/2009/2009-2010-tournament_result.csv"},
