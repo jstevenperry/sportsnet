@@ -55,7 +55,7 @@ public class NetworkUtils {
   private static List<NetworkCandidate> loadNetworkFiles(final String[] networkFileNames) {
     List<NetworkCandidate> ret = new ArrayList<>();
     int numberOfNetworksLoaded = 0;
-    System.out.print("Loaded: ");
+    System.out.printf("Loading %d networks...%n", networkFileNames.length);
     for (String networkFileName: networkFileNames) {
       //
       // Load the network
@@ -79,7 +79,7 @@ public class NetworkUtils {
         log.error(message, e);
       }
       numberOfNetworksLoaded++;
-      System.out.printf("%d/%d (%d%%)..", numberOfNetworksLoaded, networkFileNames.length, numberOfNetworksLoaded * 100 / networkFileNames.length);
+      System.out.print(".");
     }
     System.out.print("\n");
     log.info("Loaded {} networks.", networkFileNames.length);
