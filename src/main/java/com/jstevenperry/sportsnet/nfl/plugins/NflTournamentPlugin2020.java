@@ -34,19 +34,19 @@ public class NflTournamentPlugin2020 extends AbstractNflTournamentRunnerPlugin {
         // Add team coordinates
         // Round 0 - Wildcard
         // Region 0
-        createTeamCoordinateMapping(ret, 0, 0, 0, "Buffalo Bills");
-        createTeamCoordinateMapping(ret, 0, 0, 1, "Indianapolis Colts");
+        createTeamCoordinateMapping(ret, 0, 0, 0, "Tennessee Titans");
+        createTeamCoordinateMapping(ret, 0, 0, 1, "Baltimore Ravens");
         createTeamCoordinateMapping(ret, 0, 0, 2, "Pittsburgh Steelers");
         createTeamCoordinateMapping(ret, 0, 0, 3, "Cleveland Browns");
-        createTeamCoordinateMapping(ret, 0, 0, 4, "Tennessee Titans");
-        createTeamCoordinateMapping(ret, 0, 0, 5, "Baltimore Ravens");
+        createTeamCoordinateMapping(ret, 0, 0, 4, "Buffalo Bills");
+        createTeamCoordinateMapping(ret, 0, 0, 5, "Indianapolis Colts");
         // Region 1
-        createTeamCoordinateMapping(ret, 1, 0, 0, "New Orleans Saints");
-        createTeamCoordinateMapping(ret, 1, 0, 1, "Chicago Bears");
-        createTeamCoordinateMapping(ret, 1, 0, 2, "Seattle Seahawks");
-        createTeamCoordinateMapping(ret, 1, 0, 3, "Los Angeles Rams");
-        createTeamCoordinateMapping(ret, 1, 0, 4, "Washington Football Team");
-        createTeamCoordinateMapping(ret, 1, 0, 5, "Tampa Bay Buccaneers");
+        createTeamCoordinateMapping(ret, 1, 0, 0, "Seattle Seahawks");
+        createTeamCoordinateMapping(ret, 1, 0, 1, "Los Angeles Rams");
+        createTeamCoordinateMapping(ret, 1, 0, 2, "Washington Football Team");
+        createTeamCoordinateMapping(ret, 1, 0, 3, "Tampa Bay Buccaneers");
+        createTeamCoordinateMapping(ret, 1, 0, 4, "New Orleans Saints");
+        createTeamCoordinateMapping(ret, 1, 0, 5, "Chicago Bears");
         //
         // Round 1 - Division Playoffs
         createTeamCoordinateMapping(ret,0,1,0,"Kansas City Chiefs");
