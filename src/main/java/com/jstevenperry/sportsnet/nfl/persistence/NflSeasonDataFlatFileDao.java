@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
 import static com.jstevenperry.sportsnet.framework.util.NetworkUtils.nice;
@@ -84,7 +83,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
     }
 
     private void processConversionsFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
+        processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Conversions.csv";
@@ -121,7 +120,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
     }
 
     private void processDriveAveragesFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
+        processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Drive-Averages.csv";
@@ -155,7 +154,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
     }
 
     private void processKickAndPuntReturnsFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
+        processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Kick&PuntReturns.csv";
@@ -194,7 +193,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
     }
 
     private void processKickingAndPuntingFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
+        processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Kicking&Punting.csv";
@@ -238,7 +237,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
     }
 
     private void processPassingOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
+        processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Passing-Offense.csv";
@@ -286,7 +285,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
     }
 
     private void processRushingOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
+        processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Rushing-Offense.csv";
@@ -321,7 +320,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
     }
 
     private void processScoringOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
+        processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Scoring-Offense.csv";
@@ -357,7 +356,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
     }
 
     private void processTeamOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
+        processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Team-Offense.csv";
@@ -407,27 +406,6 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
         seasonData.setExpectedPtsByAllOffense(Double.parseDouble(nice(StringUtils.trim(line[27]))));
 
         return seasonData;
-    }
-
-    /**
-     * Parses the specified string, which must be in HH:MM format (where HH is the number
-     * of hours, and MM is the number of minutes), and returns the number of minutes as
-     * a double precision floating point number.
-     */
-    private static double parseHourMinuteAsDouble(final String hourMinuteString) {
-        double ret;
-        StringTokenizer strtok = new StringTokenizer(hourMinuteString, ":");
-        if (strtok.countTokens() == 2) {
-            int hours = Integer.parseInt(strtok.nextToken());
-            int minutes = Integer.parseInt(strtok.nextToken());
-            // Compute the number of minutes
-            ret = hours * 60.0 + minutes;
-        } else {
-            String errorMessage = String.format("Cannot parse %s, string should be in HH:MM format!", hourMinuteString);
-            log.error(errorMessage);
-            throw new RuntimeException(errorMessage);
-        }
-        return ret;
     }
 
     private static NflSeasonData getSeasonDataComputeIfAbsent(final Map<String, NflSeasonData> teamSeasonDataMap, final String teamName) {

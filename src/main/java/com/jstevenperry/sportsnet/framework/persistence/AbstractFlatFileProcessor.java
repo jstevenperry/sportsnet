@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 public abstract class AbstractFlatFileProcessor<T extends AbstractSeasonData> {
 
@@ -22,10 +23,10 @@ public abstract class AbstractFlatFileProcessor<T extends AbstractSeasonData> {
      * the Season Data object for the type of data contained in the file with the values
      * from the file for the specified year.
      */
-    protected static <T extends AbstractSeasonData> void processFile(final Integer year,
-                                                                   final String seasonDataFileName,
-                                                                   final Map<String, T> teamSeasonDataMap,
-                                                                   final FileProcessor<T> fileProcessor) {
+    protected static <T extends AbstractSeasonData> void processSeasonDataFile(final Integer year,
+                                                                               final String seasonDataFileName,
+                                                                               final Map<String, T> teamSeasonDataMap,
+                                                                               final FileProcessor<T> fileProcessor) {
         final String REQUIRED_ENDING = fileProcessor.getRequiredFilenameEnding();
         final int NUMBER_OF_FIELDS = fileProcessor.getNumberOfFields();
         if (seasonDataFileName.endsWith(REQUIRED_ENDING)) { // Sanity check
@@ -59,6 +60,27 @@ public abstract class AbstractFlatFileProcessor<T extends AbstractSeasonData> {
             log.error(errorMessage);
             throw new RuntimeException(errorMessage);
         }
+    }
+
+    /**
+     * Parses the specified string, which must be in HH:MM format (where HH is the number
+     * of hours, and MM is the number of minutes), and returns the number of minutes as
+     * a double precision floating point number.
+     */
+    protected double parseHourMinuteAsDouble(final String hourMinuteString) {
+        double ret;
+        StringTokenizer strtok = new StringTokenizer(hourMinuteString, ":");
+        if (strtok.countTokens() == 2) {
+            int hours = Integer.parseInt(strtok.nextToken());
+            int minutes = Integer.parseInt(strtok.nextToken());
+            // Compute the number of minutes
+            ret = hours * 60.0 + minutes;
+        } else {
+            String errorMessage = String.format("Cannot parse %s, string should be in HH:MM format!", hourMinuteString);
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
+        return ret;
     }
 
 }
