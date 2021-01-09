@@ -30,6 +30,7 @@ public class NbaSeasonData extends AbstractSeasonData {
     int fouls;
     int points;
     // Opponent stats
+    int oppStatsRank;
     int oppGamesPlayed;
     int oppMinutesPlayed;
     int oppFieldGoals;
@@ -53,6 +54,7 @@ public class NbaSeasonData extends AbstractSeasonData {
     int oppFouls;
     int oppPoints;
     // Misc stats
+    int miscellaneousStatsRank;
     double ageOnFeb1;
     int wins;
     int losses;
@@ -104,6 +106,7 @@ public class NbaSeasonData extends AbstractSeasonData {
                 ", turnovers=" + turnovers +
                 ", fouls=" + fouls +
                 ", points=" + points +
+                ", oppStatsRank=" + oppStatsRank +
                 ", oppGamesPlayed=" + oppGamesPlayed +
                 ", oppMinutesPlayed=" + oppMinutesPlayed +
                 ", oppFieldGoals=" + oppFieldGoals +
@@ -126,6 +129,7 @@ public class NbaSeasonData extends AbstractSeasonData {
                 ", oppTurnovers=" + oppTurnovers +
                 ", oppFouls=" + oppFouls +
                 ", oppPoints=" + oppPoints +
+                ", miscellaneousStatsRank=" + miscellaneousStatsRank +
                 ", ageOnFeb1=" + ageOnFeb1 +
                 ", wins=" + wins +
                 ", losses=" + losses +
@@ -154,19 +158,37 @@ public class NbaSeasonData extends AbstractSeasonData {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
 
         if (o == null || getClass() != o.getClass()) return false;
 
-        NbaSeasonData that = (NbaSeasonData) o;
+        final NbaSeasonData that = (NbaSeasonData) o;
 
-        return new EqualsBuilder().append(teamStatsRank, that.teamStatsRank).append(gamesPlayed, that.gamesPlayed).append(minutesPlayed, that.minutesPlayed).append(fieldGoals, that.fieldGoals).append(fieldGoalAtt, that.fieldGoalAtt).append(fieldGoalPct, that.fieldGoalPct).append(threePointers, that.threePointers).append(threePointerAtt, that.threePointerAtt).append(threePointerPct, that.threePointerPct).append(twoPointers, that.twoPointers).append(twoPointerAtt, that.twoPointerAtt).append(twoPointerPct, that.twoPointerPct).append(freeThrows, that.freeThrows).append(freeThrowAtt, that.freeThrowAtt).append(freeThrowPct, that.freeThrowPct).append(offensiveRebounds, that.offensiveRebounds).append(defensiveRebounds, that.defensiveRebounds).append(assists, that.assists).append(steals, that.steals).append(blocks, that.blocks).append(turnovers, that.turnovers).append(fouls, that.fouls).append(points, that.points).append(oppGamesPlayed, that.oppGamesPlayed).append(oppMinutesPlayed, that.oppMinutesPlayed).append(oppFieldGoals, that.oppFieldGoals).append(oppFieldGoalAtt, that.oppFieldGoalAtt).append(oppFieldGoalPct, that.oppFieldGoalPct).append(oppThreePointers, that.oppThreePointers).append(oppThreePointerAtt, that.oppThreePointerAtt).append(oppThreePointerPct, that.oppThreePointerPct).append(oppTwoPointers, that.oppTwoPointers).append(oppTwoPointerAtt, that.oppTwoPointerAtt).append(oppTwoPointerPct, that.oppTwoPointerPct).append(oppFreeThrows, that.oppFreeThrows).append(oppFreeThrowAtt, that.oppFreeThrowAtt).append(oppFreeThrowPct, that.oppFreeThrowPct).append(oppOffensiveRebounds, that.oppOffensiveRebounds).append(oppDefensiveRebounds, that.oppDefensiveRebounds).append(oppAssists, that.oppAssists).append(oppSteals, that.oppSteals).append(oppBlocks, that.oppBlocks).append(oppTurnovers, that.oppTurnovers).append(oppFouls, that.oppFouls).append(oppPoints, that.oppPoints).append(ageOnFeb1, that.ageOnFeb1).append(wins, that.wins).append(losses, that.losses).append(pythagoreanWins, that.pythagoreanWins).append(pythagoreanLosses, that.pythagoreanLosses).append(marginOfVictory, that.marginOfVictory).append(strengthOfSchedule, that.strengthOfSchedule).append(simpleRatingSystem, that.simpleRatingSystem).append(offensiveRating, that.offensiveRating).append(defensiveRating, that.defensiveRating).append(netRating, that.netRating).append(pace, that.pace).append(freeThrowAttRate, that.freeThrowAttRate).append(threePtAttRate, that.threePtAttRate).append(trueShootingPct, that.trueShootingPct).append(effFieldGoalPct, that.effFieldGoalPct).append(turnoverPct, that.turnoverPct).append(offensiveReboundPct, that.offensiveReboundPct).append(freeThrowMadeRate, that.freeThrowMadeRate).append(oppEffFieldGoalPct, that.oppEffFieldGoalPct).append(oppTurnoverPct, that.oppTurnoverPct).append(oppOffensiveReboundPct, that.oppOffensiveReboundPct).append(oppFreeThrowMadeRate, that.oppFreeThrowMadeRate).append(attendancePerGame, that.attendancePerGame).isEquals();
+        return new EqualsBuilder().append(teamStatsRank, that.teamStatsRank).append(gamesPlayed, that.gamesPlayed).append(minutesPlayed, that.minutesPlayed).append(fieldGoals, that.fieldGoals).append(fieldGoalAtt, that.fieldGoalAtt).append(fieldGoalPct, that.fieldGoalPct).append(threePointers, that.threePointers).append(threePointerAtt, that.threePointerAtt).append(threePointerPct, that.threePointerPct).append(twoPointers, that.twoPointers).append(twoPointerAtt, that.twoPointerAtt).append(twoPointerPct, that.twoPointerPct).append(freeThrows, that.freeThrows).append(freeThrowAtt, that.freeThrowAtt).append(freeThrowPct, that.freeThrowPct).append(offensiveRebounds, that.offensiveRebounds).append(defensiveRebounds, that.defensiveRebounds).append(assists, that.assists).append(steals, that.steals).append(blocks, that.blocks).append(turnovers, that.turnovers).append(fouls, that.fouls).append(points, that.points).append(oppStatsRank, that.oppStatsRank).append(oppGamesPlayed, that.oppGamesPlayed).append(oppMinutesPlayed, that.oppMinutesPlayed).append(oppFieldGoals, that.oppFieldGoals).append(oppFieldGoalAtt, that.oppFieldGoalAtt).append(oppFieldGoalPct, that.oppFieldGoalPct).append(oppThreePointers, that.oppThreePointers).append(oppThreePointerAtt, that.oppThreePointerAtt).append(oppThreePointerPct, that.oppThreePointerPct).append(oppTwoPointers, that.oppTwoPointers).append(oppTwoPointerAtt, that.oppTwoPointerAtt).append(oppTwoPointerPct, that.oppTwoPointerPct).append(oppFreeThrows, that.oppFreeThrows).append(oppFreeThrowAtt, that.oppFreeThrowAtt).append(oppFreeThrowPct, that.oppFreeThrowPct).append(oppOffensiveRebounds, that.oppOffensiveRebounds).append(oppDefensiveRebounds, that.oppDefensiveRebounds).append(oppAssists, that.oppAssists).append(oppSteals, that.oppSteals).append(oppBlocks, that.oppBlocks).append(oppTurnovers, that.oppTurnovers).append(oppFouls, that.oppFouls).append(oppPoints, that.oppPoints).append(miscellaneousStatsRank, that.miscellaneousStatsRank).append(ageOnFeb1, that.ageOnFeb1).append(wins, that.wins).append(losses, that.losses).append(pythagoreanWins, that.pythagoreanWins).append(pythagoreanLosses, that.pythagoreanLosses).append(marginOfVictory, that.marginOfVictory).append(strengthOfSchedule, that.strengthOfSchedule).append(simpleRatingSystem, that.simpleRatingSystem).append(offensiveRating, that.offensiveRating).append(defensiveRating, that.defensiveRating).append(netRating, that.netRating).append(pace, that.pace).append(freeThrowAttRate, that.freeThrowAttRate).append(threePtAttRate, that.threePtAttRate).append(trueShootingPct, that.trueShootingPct).append(effFieldGoalPct, that.effFieldGoalPct).append(turnoverPct, that.turnoverPct).append(offensiveReboundPct, that.offensiveReboundPct).append(freeThrowMadeRate, that.freeThrowMadeRate).append(oppEffFieldGoalPct, that.oppEffFieldGoalPct).append(oppTurnoverPct, that.oppTurnoverPct).append(oppOffensiveReboundPct, that.oppOffensiveReboundPct).append(oppFreeThrowMadeRate, that.oppFreeThrowMadeRate).append(attendancePerGame, that.attendancePerGame).isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(teamStatsRank).append(gamesPlayed).append(minutesPlayed).append(fieldGoals).append(fieldGoalAtt).append(fieldGoalPct).append(threePointers).append(threePointerAtt).append(threePointerPct).append(twoPointers).append(twoPointerAtt).append(twoPointerPct).append(freeThrows).append(freeThrowAtt).append(freeThrowPct).append(offensiveRebounds).append(defensiveRebounds).append(assists).append(steals).append(blocks).append(turnovers).append(fouls).append(points).append(oppGamesPlayed).append(oppMinutesPlayed).append(oppFieldGoals).append(oppFieldGoalAtt).append(oppFieldGoalPct).append(oppThreePointers).append(oppThreePointerAtt).append(oppThreePointerPct).append(oppTwoPointers).append(oppTwoPointerAtt).append(oppTwoPointerPct).append(oppFreeThrows).append(oppFreeThrowAtt).append(oppFreeThrowPct).append(oppOffensiveRebounds).append(oppDefensiveRebounds).append(oppAssists).append(oppSteals).append(oppBlocks).append(oppTurnovers).append(oppFouls).append(oppPoints).append(ageOnFeb1).append(wins).append(losses).append(pythagoreanWins).append(pythagoreanLosses).append(marginOfVictory).append(strengthOfSchedule).append(simpleRatingSystem).append(offensiveRating).append(defensiveRating).append(netRating).append(pace).append(freeThrowAttRate).append(threePtAttRate).append(trueShootingPct).append(effFieldGoalPct).append(turnoverPct).append(offensiveReboundPct).append(freeThrowMadeRate).append(oppEffFieldGoalPct).append(oppTurnoverPct).append(oppOffensiveReboundPct).append(oppFreeThrowMadeRate).append(attendancePerGame).toHashCode();
+        return new HashCodeBuilder(17, 37).append(teamStatsRank).append(gamesPlayed).append(minutesPlayed).append(fieldGoals).append(fieldGoalAtt).append(fieldGoalPct).append(threePointers).append(threePointerAtt).append(threePointerPct).append(twoPointers).append(twoPointerAtt).append(twoPointerPct).append(freeThrows).append(freeThrowAtt).append(freeThrowPct).append(offensiveRebounds).append(defensiveRebounds).append(assists).append(steals).append(blocks).append(turnovers).append(fouls).append(points).append(oppStatsRank).append(oppGamesPlayed).append(oppMinutesPlayed).append(oppFieldGoals).append(oppFieldGoalAtt).append(oppFieldGoalPct).append(oppThreePointers).append(oppThreePointerAtt).append(oppThreePointerPct).append(oppTwoPointers).append(oppTwoPointerAtt).append(oppTwoPointerPct).append(oppFreeThrows).append(oppFreeThrowAtt).append(oppFreeThrowPct).append(oppOffensiveRebounds).append(oppDefensiveRebounds).append(oppAssists).append(oppSteals).append(oppBlocks).append(oppTurnovers).append(oppFouls).append(oppPoints).append(miscellaneousStatsRank).append(ageOnFeb1).append(wins).append(losses).append(pythagoreanWins).append(pythagoreanLosses).append(marginOfVictory).append(strengthOfSchedule).append(simpleRatingSystem).append(offensiveRating).append(defensiveRating).append(netRating).append(pace).append(freeThrowAttRate).append(threePtAttRate).append(trueShootingPct).append(effFieldGoalPct).append(turnoverPct).append(offensiveReboundPct).append(freeThrowMadeRate).append(oppEffFieldGoalPct).append(oppTurnoverPct).append(oppOffensiveReboundPct).append(oppFreeThrowMadeRate).append(attendancePerGame).toHashCode();
+    }
+
+    public int getOppStatsRank() {
+        return oppStatsRank;
+    }
+
+    public NbaSeasonData setOppStatsRank(final int oppStatsRank) {
+        this.oppStatsRank = oppStatsRank;
+        return this;
+    }
+
+    public int getMiscellaneousStatsRank() {
+        return miscellaneousStatsRank;
+    }
+
+    public NbaSeasonData setMiscellaneousStatsRank(final int miscellaneousStatsRank) {
+        this.miscellaneousStatsRank = miscellaneousStatsRank;
+        return this;
     }
 
     public int getTeamStatsRank() {
