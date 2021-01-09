@@ -1,17 +1,14 @@
 package com.jstevenperry.sportsnet.nfl.persistence;
 
+import com.jstevenperry.sportsnet.framework.persistence.AbstractFlatFileProcessor;
+import com.jstevenperry.sportsnet.framework.persistence.FileProcessor;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.nfl.model.NflSeasonData;
-import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +18,7 @@ import java.util.stream.Collectors;
 import static com.jstevenperry.sportsnet.framework.util.NetworkUtils.nice;
 
 @Component("nflSeasonDataDao")
-public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
+public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeasonData> implements SeasonDataDao<NflSeasonData> {
 
     private static final Logger log = LoggerFactory.getLogger(NflSeasonDataFlatFileDao.class);
 
@@ -49,20 +46,7 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         loadData(database);
     }
 
-    private interface FileProcessor {
-
-        String getRequiredFilenameEnding();
-
-        int getNumberOfFields();
-
-        default int getNumberOfHeaderLines() {
-            return 2;
-        }
-
-        NflSeasonData parseAndProcessFileLine(final String[] line, final Map<String, NflSeasonData> teamSeasonDataMap);
-    }
-
-    private static void loadData(final Map<Integer, Map<String, NflSeasonData>> database) {
+    private void loadData(final Map<Integer, Map<String, NflSeasonData>> database) {
         for (final String[] seasonDataEntry : SEASON_DATA_FILE_NAMES) {
             Integer year = Integer.parseInt(seasonDataEntry[0]);
             for (int seasonDataFileIndex = 1; seasonDataFileIndex < seasonDataEntry.length; seasonDataFileIndex++) {
@@ -99,8 +83,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         }
     }
 
-    private static void processConversionsFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor() {
+    private void processConversionsFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
+        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Conversions.csv";
@@ -118,8 +102,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         });
     }
 
-    private static NflSeasonData parseAndProcessConversionsFileLine(final String[] line,
-                                                                    final Map<String, NflSeasonData> teamSeasonDataMap) {
+    private NflSeasonData parseAndProcessConversionsFileLine(final String[] line,
+                                                             final Map<String, NflSeasonData> teamSeasonDataMap) {
         String teamName = StringUtils.remove(StringUtils.remove(StringUtils.trim(line[1]), '*'), '.');
         NflSeasonData seasonData = getSeasonDataComputeIfAbsent(teamSeasonDataMap, teamName);
         seasonData.setConversionsRank(Integer.parseInt(nice(StringUtils.trim(line[0]))));
@@ -136,8 +120,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         return seasonData;
     }
 
-    private static void processDriveAveragesFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor() {
+    private void processDriveAveragesFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
+        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Drive-Averages.csv";
@@ -155,8 +139,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         });
     }
 
-    private static NflSeasonData parseAndProcessDriveAveragesFileLine(final String[] line,
-                                                                      final Map<String, NflSeasonData> teamSeasonDataMap) {
+    private NflSeasonData parseAndProcessDriveAveragesFileLine(final String[] line,
+                                                               final Map<String, NflSeasonData> teamSeasonDataMap) {
         String teamName = StringUtils.remove(StringUtils.remove(StringUtils.trim(line[1]), '*'), '.');
         NflSeasonData seasonData = getSeasonDataComputeIfAbsent(teamSeasonDataMap, teamName);
         seasonData.setDriveAveragesRank(Integer.parseInt(nice(StringUtils.trim(line[0]))));
@@ -170,8 +154,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         return seasonData;
     }
 
-    private static void processKickAndPuntReturnsFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor() {
+    private void processKickAndPuntReturnsFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
+        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Kick&PuntReturns.csv";
@@ -190,7 +174,7 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
 
     }
 
-    private static NflSeasonData parseAndProcessKickAndPuntReturnsFile(final String[] line, final Map<String, NflSeasonData> teamSeasonDataMap) {
+    private NflSeasonData parseAndProcessKickAndPuntReturnsFile(final String[] line, final Map<String, NflSeasonData> teamSeasonDataMap) {
         String teamName = StringUtils.remove(StringUtils.remove(StringUtils.trim(line[1]), '*'), '.');
         NflSeasonData seasonData = getSeasonDataComputeIfAbsent(teamSeasonDataMap, teamName);
         seasonData.setKickPuntReturnRank(Integer.parseInt(nice(StringUtils.trim(line[0]))));
@@ -209,8 +193,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         return seasonData;
     }
 
-    private static void processKickingAndPuntingFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor() {
+    private void processKickingAndPuntingFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
+        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Kicking&Punting.csv";
@@ -228,7 +212,7 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         });
     }
 
-    private static NflSeasonData parseAndProcessKickingAndPuntingFile(final String[] line, final Map<String, NflSeasonData> teamSeasonDataMap) {
+    private NflSeasonData parseAndProcessKickingAndPuntingFile(final String[] line, final Map<String, NflSeasonData> teamSeasonDataMap) {
         String teamName = StringUtils.remove(StringUtils.remove(StringUtils.trim(line[1]), '*'), '.');
         NflSeasonData seasonData = getSeasonDataComputeIfAbsent(teamSeasonDataMap, teamName);
         seasonData.setKickPuntRank(Integer.parseInt(nice(StringUtils.trim(line[0]))));
@@ -253,8 +237,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         return seasonData;
     }
 
-    private static void processPassingOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor() {
+    private void processPassingOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
+        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Passing-Offense.csv";
@@ -277,7 +261,7 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         });
     }
 
-    private static NflSeasonData parseAndProcessPassingOffenseFile(final String[] line, final Map<String, NflSeasonData> teamSeasonDataMap) {
+    private NflSeasonData parseAndProcessPassingOffenseFile(final String[] line, final Map<String, NflSeasonData> teamSeasonDataMap) {
         String teamName = StringUtils.remove(StringUtils.remove(StringUtils.trim(line[1]), '*'), '.');
         NflSeasonData seasonData = getSeasonDataComputeIfAbsent(teamSeasonDataMap, teamName);
         seasonData.setPassingOffenseRank(Integer.parseInt(nice(StringUtils.trim(line[0]))));
@@ -301,8 +285,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         return seasonData;
     }
 
-    private static void processRushingOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor() {
+    private void processRushingOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
+        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Rushing-Offense.csv";
@@ -336,8 +320,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         return seasonData;
     }
 
-    private static void processScoringOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor() {
+    private void processScoringOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
+        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Scoring-Offense.csv";
@@ -372,8 +356,8 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         return seasonData;
     }
 
-    private static void processTeamOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
-        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor() {
+    private void processTeamOffenseFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
+        processFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
             public String getRequiredFilenameEnding() {
                 return "Team-Offense.csv";
@@ -423,51 +407,6 @@ public class NflSeasonDataFlatFileDao implements SeasonDataDao<NflSeasonData> {
         seasonData.setExpectedPtsByAllOffense(Double.parseDouble(nice(StringUtils.trim(line[27]))));
 
         return seasonData;
-    }
-
-    /**
-     * Common code. Reads the specified file and invokes the FileProcessor that is provided
-     * by the caller to support that. Upon successful completion, this method has decorated
-     * the Season Data object for the type of data contained in the file with the values
-     * from the file for the specified year.
-     */
-    private static void processFile(final Integer year,
-                                    final String seasonDataFileName,
-                                    final Map<String, NflSeasonData> teamSeasonDataMap,
-                                    final FileProcessor fileProcessor) {
-        final String REQUIRED_ENDING = fileProcessor.getRequiredFilenameEnding();
-        final int NUMBER_OF_FIELDS = fileProcessor.getNumberOfFields();
-        if (seasonDataFileName.endsWith(REQUIRED_ENDING)) { // Sanity check
-            InputStream inputStream = NflSeasonDataFlatFileDao.class.getResourceAsStream(seasonDataFileName);
-            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-                CSVReader csvReader = new CSVReader(bufferedReader);
-                // Skip header lines
-                for (int skipCount = 0; skipCount < fileProcessor.getNumberOfHeaderLines(); skipCount++) {
-                    csvReader.readNext(); // Skip header
-                }
-                int numberOfDataLinesProcessed = 0;
-                String[] line = csvReader.readNext();
-                while (line != null) {
-                    if (line.length == NUMBER_OF_FIELDS) {
-                        NflSeasonData seasonData = fileProcessor.parseAndProcessFileLine(line, teamSeasonDataMap);
-                        seasonData.setYear(year);
-                    } else {
-                        throw new RuntimeException(String.format("processFile(%d, %s): Expected %d fields, got %d instead.", year, seasonDataFileName, NUMBER_OF_FIELDS, line.length));
-                    }
-                    line = csvReader.readNext();
-                    numberOfDataLinesProcessed++;
-                }
-                log.debug("processFile({}, {}, ...) Processed {} lines of data.", year, seasonDataFileName, numberOfDataLinesProcessed);
-            } catch (IOException e) {
-                String message = String.format("processFile(%d, %s): Error reading database file name '%s': %s", year, seasonDataFileName, seasonDataFileName, e.getLocalizedMessage());
-                log.error(message, e);
-                throw new RuntimeException(message, e);
-            }
-        } else {
-            String errorMessage = String.format("processFile(%d, %s): This (%s) is not the file you're looking for (ends with '%s')", year, seasonDataFileName, seasonDataFileName, REQUIRED_ENDING);
-            log.error(errorMessage);
-            throw new RuntimeException(errorMessage);
-        }
     }
 
     /**
