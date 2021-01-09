@@ -54,6 +54,8 @@ public class NetworkUtils {
 
   private static List<NetworkCandidate> loadNetworkFiles(final String[] networkFileNames) {
     List<NetworkCandidate> ret = new ArrayList<>();
+    int numberOfNetworksLoaded = 0;
+    System.out.printf("Loading %d networks...%n", networkFileNames.length);
     for (String networkFileName: networkFileNames) {
       //
       // Load the network
@@ -76,7 +78,11 @@ public class NetworkUtils {
         String message = String.format("Error loading network: %s", networkFileName);
         log.error(message, e);
       }
+      numberOfNetworksLoaded++;
+      System.out.print(".");
     }
+    System.out.print("\n");
+    log.info("Loaded {} networks.", networkFileNames.length);
     return ret;
   }
 
@@ -251,6 +257,14 @@ public class NetworkUtils {
     if (!validTournamentYears.contains(year)) {
       throw new RuntimeException(String.format("Invalid year: " + year + " (must be one of %s)", StringUtils.join(validTournamentYears.toArray(), ',')));
     }
+  }
+
+  public static String nice(final String string) {
+    String ret = "0";
+    if (StringUtils.isNotEmpty(string)) {
+      ret = StringUtils.remove(StringUtils.trim(string), '%');
+    }
+    return ret;
   }
 
 }

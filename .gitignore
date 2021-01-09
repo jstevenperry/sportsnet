@@ -38,3 +38,6 @@ target
 
 # DL4J predictions
 *.dl4j.csv
+
+# Stupid ass MacOS files
+.DS_Store

@@ -69,14 +69,14 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
     return ret;
   }
 
-  public RecordReaderDataSetIterator createIterator(final List<Integer> yearsForTraining,
+  public RecordReaderDataSetIterator createIterator(final List<Integer> yearsToPull,
                                                     final SeasonDataDao<T> seasonDataDao,
                                                     final TournamentResultDao tournamentResultDao,
                                                     final TournamentParticipantDao tournamentParticipantDao,
                                                     final NetworkParameters networkParameters) throws IOException, InterruptedException {
     StringWriter stringWriter = new StringWriter();
     CSVWriter csvWriter = new CSVWriter(stringWriter);
-    for (Integer year : yearsForTraining) {
+    for (Integer year : yearsToPull) {
       List<TournamentResult> tournamentResults = pullTournamentResults(year, tournamentResultDao);
       Collections.shuffle(tournamentResults); // Shake things up a little
       for (TournamentResult tournamentResult : tournamentResults) {

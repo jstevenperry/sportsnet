@@ -1,0 +1,35 @@
+# Each line describes a tournament matchup with a home team and an away team
+# NOTE: PUT THIS FILE IN YOUR SIMULATION DIRECTORY!
+# File format:
+# [home_region,home_round,home_index]vs[away_region,away_round,away_index]
+#
+# Region 0 (AFC)
+# Round 0 (Wildcard)
+[0,0,0]vs[0,0,1]
+[0,0,2]vs[0,0,3]
+[0,0,4]vs[0,0,5]
+#
+# Round 1 - Divisional playoffs
+[0,1,0]vs[0,1,1]
+[0,1,3]vs[0,1,5]
+#
+# Round 2 Division championship
+[0,2,0]vs[0,2,1]
+#
+#
+# Region 1 (NFC)
+# Round 0 (Wildcard)
+[1,0,0]vs[1,0,1]
+[1,0,2]vs[1,0,3]
+[1,0,4]vs[1,0,5]
+# Round 1 - Divisional playoffs
+[1,1,0]vs[1,1,1]
+[1,1,3]vs[1,1,5]
+# Round 2 Division championship
+[1,2,0]vs[1,2,1]
+#
+# SUPER BOWL
+[0,3,0]vs[1,3,0]
+#
+# CHAMPION
+# [0,4,0]

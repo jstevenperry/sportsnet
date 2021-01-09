@@ -53,8 +53,8 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
   protected abstract List<AbstractTournamentRunnerPlugin<T>> loadPlugins(SeasonDataDao<T> seasonDataDao);
 
   private void promptUser(final BufferedReader scanner,
-                                 final List<NetworkCandidate> allNetworks,
-                                 final List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins) throws IOException {
+                          final List<NetworkCandidate> allNetworks,
+                          final List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins) throws IOException {
     //
     // Get the network the user wants to run
     List<NetworkCandidate> selectedNetworks = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.Action.RUN);
