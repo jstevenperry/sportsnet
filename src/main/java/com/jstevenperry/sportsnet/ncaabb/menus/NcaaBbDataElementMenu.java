@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class DataElementMenu extends AbstractDataElementMenu {
+public class NcaaBbDataElementMenu extends AbstractDataElementMenu {
 
   private static final Logger log = LoggerFactory.getLogger(DataElementMenuChoiceEnum.class);
 
