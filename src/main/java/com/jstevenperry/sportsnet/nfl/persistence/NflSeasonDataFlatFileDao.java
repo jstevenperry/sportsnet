@@ -1,8 +1,7 @@
 package com.jstevenperry.sportsnet.nfl.persistence;
 
-import com.jstevenperry.sportsnet.framework.persistence.AbstractFlatFileProcessor;
+import com.jstevenperry.sportsnet.framework.persistence.AbstractSeasonDataFlatFileDao;
 import com.jstevenperry.sportsnet.framework.persistence.FileProcessor;
-import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.nfl.model.NflSeasonData;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -17,40 +16,16 @@ import java.util.stream.Collectors;
 import static com.jstevenperry.sportsnet.framework.util.NetworkUtils.nice;
 
 @Component("nflSeasonDataDao")
-public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeasonData> implements SeasonDataDao<NflSeasonData> {
+public class NflSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NflSeasonData> {
 
     private static final Logger log = LoggerFactory.getLogger(NflSeasonDataFlatFileDao.class);
 
-    private static final String[][] SEASON_DATA_FILE_NAMES = {
-            {"2006", "/nfl/2006/2006-Conversions.csv", "/nfl/2006/2006-Drive-Averages.csv", "/nfl/2006/2006-Kick&PuntReturns.csv", "/nfl/2006/2006-Kicking&Punting.csv", "/nfl/2006/2006-Passing-Offense.csv", "/nfl/2006/2006-Rushing-Offense.csv", "/nfl/2006/2006-Scoring-Offense.csv", "/nfl/2006/2006-Team-Offense.csv"},
-            {"2007", "/nfl/2007/2007-Conversions.csv", "/nfl/2007/2007-Drive-Averages.csv", "/nfl/2007/2007-Kick&PuntReturns.csv", "/nfl/2007/2007-Kicking&Punting.csv", "/nfl/2007/2007-Passing-Offense.csv", "/nfl/2007/2007-Rushing-Offense.csv", "/nfl/2007/2007-Scoring-Offense.csv", "/nfl/2007/2007-Team-Offense.csv"},
-            {"2008", "/nfl/2008/2008-Conversions.csv", "/nfl/2008/2008-Drive-Averages.csv", "/nfl/2008/2008-Kick&PuntReturns.csv", "/nfl/2008/2008-Kicking&Punting.csv", "/nfl/2008/2008-Passing-Offense.csv", "/nfl/2008/2008-Rushing-Offense.csv", "/nfl/2008/2008-Scoring-Offense.csv", "/nfl/2008/2008-Team-Offense.csv"},
-            {"2009", "/nfl/2009/2009-Conversions.csv", "/nfl/2009/2009-Drive-Averages.csv", "/nfl/2009/2009-Kick&PuntReturns.csv", "/nfl/2009/2009-Kicking&Punting.csv", "/nfl/2009/2009-Passing-Offense.csv", "/nfl/2009/2009-Rushing-Offense.csv", "/nfl/2009/2009-Scoring-Offense.csv", "/nfl/2009/2009-Team-Offense.csv"},
-            {"2010", "/nfl/2010/2010-Conversions.csv", "/nfl/2010/2010-Drive-Averages.csv", "/nfl/2010/2010-Kick&PuntReturns.csv", "/nfl/2010/2010-Kicking&Punting.csv", "/nfl/2010/2010-Passing-Offense.csv", "/nfl/2010/2010-Rushing-Offense.csv", "/nfl/2010/2010-Scoring-Offense.csv", "/nfl/2010/2010-Team-Offense.csv"},
-            {"2011", "/nfl/2011/2011-Conversions.csv", "/nfl/2011/2011-Drive-Averages.csv", "/nfl/2011/2011-Kick&PuntReturns.csv", "/nfl/2011/2011-Kicking&Punting.csv", "/nfl/2011/2011-Passing-Offense.csv", "/nfl/2011/2011-Rushing-Offense.csv", "/nfl/2011/2011-Scoring-Offense.csv", "/nfl/2011/2011-Team-Offense.csv"},
-            {"2012", "/nfl/2012/2012-Conversions.csv", "/nfl/2012/2012-Drive-Averages.csv", "/nfl/2012/2012-Kick&PuntReturns.csv", "/nfl/2012/2012-Kicking&Punting.csv", "/nfl/2012/2012-Passing-Offense.csv", "/nfl/2012/2012-Rushing-Offense.csv", "/nfl/2012/2012-Scoring-Offense.csv", "/nfl/2012/2012-Team-Offense.csv"},
-            {"2013", "/nfl/2013/2013-Conversions.csv", "/nfl/2013/2013-Drive-Averages.csv", "/nfl/2013/2013-Kick&PuntReturns.csv", "/nfl/2013/2013-Kicking&Punting.csv", "/nfl/2013/2013-Passing-Offense.csv", "/nfl/2013/2013-Rushing-Offense.csv", "/nfl/2013/2013-Scoring-Offense.csv", "/nfl/2013/2013-Team-Offense.csv"},
-            {"2014", "/nfl/2014/2014-Conversions.csv", "/nfl/2014/2014-Drive-Averages.csv", "/nfl/2014/2014-Kick&PuntReturns.csv", "/nfl/2014/2014-Kicking&Punting.csv", "/nfl/2014/2014-Passing-Offense.csv", "/nfl/2014/2014-Rushing-Offense.csv", "/nfl/2014/2014-Scoring-Offense.csv", "/nfl/2014/2014-Team-Offense.csv"},
-            {"2015", "/nfl/2015/2015-Conversions.csv", "/nfl/2015/2015-Drive-Averages.csv", "/nfl/2015/2015-Kick&PuntReturns.csv", "/nfl/2015/2015-Kicking&Punting.csv", "/nfl/2015/2015-Passing-Offense.csv", "/nfl/2015/2015-Rushing-Offense.csv", "/nfl/2015/2015-Scoring-Offense.csv", "/nfl/2015/2015-Team-Offense.csv"},
-            {"2016", "/nfl/2016/2016-Conversions.csv", "/nfl/2016/2016-Drive-Averages.csv", "/nfl/2016/2016-Kick&PuntReturns.csv", "/nfl/2016/2016-Kicking&Punting.csv", "/nfl/2016/2016-Passing-Offense.csv", "/nfl/2016/2016-Rushing-Offense.csv", "/nfl/2016/2016-Scoring-Offense.csv", "/nfl/2016/2016-Team-Offense.csv"},
-            {"2017", "/nfl/2017/2017-Conversions.csv", "/nfl/2017/2017-Drive-Averages.csv", "/nfl/2017/2017-Kick&PuntReturns.csv", "/nfl/2017/2017-Kicking&Punting.csv", "/nfl/2017/2017-Passing-Offense.csv", "/nfl/2017/2017-Rushing-Offense.csv", "/nfl/2017/2017-Scoring-Offense.csv", "/nfl/2017/2017-Team-Offense.csv"},
-            {"2018", "/nfl/2018/2018-Conversions.csv", "/nfl/2018/2018-Drive-Averages.csv", "/nfl/2018/2018-Kick&PuntReturns.csv", "/nfl/2018/2018-Kicking&Punting.csv", "/nfl/2018/2018-Passing-Offense.csv", "/nfl/2018/2018-Rushing-Offense.csv", "/nfl/2018/2018-Scoring-Offense.csv", "/nfl/2018/2018-Team-Offense.csv"},
-            {"2019", "/nfl/2019/2019-Conversions.csv", "/nfl/2019/2019-Drive-Averages.csv", "/nfl/2019/2019-Kick&PuntReturns.csv", "/nfl/2019/2019-Kicking&Punting.csv", "/nfl/2019/2019-Passing-Offense.csv", "/nfl/2019/2019-Rushing-Offense.csv", "/nfl/2019/2019-Scoring-Offense.csv", "/nfl/2019/2019-Team-Offense.csv"},
-            {"2020", "/nfl/2020/2020-Conversions.csv", "/nfl/2020/2020-Drive-Averages.csv", "/nfl/2020/2020-Kick&PuntReturns.csv", "/nfl/2020/2020-Kicking&Punting.csv", "/nfl/2020/2020-Passing-Offense.csv", "/nfl/2020/2020-Rushing-Offense.csv", "/nfl/2020/2020-Scoring-Offense.csv", "/nfl/2020/2020-Team-Offense.csv"}
-    };
-
-    private final Map<Integer, Map<String, NflSeasonData>> database = new HashMap<>();
-
-    public NflSeasonDataFlatFileDao() {
-        loadData(database);
-    }
-
-    private void loadData(final Map<Integer, Map<String, NflSeasonData>> database) {
-        for (final String[] seasonDataEntry : SEASON_DATA_FILE_NAMES) {
+    protected void loadData() {
+        for (final String[] seasonDataEntry : getDataFileNames()) {
             Integer year = Integer.parseInt(seasonDataEntry[0]);
             for (int seasonDataFileIndex = 1; seasonDataFileIndex < seasonDataEntry.length; seasonDataFileIndex++) {
                 String seasonDataFileName = seasonDataEntry[seasonDataFileIndex];
-                Map<String, NflSeasonData> teamSeasonDataMap = database.computeIfAbsent(year, k -> new HashMap<>());
+                Map<String, NflSeasonData> teamSeasonDataMap = getDatabase().computeIfAbsent(year, k -> new HashMap<>());
                 // See sternly worded comment in SEASON_DATA_FILE_NAMES declaration
                 switch (seasonDataFileIndex) {
                     case 1:
@@ -80,6 +55,27 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
                 }
             }
         }
+    }
+
+    @Override
+    protected String[][] getDataFileNames() {
+        return new String[][] {
+                {"2006", "/nfl/2006/2006-Conversions.csv", "/nfl/2006/2006-Drive-Averages.csv", "/nfl/2006/2006-Kick&PuntReturns.csv", "/nfl/2006/2006-Kicking&Punting.csv", "/nfl/2006/2006-Passing-Offense.csv", "/nfl/2006/2006-Rushing-Offense.csv", "/nfl/2006/2006-Scoring-Offense.csv", "/nfl/2006/2006-Team-Offense.csv"},
+                {"2007", "/nfl/2007/2007-Conversions.csv", "/nfl/2007/2007-Drive-Averages.csv", "/nfl/2007/2007-Kick&PuntReturns.csv", "/nfl/2007/2007-Kicking&Punting.csv", "/nfl/2007/2007-Passing-Offense.csv", "/nfl/2007/2007-Rushing-Offense.csv", "/nfl/2007/2007-Scoring-Offense.csv", "/nfl/2007/2007-Team-Offense.csv"},
+                {"2008", "/nfl/2008/2008-Conversions.csv", "/nfl/2008/2008-Drive-Averages.csv", "/nfl/2008/2008-Kick&PuntReturns.csv", "/nfl/2008/2008-Kicking&Punting.csv", "/nfl/2008/2008-Passing-Offense.csv", "/nfl/2008/2008-Rushing-Offense.csv", "/nfl/2008/2008-Scoring-Offense.csv", "/nfl/2008/2008-Team-Offense.csv"},
+                {"2009", "/nfl/2009/2009-Conversions.csv", "/nfl/2009/2009-Drive-Averages.csv", "/nfl/2009/2009-Kick&PuntReturns.csv", "/nfl/2009/2009-Kicking&Punting.csv", "/nfl/2009/2009-Passing-Offense.csv", "/nfl/2009/2009-Rushing-Offense.csv", "/nfl/2009/2009-Scoring-Offense.csv", "/nfl/2009/2009-Team-Offense.csv"},
+                {"2010", "/nfl/2010/2010-Conversions.csv", "/nfl/2010/2010-Drive-Averages.csv", "/nfl/2010/2010-Kick&PuntReturns.csv", "/nfl/2010/2010-Kicking&Punting.csv", "/nfl/2010/2010-Passing-Offense.csv", "/nfl/2010/2010-Rushing-Offense.csv", "/nfl/2010/2010-Scoring-Offense.csv", "/nfl/2010/2010-Team-Offense.csv"},
+                {"2011", "/nfl/2011/2011-Conversions.csv", "/nfl/2011/2011-Drive-Averages.csv", "/nfl/2011/2011-Kick&PuntReturns.csv", "/nfl/2011/2011-Kicking&Punting.csv", "/nfl/2011/2011-Passing-Offense.csv", "/nfl/2011/2011-Rushing-Offense.csv", "/nfl/2011/2011-Scoring-Offense.csv", "/nfl/2011/2011-Team-Offense.csv"},
+                {"2012", "/nfl/2012/2012-Conversions.csv", "/nfl/2012/2012-Drive-Averages.csv", "/nfl/2012/2012-Kick&PuntReturns.csv", "/nfl/2012/2012-Kicking&Punting.csv", "/nfl/2012/2012-Passing-Offense.csv", "/nfl/2012/2012-Rushing-Offense.csv", "/nfl/2012/2012-Scoring-Offense.csv", "/nfl/2012/2012-Team-Offense.csv"},
+                {"2013", "/nfl/2013/2013-Conversions.csv", "/nfl/2013/2013-Drive-Averages.csv", "/nfl/2013/2013-Kick&PuntReturns.csv", "/nfl/2013/2013-Kicking&Punting.csv", "/nfl/2013/2013-Passing-Offense.csv", "/nfl/2013/2013-Rushing-Offense.csv", "/nfl/2013/2013-Scoring-Offense.csv", "/nfl/2013/2013-Team-Offense.csv"},
+                {"2014", "/nfl/2014/2014-Conversions.csv", "/nfl/2014/2014-Drive-Averages.csv", "/nfl/2014/2014-Kick&PuntReturns.csv", "/nfl/2014/2014-Kicking&Punting.csv", "/nfl/2014/2014-Passing-Offense.csv", "/nfl/2014/2014-Rushing-Offense.csv", "/nfl/2014/2014-Scoring-Offense.csv", "/nfl/2014/2014-Team-Offense.csv"},
+                {"2015", "/nfl/2015/2015-Conversions.csv", "/nfl/2015/2015-Drive-Averages.csv", "/nfl/2015/2015-Kick&PuntReturns.csv", "/nfl/2015/2015-Kicking&Punting.csv", "/nfl/2015/2015-Passing-Offense.csv", "/nfl/2015/2015-Rushing-Offense.csv", "/nfl/2015/2015-Scoring-Offense.csv", "/nfl/2015/2015-Team-Offense.csv"},
+                {"2016", "/nfl/2016/2016-Conversions.csv", "/nfl/2016/2016-Drive-Averages.csv", "/nfl/2016/2016-Kick&PuntReturns.csv", "/nfl/2016/2016-Kicking&Punting.csv", "/nfl/2016/2016-Passing-Offense.csv", "/nfl/2016/2016-Rushing-Offense.csv", "/nfl/2016/2016-Scoring-Offense.csv", "/nfl/2016/2016-Team-Offense.csv"},
+                {"2017", "/nfl/2017/2017-Conversions.csv", "/nfl/2017/2017-Drive-Averages.csv", "/nfl/2017/2017-Kick&PuntReturns.csv", "/nfl/2017/2017-Kicking&Punting.csv", "/nfl/2017/2017-Passing-Offense.csv", "/nfl/2017/2017-Rushing-Offense.csv", "/nfl/2017/2017-Scoring-Offense.csv", "/nfl/2017/2017-Team-Offense.csv"},
+                {"2018", "/nfl/2018/2018-Conversions.csv", "/nfl/2018/2018-Drive-Averages.csv", "/nfl/2018/2018-Kick&PuntReturns.csv", "/nfl/2018/2018-Kicking&Punting.csv", "/nfl/2018/2018-Passing-Offense.csv", "/nfl/2018/2018-Rushing-Offense.csv", "/nfl/2018/2018-Scoring-Offense.csv", "/nfl/2018/2018-Team-Offense.csv"},
+                {"2019", "/nfl/2019/2019-Conversions.csv", "/nfl/2019/2019-Drive-Averages.csv", "/nfl/2019/2019-Kick&PuntReturns.csv", "/nfl/2019/2019-Kicking&Punting.csv", "/nfl/2019/2019-Passing-Offense.csv", "/nfl/2019/2019-Rushing-Offense.csv", "/nfl/2019/2019-Scoring-Offense.csv", "/nfl/2019/2019-Team-Offense.csv"},
+                {"2020", "/nfl/2020/2020-Conversions.csv", "/nfl/2020/2020-Drive-Averages.csv", "/nfl/2020/2020-Kick&PuntReturns.csv", "/nfl/2020/2020-Kicking&Punting.csv", "/nfl/2020/2020-Passing-Offense.csv", "/nfl/2020/2020-Rushing-Offense.csv", "/nfl/2020/2020-Scoring-Offense.csv", "/nfl/2020/2020-Team-Offense.csv"}
+        };
     }
 
     private void processConversionsFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
@@ -419,7 +415,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
 
     @Override
     public List<NflSeasonData> fetchAllByYear(final Integer year) {
-        Map<String, NflSeasonData> teamSeasonDataMap = database.get(year);
+        Map<String, NflSeasonData> teamSeasonDataMap = getDatabase().get(year);
         List<NflSeasonData> ret = teamSeasonDataMap.keySet()
                 .stream()
                 .map(teamSeasonDataMap::get)
@@ -431,7 +427,7 @@ public class NflSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NflSeaso
     @Override
     public NflSeasonData fetchByYearAndTeamName(final Integer year, final String teamName) {
         NflSeasonData ret;
-        Map<String, NflSeasonData> teamSeasonDataMap = database.get(year);
+        Map<String, NflSeasonData> teamSeasonDataMap = getDatabase().get(year);
         ret = teamSeasonDataMap.get(teamName);
 
         log.trace("fetchByYearAndTeamName({}, {}): Returning NflSeasonData: {}", year, teamName, ret);
