@@ -19,12 +19,12 @@ public class NflTournamentPlugin2020 extends AbstractNflTournamentRunnerPlugin {
 
     @Override
     protected String getTournamentResultsTemplateFileName() {
-        return "/nfl/2020/tournament-results-nfl.csv";
+        return "/nfl/2020/playoff-results-nfl.csv";
     }
 
     @Override
     public String getTournamentTemplateFileName() {
-        return "/nfl/2020/tournament-template-nfl.txt";
+        return "/nfl/2020/playoff-matchups-template-nfl.txt";
     }
 
     @Override

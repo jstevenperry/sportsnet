@@ -14,7 +14,7 @@ public abstract class AbstractNflTournamentRunnerPlugin extends AbstractTourname
 
   @Override
   protected String getTournamentResultsTemplateFileName() {
-    return "/nfl/tournament-results-nfl.csv";
+    return "/nfl/playoff-results-nfl.csv";
   }
 
   @Override
@@ -24,7 +24,7 @@ public abstract class AbstractNflTournamentRunnerPlugin extends AbstractTourname
 
   @Override
   public String getTournamentTemplateFileName() {
-    return "/nfl/tournament-template-nfl.txt";
+    return "/nfl/playoff-matchups-template-nfl.txt";
   }
 
   @Override
