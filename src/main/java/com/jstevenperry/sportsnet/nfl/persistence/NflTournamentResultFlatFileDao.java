@@ -3,22 +3,11 @@ package com.jstevenperry.sportsnet.nfl.persistence;
 import com.jstevenperry.sportsnet.framework.model.TournamentResult;
 import com.jstevenperry.sportsnet.framework.persistence.AbstractTournamentResultFlatFileDao;
 import com.jstevenperry.sportsnet.nfl.model.NflSeasonData;
-import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component("nflTournamentResultFlatFileDao")
 public class NflTournamentResultFlatFileDao extends AbstractTournamentResultFlatFileDao<NflSeasonData> {
-
-  private static final Logger log = LoggerFactory.getLogger(NflTournamentResultFlatFileDao.class);
 
   @Override
   protected int getNumberOfFields() {
@@ -46,34 +35,7 @@ public class NflTournamentResultFlatFileDao extends AbstractTournamentResultFlat
   }
 
   @Override
-  protected void loadData() {
-    for (final String[] tournamentEntry : getDataFileNames()) {
-      Integer year = Integer.parseInt(tournamentEntry[0]);
-      String dataFileName = tournamentEntry[1];
-      InputStream inputStream = NflTournamentResultFlatFileDao.class.getResourceAsStream(dataFileName);
-      try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-        CSVReader csvReader = new CSVReader(bufferedReader);
-        csvReader.readNext(); // Read header
-        String[] line = csvReader.readNext();
-        while (line != null) {
-          if (line.length == getNumberOfFields()) {
-            TournamentResult data = parseLine(year, line);
-            List<TournamentResult> tournamentResults = getDatabase().computeIfAbsent(year, k -> new ArrayList<>());
-            tournamentResults.add(data);
-          } else {
-            throw new RuntimeException(String.format("Expected %d fields, got %d instead.", getNumberOfFields(), line.length));
-          }
-          line = csvReader.readNext();
-        }
-      } catch (Exception e) {
-        String message = String.format("Error reading database file name '%s': %s", dataFileName, e.getLocalizedMessage());
-        log.error(message, e);
-        throw new RuntimeException(message, e);
-      }
-    }
-  }
-
-  private static TournamentResult parseLine(final Integer year, final String[] line) {
+  protected TournamentResult parseLine(final Integer year, final String[] line) {
     TournamentResult ret = new TournamentResult();
     ret.setYear(year);
     ret.setWinningTeamName(StringUtils.remove(StringUtils.trim(line[3]), "*."));
