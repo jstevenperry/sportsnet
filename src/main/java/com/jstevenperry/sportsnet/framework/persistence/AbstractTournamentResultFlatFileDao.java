@@ -21,12 +21,9 @@ public abstract class AbstractTournamentResultFlatFileDao<T extends AbstractSeas
     private static final Logger log = LoggerFactory.getLogger(AbstractTournamentResultFlatFileDao.class);
 
     /**
-     * The number of fields in the standard Tournament results file, subclasses override if
-     * their sport differs.
+     * The number of fields in the standard Tournament results file, subclasses must implement.
      */
-    protected int getNumberOfFields() {
-        return 4;
-    }
+    protected abstract int getNumberOfFields();
 
     private Map<Integer, List<TournamentResult>> database;
 
