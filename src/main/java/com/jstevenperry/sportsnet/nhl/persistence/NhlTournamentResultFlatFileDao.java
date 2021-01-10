@@ -1,11 +1,8 @@
 package com.jstevenperry.sportsnet.nhl.persistence;
 
-import com.jstevenperry.sportsnet.framework.model.TournamentResult;
 import com.jstevenperry.sportsnet.framework.persistence.AbstractTournamentResultFlatFileDao;
 import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component("nhlTournamentResultDao")
 public class NhlTournamentResultFlatFileDao extends AbstractTournamentResultFlatFileDao<NhlSeasonData> {
@@ -13,11 +10,6 @@ public class NhlTournamentResultFlatFileDao extends AbstractTournamentResultFlat
   @Override
   protected int getNumberOfFields() {
     return 4;
-  }
-
-  @Override
-  public List<TournamentResult> fetchAllByYear(final Integer year) {
-    return null;
   }
 
   @Override
