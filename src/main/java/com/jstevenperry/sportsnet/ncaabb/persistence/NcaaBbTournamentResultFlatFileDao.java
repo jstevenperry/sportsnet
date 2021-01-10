@@ -1,7 +1,8 @@
 package com.jstevenperry.sportsnet.ncaabb.persistence;
 
 import com.jstevenperry.sportsnet.framework.model.TournamentResult;
-import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
+import com.jstevenperry.sportsnet.framework.persistence.AbstractTournamentResultFlatFileDao;
+import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -16,25 +17,27 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Component("ncaaBbTournamentResultDao")
-public class NcaaBbTournamentResultFlatFileDao implements TournamentResultDao {
+public class NcaaBbTournamentResultFlatFileDao extends AbstractTournamentResultFlatFileDao<NcaaBbSeasonData> {
 
   private static final Logger log = LoggerFactory.getLogger(NcaaBbTournamentResultFlatFileDao.class);
 
-  private static final int NUMBER_OF_FIELDS = 7;
   private static final String FILE_NAME = "/ncaabb/tournament_result.csv";
 
-  private Map<Integer, List<TournamentResult>> database = new HashMap<>();
-
-  public NcaaBbTournamentResultFlatFileDao() {
-    loadData(database);
+  @Override
+  protected String[][] getDataFileNames() {
+    throw new UnsupportedOperationException("getDataFileNames() not implemented, reason = Method not appropriate for this class");
   }
 
-  private static void loadData(final Map<Integer, List<TournamentResult>> database) {
+  @Override
+  protected int getNumberOfFields() {
+    return 7;
+  }
+
+  @Override
+  protected void loadData() {
     String databaseFileName = FILE_NAME;
     InputStream inputStream = NcaaBbTournamentResultFlatFileDao.class.getResourceAsStream(databaseFileName);
     try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
@@ -42,12 +45,12 @@ public class NcaaBbTournamentResultFlatFileDao implements TournamentResultDao {
       csvReader.readNext(); // Read header
       String[] line = csvReader.readNext();
       while (line != null) {
-        if (line.length == NUMBER_OF_FIELDS) {
+        if (line.length == getNumberOfFields()) {
           TournamentResult data = parseLine(line);
-          List<TournamentResult> tournamentResults = database.computeIfAbsent(data.getYear(), k -> new ArrayList<>());
+          List<TournamentResult> tournamentResults = getDatabase().computeIfAbsent(data.getYear(), k -> new ArrayList<>());
           tournamentResults.add(data);
         } else {
-          throw new RuntimeException(String.format("Expected %d fields, got %d instead.", NUMBER_OF_FIELDS, line.length));
+          throw new RuntimeException(String.format("Expected %d fields, got %d instead.", getNumberOfFields(), line.length));
         }
         line = csvReader.readNext();
       }
@@ -70,8 +73,4 @@ public class NcaaBbTournamentResultFlatFileDao implements TournamentResultDao {
     return ret;
   }
 
-  @Override
-  public List<TournamentResult> fetchAllByYear(final Integer year) {
-    return database.get(year);
-  }
 }

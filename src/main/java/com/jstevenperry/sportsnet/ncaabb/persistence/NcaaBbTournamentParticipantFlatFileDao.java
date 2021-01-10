@@ -1,7 +1,8 @@
 package com.jstevenperry.sportsnet.ncaabb.persistence;
 
 import com.jstevenperry.sportsnet.framework.model.TournamentParticipant;
-import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
+import com.jstevenperry.sportsnet.framework.persistence.AbstractTournamentParticipantFlatFileDao;
+import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -13,25 +14,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component("ncaaBbTournamentParticipantDao")
-public class NcaaBbTournamentParticipantFlatFileDao implements TournamentParticipantDao {
+public class NcaaBbTournamentParticipantFlatFileDao extends AbstractTournamentParticipantFlatFileDao<NcaaBbSeasonData> {
 
   private static final Logger log = LoggerFactory.getLogger(NcaaBbTournamentParticipantFlatFileDao.class);
 
-  private static final int NUMBER_OF_FIELDS = 4;
   private static final String FILE_NAME = "/ncaabb/tournament_participant.csv";
 
-  private Map<Integer, Map<String, TournamentParticipant>> database = new HashMap<>();
-
-  public NcaaBbTournamentParticipantFlatFileDao() {
-    loadData(database);
+  @Override
+  protected String[][] getDataFileNames() {
+    throw new UnsupportedOperationException("getDataFileNames() not implemented, reason = Method not appropriate for this class");
   }
 
-  private static void loadData(final Map<Integer, Map<String, TournamentParticipant>> database) {
+  @Override
+  protected int getNumberOfFields() {
+    return 4;
+  }
+
+  @Override
+  protected void loadData() {
     String databaseFileName = FILE_NAME;
     InputStream inputStream = NcaaBbTournamentParticipantFlatFileDao.class.getResourceAsStream(databaseFileName);
     try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
@@ -39,12 +42,12 @@ public class NcaaBbTournamentParticipantFlatFileDao implements TournamentPartici
       csvReader.readNext(); // Read header
       String[] line = csvReader.readNext();
       while (line != null) {
-        if (line.length == NUMBER_OF_FIELDS) {
+        if (line.length == getNumberOfFields()) {
           TournamentParticipant data = parseLine(line);
-          Map<String, TournamentParticipant> teamDataMap = database.computeIfAbsent(data.getYear(), k -> new HashMap<>());
+          Map<String, TournamentParticipant> teamDataMap = getDatabase().computeIfAbsent(data.getYear(), k -> new HashMap<>());
           teamDataMap.put(data.getTeamName(), data);
         } else {
-          throw new RuntimeException(String.format("Expected %d fields, got %d instead.", NUMBER_OF_FIELDS, line.length));
+          throw new RuntimeException(String.format("Expected %d fields, got %d instead.", getNumberOfFields(), line.length));
         }
         line = csvReader.readNext();
       }
@@ -64,18 +67,4 @@ public class NcaaBbTournamentParticipantFlatFileDao implements TournamentPartici
     return ret;
   }
 
-  @Override
-  public TournamentParticipant fetchByYear(final String teamName, final Integer year) {
-    TournamentParticipant ret = null;
-    Map<String, TournamentParticipant> teamDataMap = database.get(year);
-    if (teamDataMap != null) {
-      ret = teamDataMap.get(teamName);
-    }
-    return ret;
-  }
-
-  @Override
-  public List<Integer> fetchValidTournamentYears() {
-    return database.keySet().stream().sorted().collect(Collectors.toList());
-  }
 }
