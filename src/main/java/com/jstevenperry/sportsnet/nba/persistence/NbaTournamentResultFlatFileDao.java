@@ -21,7 +21,7 @@ public class NbaTournamentResultFlatFileDao extends AbstractTournamentResultFlat
                 {"2015", "/nba/2015-16-Playoff-Results.csv"},
                 {"2016", "/nba/2016-17-Playoff-Results.csv"},
                 {"2017", "/nba/2017-18-Playoff-Results.csv"},
-                {"2019", "/nba/2018-19-Playoff-Results.csv"},
+                {"2018", "/nba/2018-19-Playoff-Results.csv"},
                 {"2019", "/nba/2019-20-Playoff-Results.csv"},
         };
     }
