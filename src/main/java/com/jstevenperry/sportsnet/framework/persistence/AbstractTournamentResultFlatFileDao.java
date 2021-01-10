@@ -62,7 +62,7 @@ public abstract class AbstractTournamentResultFlatFileDao<T extends AbstractSeas
         }
     }
 
-    private static TournamentResult parseLine(final Integer year, final String[] line) {
+    protected TournamentResult parseLine(final Integer year, final String[] line) {
         TournamentResult ret = new TournamentResult();
         ret.setYear(year);
         ret.setWinningTeamName(StringUtils.remove(StringUtils.trim(line[0]), "*."));
