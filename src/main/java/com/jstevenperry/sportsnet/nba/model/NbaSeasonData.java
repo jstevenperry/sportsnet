@@ -4,7 +4,88 @@ import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NbaSeasonData extends AbstractSeasonData {
+    
+    public static List<Double> seasonDataAsDoubleList(final NbaSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+        List<Double> ret = new ArrayList<>();
+        ret.add(asDouble(seasonData.getTeamStatsRank()));
+        ret.add(asDouble(seasonData.getGamesPlayed()));
+        ret.add(asDouble(seasonData.getMinutesPlayed()));
+        ret.add(asDouble(seasonData.getFieldGoals()));
+        ret.add(asDouble(seasonData.getFieldGoalAtt()));
+        ret.add(asDouble(seasonData.getFieldGoalPct()));
+        ret.add(asDouble(seasonData.getThreePointers()));
+        ret.add(asDouble(seasonData.getThreePointerAtt()));
+        ret.add(asDouble(seasonData.getThreePointerPct()));
+        ret.add(asDouble(seasonData.getTwoPointers()));
+        ret.add(asDouble(seasonData.getTwoPointerAtt()));
+        ret.add(asDouble(seasonData.getTwoPointerPct()));
+        ret.add(asDouble(seasonData.getFreeThrows()));
+        ret.add(asDouble(seasonData.getFreeThrowAtt()));
+        ret.add(asDouble(seasonData.getFreeThrowPct()));
+        ret.add(asDouble(seasonData.getOffensiveRebounds()));
+        ret.add(asDouble(seasonData.getDefensiveRebounds()));
+        ret.add(asDouble(seasonData.getAssists()));
+        ret.add(asDouble(seasonData.getSteals()));
+        ret.add(asDouble(seasonData.getBlocks()));
+        ret.add(asDouble(seasonData.getTurnovers()));
+        ret.add(asDouble(seasonData.getFouls()));
+        ret.add(asDouble(seasonData.getPoints()));
+        ret.add(asDouble(seasonData.getOppStatsRank()));
+        ret.add(asDouble(seasonData.getOppGamesPlayed()));
+        ret.add(asDouble(seasonData.getOppMinutesPlayed()));
+        ret.add(asDouble(seasonData.getOppFieldGoals()));
+        ret.add(asDouble(seasonData.getOppFieldGoalAtt()));
+        ret.add(asDouble(seasonData.getOppFieldGoalPct()));
+        ret.add(asDouble(seasonData.getOppThreePointers()));
+        ret.add(asDouble(seasonData.getOppThreePointerAtt()));
+        ret.add(asDouble(seasonData.getOppThreePointerPct()));
+        ret.add(asDouble(seasonData.getOppTwoPointers()));
+        ret.add(asDouble(seasonData.getOppTwoPointerAtt()));
+        ret.add(asDouble(seasonData.getOppTwoPointerPct()));
+        ret.add(asDouble(seasonData.getOppFreeThrows()));
+        ret.add(asDouble(seasonData.getOppFreeThrowAtt()));
+        ret.add(asDouble(seasonData.getOppFreeThrowPct()));
+        ret.add(asDouble(seasonData.getOppOffensiveRebounds()));
+        ret.add(asDouble(seasonData.getOppDefensiveRebounds()));
+        ret.add(asDouble(seasonData.getOppAssists()));
+        ret.add(asDouble(seasonData.getOppSteals()));
+        ret.add(asDouble(seasonData.getOppBlocks()));
+        ret.add(asDouble(seasonData.getOppTurnovers()));
+        ret.add(asDouble(seasonData.getOppFouls()));
+        ret.add(asDouble(seasonData.getOppPoints()));
+        ret.add(asDouble(seasonData.getMiscellaneousStatsRank()));
+        ret.add(asDouble(seasonData.getAgeOnFeb1()));
+        ret.add(asDouble(seasonData.getWins()));
+        ret.add(asDouble(seasonData.getLosses()));
+        ret.add(asDouble(seasonData.getPythagoreanWins()));
+        ret.add(asDouble(seasonData.getPythagoreanLosses()));
+        ret.add(asDouble(seasonData.getMarginOfVictory()));
+        ret.add(asDouble(seasonData.getStrengthOfSchedule()));
+        ret.add(asDouble(seasonData.getSimpleRatingSystem()));
+        ret.add(asDouble(seasonData.getOffensiveRating()));
+        ret.add(asDouble(seasonData.getDefensiveRating()));
+        ret.add(asDouble(seasonData.getNetRating()));
+        ret.add(asDouble(seasonData.getPace()));
+        ret.add(asDouble(seasonData.getFreeThrowAttRate()));
+        ret.add(asDouble(seasonData.getThreePtAttRate()));
+        ret.add(asDouble(seasonData.getTrueShootingPct()));
+        ret.add(asDouble(seasonData.getEffFieldGoalPct()));
+        ret.add(asDouble(seasonData.getTurnoverPct()));
+        ret.add(asDouble(seasonData.getOffensiveReboundPct()));
+        ret.add(asDouble(seasonData.getFreeThrowMadeRate()));
+        ret.add(asDouble(seasonData.getOppEffFieldGoalPct()));
+        ret.add(asDouble(seasonData.getOppTurnoverPct()));
+        ret.add(asDouble(seasonData.getOppOffensiveReboundPct()));
+        ret.add(asDouble(seasonData.getOppFreeThrowMadeRate()));
+        ret.add(asDouble(seasonData.getAttendancePerGame()));
+        
+        return ret;
+    }
+    
     // Team stats
     int teamStatsRank;
     int gamesPlayed;
