@@ -3,8 +3,6 @@ package com.jstevenperry.sportsnet.nhl.persistence;
 import com.jstevenperry.sportsnet.framework.model.TournamentResult;
 import com.jstevenperry.sportsnet.framework.persistence.AbstractTournamentResultFlatFileDao;
 import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,7 +10,10 @@ import java.util.List;
 @Component("nhlTournamentResultDao")
 public class NhlTournamentResultFlatFileDao extends AbstractTournamentResultFlatFileDao<NhlSeasonData> {
 
-  private static final Logger log = LoggerFactory.getLogger(NhlTournamentResultFlatFileDao.class);
+  @Override
+  protected int getNumberOfFields() {
+    return 4;
+  }
 
   @Override
   public List<TournamentResult> fetchAllByYear(final Integer year) {
