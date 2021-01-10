@@ -37,6 +37,6 @@ public class NflNetworkMenu extends AbstractNetworkMenu<NflSeasonData> {
 
   @Override
   public String getNetworkType() {
-    return "NFL";
+    return NETWORK_TYPE;
   }
 }
