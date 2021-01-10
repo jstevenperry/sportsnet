@@ -11,10 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class AbstractTournamentResultFlatFileDao<T extends AbstractSeasonData> extends AbstractFlatFileProcessor<T> implements TournamentResultDao {
 
@@ -50,7 +47,7 @@ public abstract class AbstractTournamentResultFlatFileDao<T extends AbstractSeas
                         List<TournamentResult> tournamentResults = getDatabase().computeIfAbsent(year, k -> new ArrayList<>());
                         tournamentResults.add(data);
                     } else {
-                        throw new RuntimeException(String.format("Expected %d fields, got %d instead.", getNumberOfFields(), line.length));
+                        throw new RuntimeException(String.format("Expected %d fields, got %d instead. (Line data: [%s])", getNumberOfFields(), line.length, Arrays.toString(line)));
                     }
                     line = csvReader.readNext();
                 }
