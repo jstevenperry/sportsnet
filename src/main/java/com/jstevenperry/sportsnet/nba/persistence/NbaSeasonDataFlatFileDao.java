@@ -1,12 +1,13 @@
 package com.jstevenperry.sportsnet.nba.persistence;
 
-import com.jstevenperry.sportsnet.framework.persistence.AbstractFlatFileProcessor;
+import com.jstevenperry.sportsnet.framework.persistence.AbstractSeasonDataFlatFileDao;
 import com.jstevenperry.sportsnet.framework.persistence.FileProcessor;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.nba.model.NbaSeasonData;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,34 +16,38 @@ import java.util.stream.Collectors;
 
 import static com.jstevenperry.sportsnet.framework.util.NetworkUtils.nice;
 
-public class NbaSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NbaSeasonData> implements SeasonDataDao<NbaSeasonData> {
+@Component("nbaSeasonDataDao")
+public class NbaSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NbaSeasonData> implements SeasonDataDao<NbaSeasonData> {
 
     private static final Logger log = LoggerFactory.getLogger(NbaSeasonDataFlatFileDao.class);
 
-    private static final String[][] SEASON_DATA_FILE_NAMES = {
-            {"2012", "/nba/2012/2012-13-Team-Stats.csv", "/nba/2012/2012-13-Opponent-Stats.csv", "/nba/2012/2012-13-Miscellaneous-Stats.csv"},
-            {"2013", "/nba/2013/2013-14-Team-Stats.csv", "/nba/2013/2013-14-Opponent-Stats.csv", "/nba/2013/2013-14-Miscellaneous-Stats.csv"},
-            {"2014", "/nba/2014/2014-15-Team-Stats.csv", "/nba/2014/2014-15-Opponent-Stats.csv", "/nba/2014/2014-15-Miscellaneous-Stats.csv"},
-            {"2015", "/nba/2015/2015-16-Team-Stats.csv", "/nba/2015/2015-16-Opponent-Stats.csv", "/nba/2015/2015-16-Miscellaneous-Stats.csv"},
-            {"2016", "/nba/2016/2016-17-Team-Stats.csv", "/nba/2016/2016-17-Opponent-Stats.csv", "/nba/2016/2016-17-Miscellaneous-Stats.csv"},
-            {"2017", "/nba/2017/2017-18-Team-Stats.csv", "/nba/2017/2017-18-Opponent-Stats.csv", "/nba/2017/2017-18-Miscellaneous-Stats.csv"},
-            {"2018", "/nba/2018/2018-19-Team-Stats.csv", "/nba/2018/2018-19-Opponent-Stats.csv", "/nba/2018/2018-19-Miscellaneous-Stats.csv"},
-            {"2019", "/nba/2019/2019-20-Team-Stats.csv", "/nba/2019/2019-20-Opponent-Stats.csv", "/nba/2019/2019-20-Miscellaneous-Stats.csv"},
-            //{"2020", "/nba/2020/2020-21-Team-Stats.csv", "/nba/2020/2020-21-Opponent-Stats.csv", "/nba/2020/2020-21-Miscellaneous-Stats.csv"}
-    };
-
-    private final Map<Integer, Map<String, NbaSeasonData>> database = new HashMap<>();
-
-    public NbaSeasonDataFlatFileDao() {
-        loadData(database);
+    @Override
+    protected String[][] getDataFileNames() {
+        return new String[][] {
+                {"2012", "/nba/2012-13-Team-Stats.csv", "/nba/2012-13-Opponent-Stats.csv", "/nba/2012-13-Miscellaneous-Stats.csv"},
+                {"2013", "/nba/2013-14-Team-Stats.csv", "/nba/2013-14-Opponent-Stats.csv", "/nba/2013-14-Miscellaneous-Stats.csv"},
+                {"2014", "/nba/2014-15-Team-Stats.csv", "/nba/2014-15-Opponent-Stats.csv", "/nba/2014-15-Miscellaneous-Stats.csv"},
+                {"2015", "/nba/2015-16-Team-Stats.csv", "/nba/2015-16-Opponent-Stats.csv", "/nba/2015-16-Miscellaneous-Stats.csv"},
+                {"2016", "/nba/2016-17-Team-Stats.csv", "/nba/2016-17-Opponent-Stats.csv", "/nba/2016-17-Miscellaneous-Stats.csv"},
+                {"2017", "/nba/2017-18-Team-Stats.csv", "/nba/2017-18-Opponent-Stats.csv", "/nba/2017-18-Miscellaneous-Stats.csv"},
+                {"2018", "/nba/2018-19-Team-Stats.csv", "/nba/2018-19-Opponent-Stats.csv", "/nba/2018-19-Miscellaneous-Stats.csv"},
+                {"2019", "/nba/2019-20-Team-Stats.csv", "/nba/2019-20-Opponent-Stats.csv", "/nba/2019-20-Miscellaneous-Stats.csv"},
+                //{"2020", "/nba/2020-21-Team-Stats.csv", "/nba/2020-21-Opponent-Stats.csv", "/nba/2020-21-Miscellaneous-Stats.csv"}
+        };
     }
 
-    private void loadData(final Map<Integer, Map<String, NbaSeasonData>> database) {
-        for (final String[] seasonDataEntry : SEASON_DATA_FILE_NAMES) {
+    @Override
+    protected int getNumberOfFields() {
+        throw new UnsupportedOperationException("getNumberOfFields() is not implemented. Reason = not appropriate for this class.");
+    }
+
+    @Override
+    protected void loadData() {
+        for (final String[] seasonDataEntry : getDataFileNames()) {
             Integer year = Integer.parseInt(seasonDataEntry[0]);
             for (int seasonDataFileIndex = 1; seasonDataFileIndex < seasonDataEntry.length; seasonDataFileIndex++) {
                 String seasonDataFileName = seasonDataEntry[seasonDataFileIndex];
-                Map<String, NbaSeasonData> teamSeasonDataMap = database.computeIfAbsent(year, k -> new HashMap<>());
+                Map<String, NbaSeasonData> teamSeasonDataMap = getDatabase().computeIfAbsent(year, k -> new HashMap<>());
                 // See sternly worded comment in SEASON_DATA_FILE_NAMES declaration
                 switch (seasonDataFileIndex) {
                     case 1:
@@ -124,12 +129,12 @@ public class NbaSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NbaSeaso
 
             @Override
             public String getRequiredFilenameEnding() {
-                return "Opponent-Stats";
+                return "Opponent-Stats.csv";
             }
 
             @Override
             public int getNumberOfFields() {
-                return 24;
+                return 25;
             }
 
             @Override
@@ -178,17 +183,12 @@ public class NbaSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NbaSeaso
 
             @Override
             public String getRequiredFilenameEnding() {
-                return "Miscellaneous-Stats";
+                return "Miscellaneous-Stats.csv";
             }
 
             @Override
             public int getNumberOfFields() {
                 return 28;
-            }
-
-            @Override
-            public int getNumberOfHeaderLines() {
-                return 1;
             }
 
             @Override
@@ -240,7 +240,7 @@ public class NbaSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NbaSeaso
 
     @Override
     public List<NbaSeasonData> fetchAllByYear(final Integer year) {
-        Map<String, NbaSeasonData> teamSeasonDataMap = database.get(year);
+        Map<String, NbaSeasonData> teamSeasonDataMap = getDatabase().get(year);
         List<NbaSeasonData> ret = teamSeasonDataMap.keySet()
                 .stream()
                 .map(teamSeasonDataMap::get)
@@ -252,7 +252,7 @@ public class NbaSeasonDataFlatFileDao extends AbstractFlatFileProcessor<NbaSeaso
     @Override
     public NbaSeasonData fetchByYearAndTeamName(final Integer year, final String teamName) {
         NbaSeasonData ret;
-        Map<String, NbaSeasonData> teamSeasonDataMap = database.get(year);
+        Map<String, NbaSeasonData> teamSeasonDataMap = getDatabase().get(year);
         ret = teamSeasonDataMap.get(teamName);
 
         log.trace("fetchByYearAndTeamName({}, {}): Returning NbaSeasonData: {}", year, teamName, ret);

@@ -20,7 +20,7 @@ public abstract class AbstractNhlTournamentRunnerPlugin extends AbstractTourname
 
   @Override
   protected String getTournamentResultsTemplateFileName() {
-    return "/nhl/tournament-results-template.csv";
+    return "/nhl/tournament-results.csv";
   }
 
   @Override

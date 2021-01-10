@@ -28,9 +28,7 @@ public abstract class AbstractFlatFileProcessor<T extends AbstractSeasonData> {
     /**
      * Returns the number of fields in each line of the tournament participant file.
      */
-    protected int getNumberOfFields() {
-        return 2;
-    }
+    protected abstract int getNumberOfFields();
 
 
     /**

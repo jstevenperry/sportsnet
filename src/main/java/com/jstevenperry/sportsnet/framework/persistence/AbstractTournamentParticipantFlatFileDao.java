@@ -30,6 +30,14 @@ public abstract class AbstractTournamentParticipantFlatFileDao<T extends Abstrac
         return database;
     }
 
+    /**
+     * The number of fields in the standard tournament participant file.
+     * Subclasses will override if their sport differs.
+     */
+    protected int getNumberOfFields() {
+        return 2;
+    }
+
     protected void loadData() {
         for (final String[] tournamentEntry : getDataFileNames()) {
             Integer year = Integer.parseInt(tournamentEntry[0]);

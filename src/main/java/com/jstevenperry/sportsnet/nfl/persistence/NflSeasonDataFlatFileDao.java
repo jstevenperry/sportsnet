@@ -78,6 +78,11 @@ public class NflSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NflS
         };
     }
 
+    @Override
+    protected int getNumberOfFields() {
+        throw new UnsupportedOperationException("getNumberOfFields() is not implemented. Reason = not appropriate for this class.");
+    }
+
     private void processConversionsFile(final Integer year, final String seasonDataFileName, final Map<String, NflSeasonData> teamSeasonDataMap) {
         processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NflSeasonData>() {
             @Override
