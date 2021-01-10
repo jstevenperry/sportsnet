@@ -82,6 +82,10 @@ public class NbaSeasonData extends AbstractSeasonData {
         ret.add(asDouble(seasonData.getOppOffensiveReboundPct()));
         ret.add(asDouble(seasonData.getOppFreeThrowMadeRate()));
         ret.add(asDouble(seasonData.getAttendancePerGame()));
+
+        if (isTraining) {
+            ret.add(resultClass);
+        }
         
         return ret;
     }
