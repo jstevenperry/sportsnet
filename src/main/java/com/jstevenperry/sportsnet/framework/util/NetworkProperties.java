@@ -78,7 +78,7 @@ public class NetworkProperties {
   private static PropertiesFile getPropertiesFile() {
     if (propertiesFile == null || System.currentTimeMillis() > cacheExpirationTime) {
       cacheExpirationTime = System.currentTimeMillis() + 30000; // 30 seconds
-      String propertiesFileNameFromEnvironmentVariable = System.getenv(NETWORK_PROPERTIES_FILE);
+      String propertiesFileNameFromEnvironmentVariable = System.getProperty(NETWORK_PROPERTIES_FILE);
       if (StringUtils.isNotEmpty(propertiesFileNameFromEnvironmentVariable)) {
         log.trace(String.format("Override found for property (%s). Attempting to load properties file: %s", NETWORK_PROPERTIES_FILE, propertiesFileNameFromEnvironmentVariable));
         try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(propertiesFileNameFromEnvironmentVariable))){
