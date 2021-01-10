@@ -24,6 +24,7 @@ public class NcaaBbTournamentResultFlatFileDao extends AbstractTournamentResultF
 
   private static final Logger log = LoggerFactory.getLogger(NcaaBbTournamentResultFlatFileDao.class);
 
+  // TODO: Break up the (giant) results file into (smaller) more manageable files by year
   private static final String FILE_NAME = "/ncaabb/tournament_result.csv";
 
   @Override
@@ -46,7 +47,7 @@ public class NcaaBbTournamentResultFlatFileDao extends AbstractTournamentResultF
       String[] line = csvReader.readNext();
       while (line != null) {
         if (line.length == getNumberOfFields()) {
-          TournamentResult data = parseLine(line);
+          TournamentResult data = parseLine(null, line);
           List<TournamentResult> tournamentResults = getDatabase().computeIfAbsent(data.getYear(), k -> new ArrayList<>());
           tournamentResults.add(data);
         } else {
@@ -61,7 +62,8 @@ public class NcaaBbTournamentResultFlatFileDao extends AbstractTournamentResultF
     }
   }
 
-  private static TournamentResult parseLine(final String[] line) {
+  @Override
+  protected TournamentResult parseLine(final Integer year, final String[] line) {
     TournamentResult ret = new TournamentResult();
     ret.setId(Integer.parseInt(line[0]));
     ret.setYear(Integer.parseInt(line[1]));
