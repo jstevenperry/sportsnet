@@ -1,7 +1,8 @@
 package com.jstevenperry.sportsnet.nfl.persistence;
 
 import com.jstevenperry.sportsnet.framework.model.TournamentParticipant;
-import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
+import com.jstevenperry.sportsnet.framework.persistence.AbstractTournamentParticipantFlatFileDao;
+import com.jstevenperry.sportsnet.nfl.model.NflSeasonData;
 import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -13,40 +14,40 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component("nflTournamentParticipantFlatFileDao")
-public class NflTournamentParticipantFlatFileDao implements TournamentParticipantDao {
+public class NflTournamentParticipantFlatFileDao extends AbstractTournamentParticipantFlatFileDao<NflSeasonData> {
   private static final Logger log = LoggerFactory.getLogger(NflTournamentParticipantFlatFileDao.class);
 
-  private static final int NUMBER_OF_FIELDS = 9;
-  private static final String[][] TOURNAMENT_PARTICIPANT_FILE_NAMES = {
-    {"2006", "/nfl/2006/2006-2007-tournament_result.csv"},
-    {"2007", "/nfl/2007/2007-2008-tournament_result.csv"},
-    {"2008", "/nfl/2008/2008-2009-tournament_result.csv"},
-    {"2009", "/nfl/2009/2009-2010-tournament_result.csv"},
-    {"2010", "/nfl/2010/2010-2011-tournament_result.csv"},
-    {"2011", "/nfl/2011/2011-2012-tournament_result.csv"},
-    {"2012", "/nfl/2012/2012-2013-tournament_result.csv"},
-    {"2013", "/nfl/2013/2013-2014-tournament_result.csv"},
-    {"2014", "/nfl/2014/2014-2015-tournament_result.csv"},
-    {"2015", "/nfl/2015/2015-2016-tournament_result.csv"},
-    {"2016", "/nfl/2016/2016-2017-tournament_result.csv"},
-    {"2017", "/nfl/2017/2017-2018-tournament_result.csv"},
-    {"2018", "/nfl/2018/2018-2019-tournament_result.csv"},
-    {"2019", "/nfl/2019/2019-2020-tournament_result.csv"},
-  };
-
-  private final Map<Integer, Map<String, TournamentParticipant>> database = new HashMap<>();
-
-  public NflTournamentParticipantFlatFileDao() {
-    loadData(database);
+  @Override
+  protected int getNumberOfFields() {
+    return 9;
   }
 
-  private static void loadData(final Map<Integer, Map<String, TournamentParticipant>> database) {
-    for (final String[] tournamentEntry : TOURNAMENT_PARTICIPANT_FILE_NAMES) {
+  @Override
+  protected String[][] getDataFileNames() {
+    return new String[][] {
+            {"2006", "/nfl/2006/2006-2007-tournament_result.csv"},
+            {"2007", "/nfl/2007/2007-2008-tournament_result.csv"},
+            {"2008", "/nfl/2008/2008-2009-tournament_result.csv"},
+            {"2009", "/nfl/2009/2009-2010-tournament_result.csv"},
+            {"2010", "/nfl/2010/2010-2011-tournament_result.csv"},
+            {"2011", "/nfl/2011/2011-2012-tournament_result.csv"},
+            {"2012", "/nfl/2012/2012-2013-tournament_result.csv"},
+            {"2013", "/nfl/2013/2013-2014-tournament_result.csv"},
+            {"2014", "/nfl/2014/2014-2015-tournament_result.csv"},
+            {"2015", "/nfl/2015/2015-2016-tournament_result.csv"},
+            {"2016", "/nfl/2016/2016-2017-tournament_result.csv"},
+            {"2017", "/nfl/2017/2017-2018-tournament_result.csv"},
+            {"2018", "/nfl/2018/2018-2019-tournament_result.csv"},
+            {"2019", "/nfl/2019/2019-2020-tournament_result.csv"},
+    };
+  }
+
+  @Override
+  protected void loadData() {
+    for (final String[] tournamentEntry : getDataFileNames()) {
       Integer year = Integer.parseInt(tournamentEntry[0]);
       String dataFileName = tournamentEntry[1];
       InputStream inputStream = NflTournamentParticipantFlatFileDao.class.getResourceAsStream(dataFileName);
@@ -55,15 +56,15 @@ public class NflTournamentParticipantFlatFileDao implements TournamentParticipan
         csvReader.readNext(); // Read header
         String[] line = csvReader.readNext();
         while (line != null) {
-          if (line.length == NUMBER_OF_FIELDS) {
-            Map<String, TournamentParticipant> teamDataMap = database.computeIfAbsent(year, k -> new HashMap<>());
+          if (line.length == getNumberOfFields()) {
+            Map<String, TournamentParticipant> teamDataMap = getDatabase().computeIfAbsent(year, k -> new HashMap<>());
             parseAndProcessLine(year, line, teamDataMap);
           } else {
-            throw new RuntimeException(String.format("loadData: File %s: Expected %d fields, got %d instead.", dataFileName, NUMBER_OF_FIELDS, line.length));
+            throw new RuntimeException(String.format("loadData: File %s: Expected %d fields, got %d instead.", dataFileName, getNumberOfFields(), line.length));
           }
           line = csvReader.readNext();
         }
-        Map<String, TournamentParticipant> teamDataMap = database.get(year);
+        Map<String, TournamentParticipant> teamDataMap = getDatabase().get(year);
         teamDataMap.keySet().forEach(teamName -> log.debug("Year: {}, team: {}, number of victories: {}", year, teamName, teamDataMap.get(teamName).getNumberOfVictories()));
       } catch (IOException e) {
         String message = String.format("loadData: Error reading database file name '%s': %s", dataFileName, e.getLocalizedMessage());
@@ -117,18 +118,4 @@ public class NflTournamentParticipantFlatFileDao implements TournamentParticipan
     }
   }
 
-  @Override
-  public TournamentParticipant fetchByYear(final String teamName, final Integer year) {
-    TournamentParticipant ret = null;
-    Map<String, TournamentParticipant> teamDataMap = database.get(year);
-    if (teamDataMap != null) {
-      ret = teamDataMap.get(teamName);
-    }
-    return ret;
-  }
-
-  @Override
-  public List<Integer> fetchValidTournamentYears() {
-    return database.keySet().stream().sorted().collect(Collectors.toList());
-  }
 }

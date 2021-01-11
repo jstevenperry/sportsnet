@@ -2,6 +2,8 @@ package com.jstevenperry.sportsnet;
 
 import com.jstevenperry.sportsnet.framework.menus.AbstractNetworkMenu;
 import com.jstevenperry.sportsnet.framework.menus.SportsnetChoice;
+import com.jstevenperry.sportsnet.nba.menus.NbaNetworkMenu;
+import com.jstevenperry.sportsnet.nba.model.NbaSeasonData;
 import com.jstevenperry.sportsnet.ncaabb.menus.NcaaBbNetworkMenu;
 import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 import com.jstevenperry.sportsnet.nfl.menus.NflNetworkMenu;
@@ -32,7 +34,7 @@ import java.io.InputStreamReader;
 public class SportsnetMenu {
 
   private static final Logger log = LoggerFactory.getLogger(SportsnetMenu.class);
-  private static final String SPORTSNET_VERSION = "2.1.0";
+  private static final String SPORTSNET_VERSION = "2.2.0";
 
   public static void main(final String[] args) {
     SpringApplication.run(SportsnetMenu.class, args);
@@ -100,7 +102,7 @@ public class SportsnetMenu {
     return ret;
   }
 
-  private static void processMenuChoice(final SportsnetChoice menuChoice, final ApplicationContext applicationContext) throws InterruptedException {
+  private static void processMenuChoice(final SportsnetChoice menuChoice, final ApplicationContext applicationContext) {
     switch (menuChoice) {
       case NCAA_MENS_BASKETBALL:
         //
@@ -121,6 +123,12 @@ public class SportsnetMenu {
         //
         // Fire up the network menu
         nflNetworkMenu.go();
+        break;
+      case NBA:
+        AbstractNetworkMenu<NbaSeasonData> nbaNetworkMenu = new NbaNetworkMenu(applicationContext);
+        //
+        // Fire up the network menu
+        nbaNetworkMenu.go();
         break;
       case QUIT:
         log.info("Quitting...");

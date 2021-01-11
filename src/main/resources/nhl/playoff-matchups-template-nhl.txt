@@ -1,0 +1,37 @@
+# Each line describes a tournament matchup with a home team and an away team
+# File format:
+# [home_region,home_round,home_index]vs[away_region,away_round,away_index]
+# Region 0
+# Round 1
+[0,1,0]vs[0,1,1]
+[0,1,2]vs[0,1,3]
+# Round 2
+[0,2,0]vs[0,2,1]
+# Region 1
+# Round 1
+[1,1,0]vs[1,1,1]
+[1,1,2]vs[1,1,3]
+# Round 2
+[1,2,0]vs[1,2,1]
+# Region 2
+# Round 1
+[2,1,0]vs[2,1,1]
+[2,1,2]vs[2,1,3]
+# Round 2
+[2,2,0]vs[2,2,1]
+# Region 3
+# Round 1
+[3,1,0]vs[3,1,1]
+[3,1,2]vs[3,1,3]
+# Round 2
+[3,2,0]vs[3,2,1]
+#
+# SEMI-FINALS
+[0,3,0]vs[1,3,0]
+[2,3,0]vs[3,3,0]
+#
+# FINALS
+[0,4,0]vs[2,4,0]
+#
+# CHAMPION
+# [0,5,0]

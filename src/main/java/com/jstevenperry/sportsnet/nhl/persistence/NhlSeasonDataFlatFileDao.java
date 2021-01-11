@@ -1,6 +1,6 @@
 package com.jstevenperry.sportsnet.nhl.persistence;
 
-import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
+import com.jstevenperry.sportsnet.framework.persistence.AbstractSeasonDataFlatFileDao;
 import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
 import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
@@ -20,33 +20,34 @@ import java.util.stream.Collectors;
 import static com.jstevenperry.sportsnet.framework.util.NetworkUtils.nice;
 
 @Component("nhlSeasonDataDao")
-public class NhlSeasonDataFlatFileDao implements SeasonDataDao<NhlSeasonData> {
+public class NhlSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NhlSeasonData> {
 
   private static final Logger log = LoggerFactory.getLogger(NhlSeasonDataFlatFileDao.class);
 
-  private static final int SEASON_DATA_NUMBER_OF_FIELDS = 33;
-  private static final String[][] SEASON_DATA_FILE_NAMES = {
-    {"2011", "/nhl/2010-11-Summary.csv"},
-    {"2012", "/nhl/2011-12-Summary.csv"},
-    {"2013", "/nhl/2012-13-Summary.csv"},
-    {"2014", "/nhl/2013-14-Summary.csv"},
-    {"2015", "/nhl/2014-15-Summary.csv"},
-    {"2016", "/nhl/2015-16-Summary.csv"},
-    {"2017", "/nhl/2016-17-Summary.csv"},
-    {"2018", "/nhl/2017-18-Summary.csv"},
-    {"2019", "/nhl/2018-19-Summary.csv"},
-    {"2020", "/nhl/2019-20-Summary.csv"}
-  };
-
-  private final Map<Integer, Map<String, NhlSeasonData>> database = new HashMap<>();
-
-
-  public NhlSeasonDataFlatFileDao() {
-    loadData(database);
+  @Override
+  protected String[][] getDataFileNames() {
+    return new String[][] {
+            {"2011", "/nhl/2010-11-Summary.csv"},
+            {"2012", "/nhl/2011-12-Summary.csv"},
+            {"2013", "/nhl/2012-13-Summary.csv"},
+            {"2014", "/nhl/2013-14-Summary.csv"},
+            {"2015", "/nhl/2014-15-Summary.csv"},
+            {"2016", "/nhl/2015-16-Summary.csv"},
+            {"2017", "/nhl/2016-17-Summary.csv"},
+            {"2018", "/nhl/2017-18-Summary.csv"},
+            {"2019", "/nhl/2018-19-Summary.csv"},
+            {"2020", "/nhl/2019-20-Summary.csv"}
+    };
   }
 
-  private static void loadData(final Map<Integer, Map<String, NhlSeasonData>> database) {
-    for (final String[] seasonDataEntry : SEASON_DATA_FILE_NAMES) {
+  @Override
+  protected int getNumberOfFields() {
+    return 33;
+  }
+
+  @Override
+  protected void loadData() {
+    for (final String[] seasonDataEntry : getDataFileNames()) {
       Integer year = Integer.parseInt(seasonDataEntry[0]);
       String seasonDataFileName = seasonDataEntry[1];
       InputStream inputStream = NhlSeasonDataFlatFileDao.class.getResourceAsStream(seasonDataFileName);
@@ -56,12 +57,12 @@ public class NhlSeasonDataFlatFileDao implements SeasonDataDao<NhlSeasonData> {
         csvReader.readNext(); // Skip header
         String[] line = csvReader.readNext();
         while (line != null) {
-          if (line.length == SEASON_DATA_NUMBER_OF_FIELDS) {
+          if (line.length == getNumberOfFields()) {
             NhlSeasonData seasonData = parseSeasonDataFileLine(year, line);
-            Map<String, NhlSeasonData> teamSeasonDataMap = database.computeIfAbsent(year, k -> new HashMap<>());
+            Map<String, NhlSeasonData> teamSeasonDataMap = getDatabase().computeIfAbsent(year, k -> new HashMap<>());
             teamSeasonDataMap.put(seasonData.getTeamName(), seasonData);
           } else {
-            throw new RuntimeException(String.format("Expected %d fields, got %d instead.", SEASON_DATA_NUMBER_OF_FIELDS, line.length));
+            throw new RuntimeException(String.format("Expected %d fields, got %d instead.", getNumberOfFields(), line.length));
           }
           line = csvReader.readNext();
         }
@@ -116,7 +117,7 @@ public class NhlSeasonDataFlatFileDao implements SeasonDataDao<NhlSeasonData> {
 
   @Override
   public List<NhlSeasonData> fetchAllByYear(final Integer year) {
-    Map<String, NhlSeasonData> teamSeasonDataMap = database.get(year);
+    Map<String, NhlSeasonData> teamSeasonDataMap = getDatabase().get(year);
     List<NhlSeasonData> ret = teamSeasonDataMap.keySet()
       .stream()
       .map(teamSeasonDataMap::get)
@@ -127,7 +128,7 @@ public class NhlSeasonDataFlatFileDao implements SeasonDataDao<NhlSeasonData> {
 
   @Override
   public NhlSeasonData fetchByYearAndTeamName(final Integer year, final String teamName) {
-    Map<String, NhlSeasonData> teamSeasonDataMap = database.get(year);
+    Map<String, NhlSeasonData> teamSeasonDataMap = getDatabase().get(year);
     return teamSeasonDataMap.get(teamName);
   }
 

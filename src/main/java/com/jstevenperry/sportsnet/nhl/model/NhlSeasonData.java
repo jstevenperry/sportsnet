@@ -96,10 +96,6 @@ public class NhlSeasonData extends AbstractSeasonData {
     return ret;
   }
 
-  private static Double asDouble(final int intValue) {
-    return Integer.valueOf(intValue).doubleValue();
-  }
-
   public int getRank() {
     return rank;
   }

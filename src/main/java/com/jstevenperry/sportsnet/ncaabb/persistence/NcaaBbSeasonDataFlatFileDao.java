@@ -1,6 +1,6 @@
 package com.jstevenperry.sportsnet.ncaabb.persistence;
 
-import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
+import com.jstevenperry.sportsnet.framework.persistence.AbstractSeasonDataFlatFileDao;
 import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
@@ -20,31 +20,36 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Component("ncaaBbSeasonDataDao")
-public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonData> {
+public class NcaaBbSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NcaaBbSeasonData> {
 
   private static final Logger log = LoggerFactory.getLogger(NcaaBbSeasonDataFlatFileDao.class);
 
-  private static final int SEASON_DATA_NUMBER_OF_FIELDS = 38;
-  private static final String[][] SEASON_DATA_FILE_NAMES =  {
-    {"2011", "/ncaabb/SeasonData-2010-2011.csv"},
-    {"2012", "/ncaabb/SeasonData-2011-2012.csv"},
-    {"2013", "/ncaabb/SeasonData-2012-2013.csv"},
-    {"2014", "/ncaabb/SeasonData-2013-2014.csv"},
-    {"2015", "/ncaabb/SeasonData-2014-2015.csv"},
-    {"2016", "/ncaabb/SeasonData-2015-2016.csv"},
-    {"2017", "/ncaabb/SeasonData-2016-2017.csv"},
-    {"2018", "/ncaabb/SeasonData-2017-2018.csv"},
-    {"2019", "/ncaabb/SeasonData-2018-2019.csv"},
-    {"2020", "/ncaabb/SeasonData-2019-2020.csv"}
-  };
-
   private static final String ALIAS_FILE_NAME = "/ncaabb/SeasonData-Alias.csv";
 
-  private final Map<Integer, Map<String, NcaaBbSeasonData>> database;
+  @Override
+  protected void loadData() {
+    loadData(loadAliases());
+  }
 
-  public NcaaBbSeasonDataFlatFileDao() {
-    final Map<String, String> aliasMap = loadAliases();
-    database = loadData(aliasMap);
+  @Override
+  protected String[][] getDataFileNames() {
+    return new String[][] {
+            {"2011", "/ncaabb/SeasonData-2010-2011.csv"},
+            {"2012", "/ncaabb/SeasonData-2011-2012.csv"},
+            {"2013", "/ncaabb/SeasonData-2012-2013.csv"},
+            {"2014", "/ncaabb/SeasonData-2013-2014.csv"},
+            {"2015", "/ncaabb/SeasonData-2014-2015.csv"},
+            {"2016", "/ncaabb/SeasonData-2015-2016.csv"},
+            {"2017", "/ncaabb/SeasonData-2016-2017.csv"},
+            {"2018", "/ncaabb/SeasonData-2017-2018.csv"},
+            {"2019", "/ncaabb/SeasonData-2018-2019.csv"},
+            {"2020", "/ncaabb/SeasonData-2019-2020.csv"}
+    };
+  }
+
+  @Override
+  protected int getNumberOfFields() {
+    return 38;
   }
 
   /**
@@ -85,9 +90,8 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
     return ret;
   }
 
-  private static Map<Integer, Map<String, NcaaBbSeasonData>> loadData(final Map<String, String> aliasMap) {
-    Map<Integer, Map<String, NcaaBbSeasonData>> ret = new HashMap<>();
-    for (final String[] seasonDataEntry : SEASON_DATA_FILE_NAMES) {
+  private void loadData(final Map<String, String> aliasMap) {
+    for (final String[] seasonDataEntry : getDataFileNames()) {
       Integer year = Integer.parseInt(seasonDataEntry[0]);
       String seasonDataFileName = seasonDataEntry[1];
       InputStream inputStream = NcaaBbSeasonDataFlatFileDao.class.getResourceAsStream(seasonDataFileName);
@@ -97,12 +101,12 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
         csvReader.readNext(); // Read header
         String[] line = csvReader.readNext();
         while (line != null) {
-          if (line.length == SEASON_DATA_NUMBER_OF_FIELDS) {
+          if (line.length == getNumberOfFields()) {
             NcaaBbSeasonData seasonData = parseSeasonDataFileLine(year, line, aliasMap);
-            Map<String, NcaaBbSeasonData> teamSeasonDataMap = ret.computeIfAbsent(year, k -> new HashMap<>());
+            Map<String, NcaaBbSeasonData> teamSeasonDataMap = getDatabase().computeIfAbsent(year, k -> new HashMap<>());
             teamSeasonDataMap.put(seasonData.getTeamName(), seasonData);
           } else {
-            throw new RuntimeException(String.format("Expected %d fields, got %d instead.", SEASON_DATA_NUMBER_OF_FIELDS, line.length));
+            throw new RuntimeException(String.format("Expected %d fields, got %d instead.", getNumberOfFields(), line.length));
           }
           line = csvReader.readNext();
         }
@@ -112,7 +116,6 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
         throw new RuntimeException(message, e);
       }
     }
-    return ret;
   }
 
   private static NcaaBbSeasonData parseSeasonDataFileLine(final Integer year, final String[] line, final Map<String, String> aliasMap) {
@@ -181,7 +184,7 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
 
   @Override
   public List<NcaaBbSeasonData> fetchAllByYear(final Integer year) {
-    Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.get(year);
+    Map<String, NcaaBbSeasonData> teamSeasonDataMap = getDatabase().get(year);
     List<NcaaBbSeasonData> ret = teamSeasonDataMap.keySet()
       .stream()
       .map(teamSeasonDataMap::get)
@@ -192,7 +195,7 @@ public class NcaaBbSeasonDataFlatFileDao implements SeasonDataDao<NcaaBbSeasonDa
 
   @Override
   public NcaaBbSeasonData fetchByYearAndTeamName(final Integer year, final String teamName) {
-    Map<String, NcaaBbSeasonData> teamSeasonDataMap = database.get(year);
+    Map<String, NcaaBbSeasonData> teamSeasonDataMap = getDatabase().get(year);
     return teamSeasonDataMap.get(teamName);
   }
 

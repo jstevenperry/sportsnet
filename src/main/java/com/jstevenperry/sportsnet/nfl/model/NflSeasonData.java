@@ -117,10 +117,6 @@ public class NflSeasonData extends AbstractSeasonData {
     return ret;
   }
 
-  private static Double asDouble(final int intValue) {
-    return Integer.valueOf(intValue).doubleValue();
-  }
-
   public int getTeamOffenseRank() {
     return teamOffenseRank;
   }

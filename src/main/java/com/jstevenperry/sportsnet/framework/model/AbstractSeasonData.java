@@ -14,6 +14,14 @@ public abstract class AbstractSeasonData {
 
   private double simpleRatingSystem;
 
+  protected static Double asDouble(final int intValue) {
+    return Integer.valueOf(intValue).doubleValue();
+  }
+
+  protected static Double asDouble(final double doubleValue) {
+    return doubleValue;
+  }
+
   public Integer getYear() {
     return year;
   }

@@ -5,6 +5,7 @@ public enum SportsnetChoice {
   NCAA_MENS_BASKETBALL("NCAA Division I Men's Basketball", 1),
   NHL("National Hockey League (NHL)", 2),
   NFL("National Football League (NFL)", 3),
+  NBA("National Basketball Association (NBA)", 4),
   QUIT("Quit", 0)
   ;
 

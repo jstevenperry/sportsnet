@@ -15,12 +15,12 @@ public abstract class AbstractNhlTournamentRunnerPlugin extends AbstractTourname
 
   @Override
   public String getTournamentTemplateFileName() {
-    return "/nhl/tournament-template-nhl.txt";
+    return "/nhl/playoff-matchups-template-nhl.txt";
   }
 
   @Override
   protected String getTournamentResultsTemplateFileName() {
-    return "/nhl/tournament-results-template.csv";
+    return "/nhl/playoff-results.csv";
   }
 
   @Override
