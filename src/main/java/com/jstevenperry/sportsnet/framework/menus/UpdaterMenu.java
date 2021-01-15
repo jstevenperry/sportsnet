@@ -105,10 +105,11 @@ public class UpdaterMenu {
       return ret;
     }
 
-    private static Optional<UpdaterChoice> from(final IUpdater updater) {
+    public static Optional<UpdaterChoice> from(final IUpdater updater) {
       Optional<UpdaterChoice> ret = Optional.empty();
       for (UpdaterChoice menuChoice : UpdaterChoice.values()) {
-        if (menuChoice.getUpdater().equals(updater)) {
+        if (menuChoice.getUpdater().getClass().equals(updater.getClass())) {
+          log.debug("from({}): Found matching IUpdater, returning UpdaterChoice: {}", updater.getClass(), menuChoice);
           ret = Optional.of(menuChoice);
           break;
         }
