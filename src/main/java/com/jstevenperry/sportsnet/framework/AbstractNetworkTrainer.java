@@ -139,7 +139,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     // Get the season data for the teams in the evaluation years
     List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
     int numberOfEpochs = networkParameters.getNumberOfEpochs();
-    while (iterationNumber++ < numberOfTrainingIterations) {
+    while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
       log.debug("Pulling training data...");
       RecordReaderDataSetIterator trainingDataIterator = createIterator(yearsToTrain, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
       log.debug("Pulling evaluation data...");
@@ -277,7 +277,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     MultiLayerNetwork network = new MultiLayerNetwork(configuration);
     network.init();
     network.setListeners(new PerformanceListener(networkParameters.getNumberOfEpochs(), true));
-    for (int epochCount = 0; epochCount < maxTrainingEpochs; epochCount++) {
+    for (int epochCount = 0; epochCount < maxTrainingEpochs && keepGoing(); epochCount++) {
       //
       // Fit the model against the training data for a single epoch
       network.fit(trainingData);
@@ -290,11 +290,33 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
           break;
         } else {
           log.info("Epoch number: {}, Network error: {}", epochCount, networkError);
+          //
+          // Reup properties
+          reupPropertiesBetweenEpochBreaks(networkParameters);
         }
       }
     }
     log.info(String.format("End of training loop. Network error: %2.4f%%", computeNetworkError(networkParameters, evaluationData, network) * 100));
     return network;
+  }
+
+  private static boolean keepGoing() {
+    boolean ret = NetworkProperties.killSwitchActivated();
+    if (ret) {
+      log.warn("KILL SWITCH ACTIVE! TRAINING LOOP WILL NOT RUN!");
+    }
+    return !ret;
+  }
+
+  private static void reupPropertiesBetweenEpochBreaks(final NetworkParameters networkParameters) {
+    // Updater
+    IUpdater currentUpdater = networkParameters.getUpdater();
+    Optional<UpdaterMenu.UpdaterChoice> refreshedUpdater = UpdaterMenu.UpdaterChoice.from(networkParameters.getUpdater());
+    if (refreshedUpdater.isPresent()) {
+      networkParameters.setUpdater(refreshedUpdater.get().getUpdater());
+    } else {
+      networkParameters.setUpdater(currentUpdater);
+    }
   }
 
   private static double computeNetworkError(final NetworkParameters networkParameters, final DataSet evaluationData, final MultiLayerNetwork network) {

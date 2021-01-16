@@ -48,6 +48,7 @@ public class NetworkProperties {
    */
   public static final String BASE_DIRECTORY = "base.directory";
   public static final String NETWORK_PROPERTIES_FILE = "network.properties.file";
+  private static final String KILL_SWITCH_ACTIVATED = "kill.switch.activated";
 
   /**
    * Private constructor.
@@ -70,6 +71,8 @@ public class NetworkProperties {
 
   private static long cacheExpirationTime;
 
+  private static final long CACHE_TIMEOUT = 10000; // 10 seconds
+
   /**
    * Lazy-loads the underlying properties file.
    * 
@@ -77,7 +80,7 @@ public class NetworkProperties {
    */
   private static PropertiesFile getPropertiesFile() {
     if (propertiesFile == null || System.currentTimeMillis() > cacheExpirationTime) {
-      cacheExpirationTime = System.currentTimeMillis() + 30000; // 30 seconds
+      cacheExpirationTime = System.currentTimeMillis() + CACHE_TIMEOUT;
       String propertiesFileNameFromEnvironmentVariable = System.getProperty(NETWORK_PROPERTIES_FILE);
       if (StringUtils.isNotEmpty(propertiesFileNameFromEnvironmentVariable)) {
         log.trace(String.format("Override found for property (%s). Attempting to load properties file: %s", NETWORK_PROPERTIES_FILE, propertiesFileNameFromEnvironmentVariable));
@@ -106,6 +109,13 @@ public class NetworkProperties {
     }
     return propertiesFile;
   }
+
+  /**
+   * Kill switch - by setting the KILL_SWITCH_ACTIVATED property to true, it kills
+   * the training loop at the bottom of the current epoch. Most of the time this
+   * appears to be instantaneous.
+   */
+  public static boolean killSwitchActivated() { return getBooleanPropertyValue(KILL_SWITCH_ACTIVATED, false); }
 
   /**
    * The base directory. Used a LOT by the application. You MUST PROVIDE A
