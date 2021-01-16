@@ -80,7 +80,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
     //
     // Fetch the network configuration parameters (reuse NetworkParameters so user doesn't have to re-enter everything each time)
-    fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses);
+    fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses, false);
     log.info("Network parameters acquired.");
     //
     // Get the number of epochs
@@ -138,33 +138,42 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     //
     // Get the season data for the teams in the evaluation years
     List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
+    //
+    // Get the Normalizers that are to be used
+    DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices = DataNormalizationMenu.DataNormalizationChoice.values();
     int numberOfEpochs = networkParameters.getNumberOfEpochs();
     while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
-      log.debug("Pulling training data...");
-      RecordReaderDataSetIterator trainingDataIterator = createIterator(yearsToTrain, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
-      log.debug("Pulling evaluation data...");
-      RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
       //
       // Create the network definition
       log.debug("Configuring network...");
       MultiLayerConfiguration configuration = configureNetwork(networkParameters);
       //
-      // Train the network. If nothing goes wrong, return the trained network.
-      log.debug("Training network...");
-      MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
-      //
-      // Save the network if its performance is at or above the threshold.
-      // If the network was not saved, retain it anyway in the networkCandidate list
-      // that is owned by the caller.
-      NetworkCandidate networkCandidate = keepNetwork(trainedNetwork, networkParameters);
-      //
-      // Only keep networks in memory that are above the keep threshold to avoid running out of memory for large batch runs.
-      if (networkCandidate.getNetworkParameters().getNetworkAccuracy() * 100 >= NetworkProperties.getPerformanceThresholdNetworkKeep().doubleValue()) {
-        log.info("Iteration: {}, network retained.", iterationNumber);
-        networkCandidateList.add(networkCandidate);
-        saveNetworkIfAboveThreshold(networkCandidate, iterationNumber);
-      } else {
-        log.info("Iteration: {}, network discarded.", iterationNumber);
+      // Use all normalizers within the current iteration using the same network configuration
+      for (DataNormalizationMenu.DataNormalizationChoice dataNormalizationChoice: normalizationChoices) {
+        log.debug("Pulling training data...");
+        RecordReaderDataSetIterator trainingDataIterator = createIterator(yearsToTrain, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+        log.debug("Pulling evaluation data...");
+        RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+        // Set the normalizer to use
+        networkParameters.setNormalizer(dataNormalizationChoice);
+        //
+        // Train the network. If nothing goes wrong, return the trained network.
+        log.debug("Training network...");
+        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator, evaluationDataIterator);
+        //
+        // Save the network if its performance is at or above the threshold.
+        // If the network was not saved, retain it anyway in the networkCandidate list
+        // that is owned by the caller.
+        NetworkCandidate networkCandidate = keepNetwork(trainedNetwork, networkParameters);
+        //
+        // Only keep networks in memory that are above the keep threshold to avoid running out of memory for large batch runs.
+        if (networkCandidate.getNetworkParameters().getNetworkAccuracy() * 100 >= NetworkProperties.getPerformanceThresholdNetworkKeep().doubleValue()) {
+          log.info("Iteration: {}, network retained.", iterationNumber);
+          networkCandidateList.add(networkCandidate);
+          saveNetworkIfAboveThreshold(networkCandidate, iterationNumber);
+        } else {
+          log.info("Iteration: {}, network discarded.", iterationNumber);
+        }
       }
       // Reset to original user-specified number
       networkParameters.setNumberOfEpochs(numberOfEpochs);
@@ -173,10 +182,27 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     return networkParameters;
   }
 
+  /**
+   * Fetch network parameters for a batch run, and set the values selected by the user
+   * in the NetworkParameters object that is supplied.
+   */
   private void fetchNetworkParameters(final BufferedReader scanner,
                                       final NetworkParameters networkParameters,
                                       final TournamentParticipantDao tournamentParticipantDao,
                                       final Integer numberOfOutputClasses) throws IOException {
+    fetchNetworkParameters(scanner, networkParameters, tournamentParticipantDao, numberOfOutputClasses, true);
+  }
+
+  /**
+   * Fetch network parameters and set the values selected by the user in the NetworkParameters
+   * object that is supplied. If not for a batch run, the user is prompted for the normalizer
+   * to be used.
+   */
+  private void fetchNetworkParameters(final BufferedReader scanner,
+                                      final NetworkParameters networkParameters,
+                                      final TournamentParticipantDao tournamentParticipantDao,
+                                      final Integer numberOfOutputClasses,
+                                      final boolean isBatch) throws IOException {
     System.out.println("This is the Train Network Menu.");
     //
     // Set the dropout probability
@@ -219,10 +245,12 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
       // Get the L2 Regularization Lambda value
       double l2RegularizationLambda = scanL2RegularizationLambda(scanner, networkParameters.getL2RegularizationLambda());
       networkParameters.setL2RegularizationLambda(l2RegularizationLambda);
-      //
-      // Get the Normalizer to use
-      DataNormalizationMenu.DataNormalizationChoice dataNormalization = scanDataNormalization(scanner, networkParameters.getNormalizer());
-      networkParameters.setNormalizer(dataNormalization);
+      if (!isBatch) {
+        //
+        // Get the Normalizer to use
+        DataNormalizationMenu.DataNormalizationChoice dataNormalization = scanDataNormalization(scanner, networkParameters.getNormalizer());
+        networkParameters.setNormalizer(dataNormalization);
+      }
     } else {
       log.error("No data elements selected. Cannot train the network.");
     }
