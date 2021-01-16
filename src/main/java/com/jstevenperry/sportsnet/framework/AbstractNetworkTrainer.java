@@ -306,20 +306,22 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     network.init();
     network.setListeners(new PerformanceListener(networkParameters.getNumberOfEpochs(), true));
     for (int epochCount = 0; epochCount < maxTrainingEpochs && keepGoing(); epochCount++) {
+      // Copy original network parameters because with each training loop it gets mutated
+      NetworkParameters networkParametersToUseForTrainingLoop = networkParameters.copy();
       //
       // Fit the model against the training data for a single epoch
       network.fit(trainingData);
       if (epochCount % networkEvaluationIndex == 0) {
-        double networkError = computeNetworkError(networkParameters, evaluationData, network);
+        double networkError = computeNetworkError(networkParametersToUseForTrainingLoop, evaluationData, network);
         if (networkError < NetworkProperties.getMaxNetworkError()) {
           // Network is trained, we're done here
           log.info("Network trained after {} epochs.", epochCount);
-          networkParameters.setNumberOfEpochs(epochCount);
+          networkParametersToUseForTrainingLoop.setNumberOfEpochs(epochCount);
           break;
         } else {
           log.info("Epoch number: {}, Network error: {}", epochCount, networkError);
           //
-          // Reup properties
+          // Reup properties - okay to mutate original object
           reupPropertiesBetweenEpochBreaks(networkParameters);
         }
       }
@@ -616,27 +618,5 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     }
     return ret;
   }
-
-  private int scanNumberOfTrainingIterations(final BufferedReader scanner) throws IOException {
-    int ret = 1; // Default: 1 training iteration
-    String userInput = null;
-    while (StringUtils.isEmpty(userInput)) {
-      System.out.println("Enter the number of training iterations: ");
-      System.out.println("Press enter to use: " + ret);
-      userInput = scanner.readLine();
-      if (StringUtils.isEmpty(userInput)) {
-        break;
-      } else if (StringUtils.isNumeric(userInput)) {
-        ret = Integer.parseInt(userInput);
-        break;
-      } else {
-        String message = String.format("Not a valid value for number of training iterations: %s, please try again.", userInput);
-        log.warn(message);
-        userInput = StringUtils.EMPTY; // keep looping
-      }
-    }
-    return ret;
-  }
-
 
 }
