@@ -16,6 +16,8 @@ import java.util.List;
 
 public class NetworkParameters implements Serializable {
 
+  public static final long serialVersionUID = 1L;
+
   private Integer numberOfInputs;
   private Integer numberOfOutputs;
   private List<List<Integer>> yearsToTrainAndEvaluateNetwork = new ArrayList<>();
@@ -110,10 +112,6 @@ public class NetworkParameters implements Serializable {
   }
 
   public Integer getNumberOfEpochs() {
-    // Never allow negative number of epochs
-    if (numberOfEpochs < 1) {
-      numberOfEpochs = NetworkProperties.getMaxNetworkIterations();
-    }
     return numberOfEpochs;
   }
 
