@@ -76,15 +76,31 @@ public class UpdaterMenu {
 
   public enum UpdaterChoice {
     ADA_DELTA(AdaDelta::new, 1),
-    ADA_GRAD(() -> new AdaGrad(NetworkProperties.getLearningRuleLearningRate(), NetworkProperties.getLearningRuleLearningRate() / 1e5), 2),
-    ADAM(() -> new Adam(NetworkProperties.getLearningRuleLearningRate(), Adam.DEFAULT_ADAM_BETA1_MEAN_DECAY, Adam.DEFAULT_ADAM_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 3),
-    ADA_MAX(() -> new AdaMax(NetworkProperties.getLearningRuleLearningRate(), AdaMax.DEFAULT_ADAMAX_BETA1_MEAN_DECAY, AdaMax.DEFAULT_ADAMAX_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 4),
-    AMS_GRAD(() -> new AMSGrad(NetworkProperties.getLearningRuleLearningRate(), AMSGrad.DEFAULT_AMSGRAD_BETA1_MEAN_DECAY, AMSGrad.DEFAULT_AMSGRAD_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 5),
-    NADAM(() -> new Nadam(NetworkProperties.getLearningRuleLearningRate(), Nadam.DEFAULT_NADAM_BETA1_MEAN_DECAY, Nadam.DEFAULT_NADAM_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 6),
-    NESTEROVS(() -> new Nesterovs(NetworkProperties.getLearningRuleLearningRate(), NetworkProperties.getLearningRuleMomentumMax()), 7),
+    ADA_GRAD(() -> new AdaGrad(scale(NetworkProperties.getLearningRuleLearningRate(), 0.1), NetworkProperties.getLearningRuleLearningRate() / 1e5), 2),
+    ADAM(() -> new Adam(scale(NetworkProperties.getLearningRuleLearningRate(), 0.001), Adam.DEFAULT_ADAM_BETA1_MEAN_DECAY, Adam.DEFAULT_ADAM_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 3),
+    ADA_MAX(() -> new AdaMax(scale(NetworkProperties.getLearningRuleLearningRate(), 0.001), AdaMax.DEFAULT_ADAMAX_BETA1_MEAN_DECAY, AdaMax.DEFAULT_ADAMAX_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 4),
+    AMS_GRAD(() -> new AMSGrad(scale(NetworkProperties.getLearningRuleLearningRate(), 0.001), AMSGrad.DEFAULT_AMSGRAD_BETA1_MEAN_DECAY, AMSGrad.DEFAULT_AMSGRAD_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 5),
+    NADAM(() -> new Nadam(scale(NetworkProperties.getLearningRuleLearningRate(), 0.001), Nadam.DEFAULT_NADAM_BETA1_MEAN_DECAY, Nadam.DEFAULT_NADAM_BETA2_VAR_DECAY, NetworkProperties.getLearningRuleLearningRate() / 1e5), 6),
+    NESTEROVS(() -> new Nesterovs(scale(NetworkProperties.getLearningRuleLearningRate(), 0.1), NetworkProperties.getLearningRuleMomentumMax()), 7),
     NOOP(NoOp::new, 8),
-    RMS_PROP(() -> new RmsProp(NetworkProperties.getLearningRuleLearningRate()), 9),
-    SGD(() -> new Sgd(NetworkProperties.getLearningRuleLearningRate()), 10);
+    RMS_PROP(() -> new RmsProp(scale(NetworkProperties.getLearningRuleLearningRate(), 0.1)), 9),
+    SGD(() -> new Sgd(scale(NetworkProperties.getLearningRuleLearningRate(), 0.001)), 10);
+
+    /**
+     * Scale the specified valueToScale by the specified scale value. This is used
+     * to scale values like learning rate and epsilon so that single value may
+     * be specified in the configuration properties that can then be scaled to work
+     * for the wildly inconsistent values that are used across implementations
+     * in the DL4J framework.
+     *
+     * The idea is to specify one value in the properties whose "normal" value is
+     * 1 and can then be scaled from there since there is no consistency among
+     * the various DL4J implementations (such is the nature of open source projects
+     * and software development in general... poor communication)
+     */
+    private static double scale(final Double valueToScale, final double scaleValue) {
+      return valueToScale * scaleValue;
+    }
 
     private final Supplier<IUpdater> updaterSupplier;
     private final int ordinal;

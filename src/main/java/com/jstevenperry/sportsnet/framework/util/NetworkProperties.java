@@ -94,7 +94,7 @@ public class NetworkProperties {
           log.error(errorMessage, e);
           throw new RuntimeException(errorMessage, e);
         }
-        log.info(String.format("Loaded properties file: %s", propertiesFileNameFromEnvironmentVariable));
+        log.debug(String.format("Loaded properties file: %s", propertiesFileNameFromEnvironmentVariable));
       } else {
         log.warn("System property {} not set, attempting to load network properties file: {} from the classpath...", NETWORK_PROPERTIES_FILE, PROPERTIES_FILE_NAME);
         propertiesFile = new PropertiesFile(PROPERTIES_FILE_NAME);
@@ -133,14 +133,14 @@ public class NetworkProperties {
     return getDoublePropertyValue("dropout.probability", 0.25);
   }
 
-  public static Integer getEpochBreakIterationCount() {
-    return getIntegerPropertyValue("epoch.break.iteration.count", 3000);
+  public static Integer getEpochStatsIndexCount() {
+    return getIntegerPropertyValue("epoch.stats.index.count", 100);
   }
 
   public static Integer getFudgeFactor() { return getIntegerPropertyValue("fudge.factor", 2); }
 
   public static Double getLearningRuleLearningRate() {
-    return getDoublePropertyValue("learning.rule.learning.rate", 0.05);
+    return getDoublePropertyValue("learning.rule.learning.rate", 1.0);
   }
 
   public static Double getLearningRuleMomentumMax() {
