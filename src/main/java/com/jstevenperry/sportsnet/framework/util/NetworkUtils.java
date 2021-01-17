@@ -54,7 +54,6 @@ public class NetworkUtils {
 
   private static List<NetworkCandidate> loadNetworkFiles(final String[] networkFileNames) {
     List<NetworkCandidate> ret = new ArrayList<>();
-    int numberOfNetworksLoaded = 0;
     System.out.printf("Loading %d networks...%n", networkFileNames.length);
     for (String networkFileName: networkFileNames) {
       //
@@ -78,7 +77,6 @@ public class NetworkUtils {
         String message = String.format("Error loading network: %s", networkFileName);
         log.error(message, e);
       }
-      numberOfNetworksLoaded++;
       System.out.print(".");
     }
     System.out.print("\n");
@@ -183,7 +181,7 @@ public class NetworkUtils {
    * Helper method to create a directory. Insulates the caller from the details
    * of the Java API used to do this.
    */
-  public static String createDirectoryIfNecessary(String directoryName) {
+  public static void createDirectoryIfNecessary(String directoryName) {
     try {
       File directory = new File(directoryName);
       if (!directory.exists()) {
@@ -192,7 +190,6 @@ public class NetworkUtils {
         Path networkDirectoryPath = Files.createDirectory(Paths.get(directoryName));
         log.warn("Network directory '" + networkDirectoryPath.toString() + "' created.");
       }
-      return directoryName;
     } catch (IOException e) {
       String message = "I/O Exception occurred while creating directory '" + directoryName + "'. Cannot continue!";
       log.error(message, e);
@@ -214,7 +211,7 @@ public class NetworkUtils {
       if (aa++ > 0) {
         sb.append("x");
       }
-      sb.append(Integer.toString(neuronsCount));
+      sb.append(neuronsCount);
     }
     return sb.toString();
   }
@@ -267,4 +264,28 @@ public class NetworkUtils {
     return ret;
   }
 
+    public static String generateSampleNetworkLayout(final Integer numberOfInputs, final Integer numberOfOutputs) {
+      List<Integer> neuronLayerDescriptor = new ArrayList<>();
+      int numberOfHiddenLayers = NetworkProperties.getNumberOfHiddenLayers();
+      Integer primeSeed = NetworkProperties.getPrimeSeed();
+      Integer primeDivisor = NetworkProperties.getPrimeDivisor();
+      Integer fudgeFactor = NetworkProperties.getFudgeFactor();
+      if (numberOfHiddenLayers < 6) {
+          String errorMessage = String.format("Algorithm does not work with < 6 hidden layers, you specified %s", numberOfHiddenLayers);
+          log.error("generateSampleNetworkLayout({}, {}): {}", numberOfInputs, numberOfOutputs, numberOfHiddenLayers);
+          throw new RuntimeException(errorMessage);
+      }
+      int middleLayerIndex = numberOfHiddenLayers / 2 + 1;
+      // First layer: numberOfInputs * primeSeed
+        neuronLayerDescriptor.add(numberOfInputs * primeSeed);
+      for (int index = 1; index < middleLayerIndex; index++) {
+          neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor) * fudgeFactor);
+      }
+        // Middle layer: numberOfInputs * numberOfOutputs * fudgeFactor
+        neuronLayerDescriptor.add(middleLayerIndex, numberOfInputs * numberOfOutputs * fudgeFactor);
+      for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers; index++) {
+          neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor) * fudgeFactor);
+      }
+      return generateLayerStructureString(neuronLayerDescriptor);
+    }
 }
