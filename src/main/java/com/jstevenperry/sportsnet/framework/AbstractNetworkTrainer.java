@@ -181,7 +181,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             List<ActivationFunctionMenu.ActivationFunctionChoice> activationFunctionChoices = fetchActivationChoices();
             for (ActivationFunctionMenu.ActivationFunctionChoice activationFunctionChoice : activationFunctionChoices) {
                 try {
-                    log.info("\tUsing Activation: {}", activationFunctionChoice);
+                    log.debug("\tUsing Activation: {}", activationFunctionChoice);
                     // Set the activation function to use
                     networkParameters.setActivationFunction(activationFunctionChoice.getActivation());
                     //
@@ -222,7 +222,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         if (keepGoing()) {
             for (UpdaterMenu.UpdaterChoice updaterChoice : updaterChoicesToUseForTraining) {
                 // Set the IUpdater to use
-                log.info("\tUsing Updater: {}", updaterChoice);
+                log.debug("\tUsing Updater: {}", updaterChoice);
                 networkParameters.setUpdater(updaterChoice.getUpdater());
                 try {
                     //
@@ -266,7 +266,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         if (keepGoing()) {
             DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices = DataNormalizationMenu.DataNormalizationChoice.values();
             for (DataNormalizationMenu.DataNormalizationChoice dataNormalizationChoice : normalizationChoices) {
-                log.info("\tUsing normalizer: {}", dataNormalizationChoice);
+                log.debug("\tUsing normalizer: {}", dataNormalizationChoice);
                 // Set the normalizer to use
                 networkParameters.setNormalizer(dataNormalizationChoice);
                 runBatchLoopInternal(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
