@@ -283,9 +283,10 @@ public class NetworkUtils {
       }
         // Middle layer: numberOfInputs * numberOfOutputs * fudgeFactor
         neuronLayerDescriptor.add(middleLayerIndex, numberOfInputs * numberOfOutputs * fudgeFactor);
-      for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers; index++) {
+      for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers - 1; index++) {
           neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor) * fudgeFactor);
       }
+      neuronLayerDescriptor.add(numberOfOutputs * numberOfOutputs * numberOfOutputs);
       return generateLayerStructureString(neuronLayerDescriptor);
     }
 }

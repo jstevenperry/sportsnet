@@ -39,7 +39,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -132,6 +131,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             //
             // Generate network structure
             networkParameters.setNetworkLayout(computeNetworkStructure(networkParameters));
+            log.info("Using network layout: {}", networkParameters.getNetworkLayout());
             log.debug("Network parameters acquired.");
             int iterationNumber = 0;
             runBatchTrainingLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
@@ -320,7 +320,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         }
     }
 
-    private static String computeNetworkStructure(final NetworkParameters networkParameters) {
+    protected String computeNetworkStructure(final NetworkParameters networkParameters) {
         String hiddenLayerStructure = NetworkUtils.generateSampleNetworkLayout(networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
         return String.format("%dx%sx%d", networkParameters.getNumberOfInputs(), hiddenLayerStructure, networkParameters.getNumberOfOutputs());
     }
