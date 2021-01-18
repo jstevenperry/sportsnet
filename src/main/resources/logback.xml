@@ -18,7 +18,7 @@
     <logger name="com.jstevenperry.sportsnet" level="INFO"/>
 <!--    <logger name="com.jstevenperry.sportsnet.framework.util.NetworkUtils" level="DEBUG"/>-->
     <logger name="org.deeplearning4j.optimize.listeners" level="INFO"/>
-
+<!--    <logger name="com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer" level="DEBUG"/>-->
     <root level="WARN">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
