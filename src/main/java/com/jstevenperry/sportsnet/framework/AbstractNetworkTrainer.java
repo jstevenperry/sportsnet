@@ -24,7 +24,6 @@ import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
-import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.jetbrains.annotations.NotNull;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.activations.Activation;
@@ -104,7 +103,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         //
         // Train the network. If nothing goes wrong, return the trained network.
         log.debug("Training network...");
-        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator.next(), evaluationDataIterator.next());
+        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator.next(), evaluationDataIterator.next(), 1);
         // Restore the value for next time since it will be set to the actual number used, and the user may not want that next time
         networkParameters.setNumberOfEpochs(numberOfEpochs);
         log.debug("Training network...DONE.");
@@ -134,61 +133,61 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             // Generate network structure
             networkParameters.setNetworkLayout(computeNetworkStructure(networkParameters));
             log.debug("Network parameters acquired.");
-            //
-            // Get the season data for the teams in the training years
-            List<Integer> yearsToTrain = networkParameters.getYearsToTrainAndEvaluateNetwork().get(0);
-            //
-            // Get the season data for the teams in the evaluation years
-            List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
             int iterationNumber = 0;
-            runBatchTrainingLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters, numberOfTrainingIterations, yearsToTrain, yearsToEvaluate, iterationNumber);
+            runBatchTrainingLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
+                    networkParameters, numberOfTrainingIterations, iterationNumber);
             NetworkUtils.displayNetworkList(networkCandidateList);
         }
         return networkParameters;
     }
 
+    /**
+     * Start here.
+     *
+     * This is the top-level batch training loop. Each network configuration
+     * is tested starting here to try and find the optimal network settings
+     * without having to try them all manually.
+     */
     private void runBatchTrainingLoop(final List<NetworkCandidate> networkCandidateList,
                                       final SeasonDataDao<T> seasonDataDao,
                                       final TournamentResultDao tournamentResultDao,
                                       final TournamentParticipantDao tournamentParticipantDao,
                                       final NetworkParameters networkParameters,
                                       final int numberOfTrainingIterations,
-                                      final List<Integer> yearsToTrain,
-                                      final List<Integer> yearsToEvaluate,
                                       int iterationNumber) {
         if (keepGoing()) {
-            //
-            // Get the Normalizers that are to be used
-            DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices = DataNormalizationMenu.DataNormalizationChoice.values();
             while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
-                runBatchActivationLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters, yearsToTrain, yearsToEvaluate, iterationNumber, normalizationChoices);
+                runBatchActivationLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
+                        networkParameters, iterationNumber);
             }
             log.info("**** END OF BATCH LOOP ****");
         }
     }
 
+    /**
+     * Runs all of the activators that are returned from fetchActivationChoices() to try
+     * and find the optimal network configuration without having to try them all
+     * manually.
+     */
     private void runBatchActivationLoop(final List<NetworkCandidate> networkCandidateList,
                                         final SeasonDataDao<T> seasonDataDao,
                                         final TournamentResultDao tournamentResultDao,
                                         final TournamentParticipantDao tournamentParticipantDao,
                                         final NetworkParameters networkParameters,
-                                        final List<Integer> yearsToTrain,
-                                        final List<Integer> yearsToEvaluate,
-                                        final int iterationNumber,
-                                        final DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices) {
+                                        final int iterationNumber) {
         if (keepGoing()) {
             //
             // Use select activation functions to configure the network
             List<ActivationFunctionMenu.ActivationFunctionChoice> activationFunctionChoices = fetchActivationChoices();
             for (ActivationFunctionMenu.ActivationFunctionChoice activationFunctionChoice : activationFunctionChoices) {
                 try {
-                    log.info("Using Activation: {}", activationFunctionChoice);
+                    log.info("\tUsing Activation: {}", activationFunctionChoice);
                     // Set the activation function to use
                     networkParameters.setActivationFunction(activationFunctionChoice.getActivation());
                     //
                     // Use select updaters to configure the network
                     runBatchUpdaterLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
-                            networkParameters, yearsToTrain, yearsToEvaluate, iterationNumber, normalizationChoices);
+                            networkParameters, iterationNumber);
                 } catch (Exception e) {
                     log.error("Activation {} does not appear to work for this particular network configuration. Moving on to the next one.", activationFunctionChoice, e);
                 }
@@ -208,20 +207,22 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         return ret;
     }
 
+    /**
+     * Runs all of the updaters that are returned from fetchUpdaterChoices() to try
+     * and find the optimal network configuration without having to try them all
+     * manually.
+     */
     private void runBatchUpdaterLoop(final List<NetworkCandidate> networkCandidateList,
                                      final SeasonDataDao<T> seasonDataDao,
                                      final TournamentResultDao tournamentResultDao,
                                      final TournamentParticipantDao tournamentParticipantDao,
                                      final NetworkParameters networkParameters,
-                                     final List<Integer> yearsToTrain,
-                                     final List<Integer> yearsToEvaluate,
-                                     final int iterationNumber,
-                                     final DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices) {
+                                     final int iterationNumber) {
         List<UpdaterMenu.UpdaterChoice> updaterChoicesToUseForTraining = fetchUpdaterChoices();
         if (keepGoing()) {
             for (UpdaterMenu.UpdaterChoice updaterChoice : updaterChoicesToUseForTraining) {
                 // Set the IUpdater to use
-                log.info("Using Updater: {}", updaterChoice);
+                log.info("\tUsing Updater: {}", updaterChoice);
                 networkParameters.setUpdater(updaterChoice.getUpdater());
                 try {
                     //
@@ -231,7 +232,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                     //
                     // Use all normalizers within the current iteration using the same network configuration
                     runBatchNormalizerLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
-                            networkParameters, yearsToTrain, yearsToEvaluate, normalizationChoices, iterationNumber, configuration);
+                            networkParameters, iterationNumber, configuration);
                 } catch (Exception e) {
                     log.error("Updater {} does not appear to work for this particular network configuration. Moving on to the next one.", updaterChoice, e);
                 }
@@ -260,17 +261,16 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                         final TournamentResultDao tournamentResultDao,
                                         final TournamentParticipantDao tournamentParticipantDao,
                                         final NetworkParameters networkParameters,
-                                        final List<Integer> yearsToTrain,
-                                        final List<Integer> yearsToEvaluate,
-                                        final DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices,
                                         final int iterationNumber,
                                         final MultiLayerConfiguration configuration) throws IOException, InterruptedException {
         if (keepGoing()) {
+            DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices = DataNormalizationMenu.DataNormalizationChoice.values();
             for (DataNormalizationMenu.DataNormalizationChoice dataNormalizationChoice : normalizationChoices) {
-                log.info("Using normalizer: {}", dataNormalizationChoice);
+                log.info("\tUsing normalizer: {}", dataNormalizationChoice);
                 // Set the normalizer to use
                 networkParameters.setNormalizer(dataNormalizationChoice);
-                runBatchLoopInternal(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters, yearsToTrain, yearsToEvaluate, iterationNumber, configuration);
+                runBatchLoopInternal(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
+                        networkParameters, iterationNumber, configuration);
             }
         }
         log.info("**** END OF NORMALIZER LOOP ****");
@@ -281,21 +281,27 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                       final TournamentResultDao tournamentResultDao,
                                       final TournamentParticipantDao tournamentParticipantDao,
                                       final NetworkParameters networkParameters,
-                                      final List<Integer> yearsToTrain,
-                                      final List<Integer> yearsToEvaluate,
                                       final int iterationNumber,
                                       final MultiLayerConfiguration configuration) throws IOException, InterruptedException {
+        //
+        // Get the season data for the teams in the training years
+        List<Integer> yearsToTrain = networkParameters.getYearsToTrainAndEvaluateNetwork().get(0);
+        //
+        // Get the season data for the teams in the evaluation years
+        List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
         log.debug("Pulling training data...");
-        RecordReaderDataSetIterator trainingDataIterator = createIterator(yearsToTrain, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+        RecordReaderDataSetIterator trainingDataIterator = createIterator(yearsToTrain, seasonDataDao, tournamentResultDao,
+                tournamentParticipantDao, networkParameters);
         log.debug("Pulling evaluation data...");
-        RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+        RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao,
+                tournamentResultDao, tournamentParticipantDao, networkParameters);
         //
         // Train the network. If nothing goes wrong, return the trained network.
         log.debug("Training network...");
         DataSet trainingData = trainingDataIterator.next();
         DataSet evaluationData = evaluationDataIterator.next();
         trainingDataIterator.setCollectMetaData(true);
-        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingData, evaluationData);
+        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingData, evaluationData, iterationNumber);
         //
         // Save the network if its performance is at or above the threshold.
         // If the network was not saved, retain it anyway in the networkCandidate list
@@ -395,20 +401,21 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     private static MultiLayerNetwork goInternal(final MultiLayerConfiguration configuration,
                                                 final NetworkParameters networkParameters,
                                                 final DataSet trainingData,
-                                                final DataSet evaluationData) {
+                                                final DataSet evaluationData,
+                                                final Integer iterationNumber) {
         //
         // Prepare the data
         DataNormalization normalizer = networkParameters.getNormalizer().getDataNormalization();
         normalizeTrainingData(trainingData, evaluationData, normalizer);
         //
         // The training loop, returns the trained network model
-        MultiLayerNetwork trainedNetwork = trainNetwork(configuration, networkParameters, trainingData, trainingData);
+        MultiLayerNetwork trainedNetwork = trainNetwork(configuration, networkParameters, trainingData, trainingData, iterationNumber);
         //
         // Evaluate the model on the evaluation set to see how well the trained model performs against unknown data
         Evaluation eval = computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, trainedNetwork);
         networkParameters.setNetworkAccuracy(eval.accuracy());
         log.debug(String.format("Evaluator stats: %s", eval.stats()));
-        log.info(String.format("Network accuracy: %f%%", eval.accuracy() * 100.0));
+        log.info(String.format("\tNetwork accuracy: %f%%", eval.accuracy() * 100.0));
         log.debug(networkParameters.toStringAbbreviated());
         log.info("**** END OF TRAINING LOOP ****");
         return trainedNetwork;
@@ -426,7 +433,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     private static MultiLayerNetwork trainNetwork(final MultiLayerConfiguration configuration,
                                                   final NetworkParameters networkParameters,
                                                   final DataSet trainingData,
-                                                  final DataSet evaluationData) {
+                                                  final DataSet evaluationData,
+                                                  final Integer iterationNumber) {
         //
         // Compute the number of epochs at which the network will be periodically evaluated
         log.debug("trainNetwork: training up to {} epochs", NetworkProperties.getMaxLearningIterations());
@@ -445,19 +453,19 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                 double networkError = computeNetworkError(networkEvaluator);
                 if (networkError < NetworkProperties.getMaxNetworkError()) {
                     // Network is trained, we're done here
-                    log.info("Network trained after {} epochs.", epochCount);
+                    log.debug("\tNetwork trained after {} epochs.", epochCount);
                     log.debug(networkParameters.toStringAbbreviated());
                     networkParameters.setNumberOfEpochs(epochCount);
                     break;
                 } else if (epochCount % NetworkProperties.getEpochStatsIndexCount() == 0) {
-                    log.info("Epoch number: {}, Network error: {}", epochCount, networkError);
+                    log.debug("\tEpoch number: {}, Network error: {}", epochCount, networkError);
                     //
                     // Reup properties - okay to mutate original object
                     reupPropertiesBetweenEpochBreaks(networkParameters);
                 }
             }
         }
-        log.info(String.format("Number of iterations: %d, Network error: %2.4f%%", epochCount, computeNetworkError(
+        log.info(String.format("\tIteration %d, Number of epochs: %d, Network error: %2.4f%%", iterationNumber, epochCount, computeNetworkError(
                 computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, network)) * 100));
         return network;
     }
@@ -510,11 +518,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         double performanceThreshold = NetworkProperties.getPerformanceThreshold().doubleValue();
         NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
         if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
-            log.info(String.format("Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, saving network.",
+            log.info(String.format("*** Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, saving network. ***",
                     iterationNumber, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
             NetworkPersister.saveNetwork(networkCandidate);
         } else {
-            log.info(String.format("Iteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f).",
+            log.info(String.format("\tIteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f).",
                     iterationNumber, networkParameters.getNetworkAccuracy() * 100, performanceThreshold));
         }
     }
