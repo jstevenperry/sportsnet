@@ -417,7 +417,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         log.debug(String.format("Evaluator stats: %s", eval.stats()));
         log.info(String.format("\tNetwork accuracy: %f%%", eval.accuracy() * 100.0));
         log.debug(networkParameters.toStringAbbreviated());
-        log.info("**** END OF TRAINING LOOP ****");
+        log.info("**** END OF TRAINING LOOP ({}/{}/{}) ****", networkParameters.getNormalizer(), networkParameters.getActivationFunction(), networkParameters.getUpdater());
         return trainedNetwork;
     }
 
