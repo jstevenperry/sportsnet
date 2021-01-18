@@ -196,17 +196,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         }
     }
 
-    private static List<ActivationFunctionMenu.ActivationFunctionChoice> fetchActivationChoices() {
-        List<ActivationFunctionMenu.ActivationFunctionChoice> ret = new ArrayList<>();
-        ret.add(ActivationFunctionMenu.ActivationFunctionChoice.RELU);
-        ret.add(ActivationFunctionMenu.ActivationFunctionChoice.RATIONALTANH);
-        ret.add(ActivationFunctionMenu.ActivationFunctionChoice.RELU6);
-        ret.add(ActivationFunctionMenu.ActivationFunctionChoice.SOFTMAX);
-        ret.add(ActivationFunctionMenu.ActivationFunctionChoice.TANH);
-        ret.add(ActivationFunctionMenu.ActivationFunctionChoice.SIGMOID);
-        return ret;
-    }
-
     /**
      * Runs all of the updaters that are returned from fetchUpdaterChoices() to try
      * and find the optimal network configuration without having to try them all
@@ -245,14 +234,26 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * Specifies the Updaters that are to be used for batch training runs.
      */
     private static List<UpdaterMenu.UpdaterChoice> fetchUpdaterChoices() {
-        List<UpdaterMenu.UpdaterChoice> ret = new ArrayList<>();
-        ret.add(UpdaterMenu.UpdaterChoice.ADA_DELTA);
-        ret.add(UpdaterMenu.UpdaterChoice.ADA_GRAD);
-        ret.add(UpdaterMenu.UpdaterChoice.ADA_MAX);
-        ret.add(UpdaterMenu.UpdaterChoice.ADAM);
-        ret.add(UpdaterMenu.UpdaterChoice.NADAM);
-        ret.add(UpdaterMenu.UpdaterChoice.NESTEROVS);
-        ret.add(UpdaterMenu.UpdaterChoice.SGD);
+        List<UpdaterMenu.UpdaterChoice> ret = NetworkProperties.getUpdaters();
+        if (ret.isEmpty()) {
+            ret.add(UpdaterMenu.UpdaterChoice.AMS_GRAD);
+            ret.add(UpdaterMenu.UpdaterChoice.ADA_MAX);
+            ret.add(UpdaterMenu.UpdaterChoice.ADAM);
+            ret.add(UpdaterMenu.UpdaterChoice.SGD);
+        }
+        return ret;
+    }
+
+    private static List<ActivationFunctionMenu.ActivationFunctionChoice> fetchActivationChoices() {
+        List<ActivationFunctionMenu.ActivationFunctionChoice> ret = NetworkProperties.getActivationFunctions();
+        if (ret.isEmpty()) {
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.RELU);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.RATIONALTANH);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.RELU6);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.SOFTMAX);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.TANH);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.SIGMOID);
+        }
         return ret;
     }
 

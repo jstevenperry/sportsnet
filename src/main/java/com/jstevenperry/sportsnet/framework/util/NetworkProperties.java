@@ -15,6 +15,8 @@
  */
 package com.jstevenperry.sportsnet.framework.util;
 
+import com.jstevenperry.sportsnet.framework.menus.ActivationFunctionMenu;
+import com.jstevenperry.sportsnet.framework.menus.UpdaterMenu;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 /**
  * Provides access to the network properties.
@@ -117,6 +122,25 @@ public class NetworkProperties {
    */
   public static boolean killSwitchActivated() { return getBooleanPropertyValue(KILL_SWITCH_ACTIVATED); }
 
+  public static List<ActivationFunctionMenu.ActivationFunctionChoice> getActivationFunctions() {
+    List<ActivationFunctionMenu.ActivationFunctionChoice> ret = new ArrayList<>();
+    String activationFunctionsCsv = getStringPropertyValue("activation.functions", null);
+    if (StringUtils.isNotEmpty(activationFunctionsCsv)) {
+      StringTokenizer strtok = new StringTokenizer(activationFunctionsCsv, ",;:");
+      while (strtok.hasMoreElements()) {
+        String token = strtok.nextToken();
+        try {
+          ActivationFunctionMenu.ActivationFunctionChoice activationFunctionChoice = ActivationFunctionMenu.ActivationFunctionChoice.valueOf(token);
+          ret.add(activationFunctionChoice);
+        } catch (IllegalArgumentException e) {
+          String errorMessage = String.format("No ActivationFunctionChoice enum member called %s", token);
+          log.error("getActivationFunctions(): {}", errorMessage, e);
+          throw new RuntimeException(errorMessage, e);
+        }
+      }
+    }
+    return ret;
+  }
   /**
    * The base directory. Used a LOT by the application. You MUST PROVIDE A
    * VALUE IN THE PROPERTIES FILE FOR THIS PROPERTY!
@@ -183,6 +207,26 @@ public class NetworkProperties {
 
   public static String getSimulationDirectoryName() {
     return getStringPropertyValue("simulation.directory.name", "Simulation");
+  }
+
+  public static List<UpdaterMenu.UpdaterChoice> getUpdaters() {
+    List<UpdaterMenu.UpdaterChoice> ret = new ArrayList<>();
+    String updaters = getStringPropertyValue("updaters", null);
+    if (StringUtils.isNotEmpty(updaters)) {
+      StringTokenizer strtok = new StringTokenizer(updaters, ",;:");
+      while (strtok.hasMoreElements()) {
+        String token = strtok.nextToken();
+        try {
+          UpdaterMenu.UpdaterChoice updaterChoice = UpdaterMenu.UpdaterChoice.valueOf(token);
+          ret.add(updaterChoice);
+        } catch (IllegalArgumentException e) {
+          String errorMessage = String.format("No UpdaterChoice enum member called %s", token);
+          log.error("getUpdaters(): {}", errorMessage, e);
+          throw new RuntimeException(errorMessage, e);
+        }
+      }
+    }
+    return ret;
   }
 
   // ****************************
