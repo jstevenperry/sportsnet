@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +19,7 @@ public class NflNetworkTrainer extends AbstractNetworkTrainer<NflSeasonData> {
   private static final Logger log = LoggerFactory.getLogger(NflNetworkTrainer.class);
 
   @Override
-  protected List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner, final List<AbstractDataElementChoice> choices) throws IOException {
+  protected List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner, final List<AbstractDataElementChoice> choices) {
     // Don't bother to show the menu, just add ALL NFL data
     return new ArrayList<>(new NflDataElementMenu().values());
   }
@@ -36,7 +35,7 @@ public class NflNetworkTrainer extends AbstractNetworkTrainer<NflSeasonData> {
     int numberOfHiddenLayers = NetworkProperties.getNumberOfHiddenLayers();
     int numberOfInputs = networkParameters.getNumberOfInputs();
     int numberOfOutputs = networkParameters.getNumberOfOutputs();
-    Integer primeSeed = NetworkProperties.getPrimeSeed();
+    int primeSeed = NetworkProperties.getPrimeSeed();
     Integer primeDivisor = NetworkProperties.getPrimeDivisor();
     int fudgeFactor = NetworkProperties.getFudgeFactor();
     if (numberOfHiddenLayers < 6) {
@@ -46,7 +45,7 @@ public class NflNetworkTrainer extends AbstractNetworkTrainer<NflSeasonData> {
     }
     int middleLayerIndex = numberOfHiddenLayers / 2 + 1;
     // First layer: numberOfInputs * primeSeed * 2
-    neuronLayerDescriptor.add(numberOfInputs * primeSeed * 2);
+    neuronLayerDescriptor.add(numberOfInputs * primeSeed);
     for (int index = 1; index < middleLayerIndex; index++) {
       neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor) * fudgeFactor);
     }
@@ -55,7 +54,6 @@ public class NflNetworkTrainer extends AbstractNetworkTrainer<NflSeasonData> {
     for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers; index++) {
       neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor) * fudgeFactor);
     }
-    neuronLayerDescriptor.add(numberOfOutputs * numberOfOutputs * numberOfOutputs);
     String hiddenLayerStructure = NetworkUtils.generateLayerStructureString(neuronLayerDescriptor);
     return String.format("%dx%sx%d", networkParameters.getNumberOfInputs(), hiddenLayerStructure, networkParameters.getNumberOfOutputs());
   }

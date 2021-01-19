@@ -271,7 +271,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         if (keepGoing()) {
             DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices = DataNormalizationMenu.DataNormalizationChoice.values();
             log.info("**** BEGIN NORMALIZER LOOP ****");
-            log.info("\t Using updaters: {}", StringUtils.join(normalizationChoices, ", "));
+            log.info("\t Using normalizers: {}", StringUtils.join(normalizationChoices, ", "));
             for (DataNormalizationMenu.DataNormalizationChoice dataNormalizationChoice : normalizationChoices) {
                 log.debug("\tUsing normalizer: {}", dataNormalizationChoice);
                 // Set the normalizer to use
