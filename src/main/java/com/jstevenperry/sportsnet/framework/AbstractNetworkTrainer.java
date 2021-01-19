@@ -179,6 +179,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             //
             // Use select activation functions to configure the network
             List<ActivationFunctionMenu.ActivationFunctionChoice> activationFunctionChoices = fetchActivationChoices();
+            log.info("**** BEGIN ACTIVATION LOOP ****");
+            log.info("\t Using activation functions: {}", StringUtils.join(activationFunctionChoices.toArray(), ", "));
             for (ActivationFunctionMenu.ActivationFunctionChoice activationFunctionChoice : activationFunctionChoices) {
                 try {
                     log.debug("\tUsing Activation: {}", activationFunctionChoice);
@@ -209,6 +211,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                      final int iterationNumber) {
         List<UpdaterMenu.UpdaterChoice> updaterChoicesToUseForTraining = fetchUpdaterChoices();
         if (keepGoing()) {
+            log.info("**** BEGIN UPDATER LOOP ****");
+            log.info("\t Using updaters: {}", StringUtils.join(updaterChoicesToUseForTraining.toArray(), ", "));
             for (UpdaterMenu.UpdaterChoice updaterChoice : updaterChoicesToUseForTraining) {
                 // Set the IUpdater to use
                 log.debug("\tUsing Updater: {}", updaterChoice);
@@ -266,6 +270,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                         final MultiLayerConfiguration configuration) throws IOException, InterruptedException {
         if (keepGoing()) {
             DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices = DataNormalizationMenu.DataNormalizationChoice.values();
+            log.info("**** BEGIN NORMALIZER LOOP ****");
+            log.info("\t Using updaters: {}", StringUtils.join(normalizationChoices, ", "));
             for (DataNormalizationMenu.DataNormalizationChoice dataNormalizationChoice : normalizationChoices) {
                 log.debug("\tUsing normalizer: {}", dataNormalizationChoice);
                 // Set the normalizer to use
