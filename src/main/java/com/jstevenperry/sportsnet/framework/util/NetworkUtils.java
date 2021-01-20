@@ -25,268 +25,267 @@ import java.util.StringTokenizer;
 
 public class NetworkUtils {
 
-  private static final Logger log = LoggerFactory.getLogger(NetworkUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(NetworkUtils.class);
 
-  public static final String DL4J_NETWORK_EPILOGUE = "dl4j.zip";
+    public static final String DL4J_NETWORK_EPILOGUE = "dl4j.zip";
 
-  public static List<NetworkCandidate> loadNetworks(final String networkType) {
-    List<NetworkCandidate> ret = new ArrayList<>();
-    String networkDirectoryName = NetworkUtils.fetchNetworkDirectoryAndCreateIfNecessary(networkType);
-    File networkDirectory = new File(networkDirectoryName);
-    //
-    // Get a listing of *.dl4j.zip
-    String[] dl4jNetworkFileNames = networkDirectory.list((dir, name) -> name.endsWith(DL4J_NETWORK_EPILOGUE));
-    if (dl4jNetworkFileNames != null && dl4jNetworkFileNames.length > 0) {
-      String[] networkFileNames = new String[dl4jNetworkFileNames.length];
-      log.debug(String.format("Found %d networks at %s", dl4jNetworkFileNames.length, networkDirectoryName));
-      int index = 0;
-      //
-      // Need the full path to the network file
-      for (String dl4jNetworkFileName: dl4jNetworkFileNames) {
-        networkFileNames[index++] = networkDirectoryName + File.separator + dl4jNetworkFileName;
-      }
-      ret = loadNetworkFiles(networkFileNames);
-    } else {
-      log.warn(String.format("No networks found at %s", networkDirectoryName));
-    }
-    return ret;
-  }
-
-  private static List<NetworkCandidate> loadNetworkFiles(final String[] networkFileNames) {
-    List<NetworkCandidate> ret = new ArrayList<>();
-    System.out.printf("Loading %d networks...%n", networkFileNames.length);
-    for (String networkFileName: networkFileNames) {
-      //
-      // Load the network
-      File networkFile = new File(networkFileName);
-      try {
-        MultiLayerNetwork network = ModelSerializer.restoreMultiLayerNetwork(networkFile, true);
-        if (network == null) {
-          log.error(String.format("Network from file %s is null!", networkFileName));
-          continue; // Do not add null network
-        }
-        NetworkParameters networkParameters = ModelSerializer.getObjectFromFile(networkFile, NetworkPersister.NETWORK_PARAMETERS_KEY);
-        if (networkParameters == null) {
-          log.error(String.format("Network parameters from file %s is null!", networkFileName));
-          continue; // Do not add null network parameters
-        }
+    public static List<NetworkCandidate> loadNetworks(final String networkType) {
+        List<NetworkCandidate> ret = new ArrayList<>();
+        String networkDirectoryName = NetworkUtils.fetchNetworkDirectoryAndCreateIfNecessary(networkType);
+        File networkDirectory = new File(networkDirectoryName);
         //
-        // Everything looks good, add the loaded network to the return value
-        ret.add(new NetworkCandidate(networkParameters, network));
-      } catch (IOException e) {
-        String message = String.format("Error loading network: %s", networkFileName);
-        log.error(message, e);
-      }
-      System.out.print(".");
-    }
-    System.out.print("\n");
-    log.info("Loaded {} networks.", networkFileNames.length);
-    return ret;
-  }
-
-  public static void displayNetworkList(final List<NetworkCandidate> networkCandidates) {
-    System.out.printf("%9s%21s%11s(%%)%35s%10s%45s%30s%15s%n",
-      "Network #", "When Trained", "Accuracy", "Layer Structure", "Saved?", "Years (Training)", "Updater", "No. Epochs");
-    int index = 0;
-    log.debug("Sorting networks...");
-    //
-    // Sort the list, then present it
-    Collections.sort(networkCandidates);
-    log.debug("Rendering networks suitable for display...");
-    for (NetworkCandidate networkCandidate : networkCandidates) {
-      NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
-      System.out.printf("%9d%21s%13.2f%%%35s%10s%45s%30s%15d%n",
-        index + 1,
-        networkParameters.getWhenTrained().format(DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm")),
-        networkParameters.getNetworkAccuracy() * 100.0,
-        StringUtils.abbreviate(networkParameters.getNetworkLayout(), 32),
-        networkParameters.isNetworkSaved() ? "Y": "N",
-        networkParameters.getTrainingYearsString(),
-        StringUtils.abbreviate(networkParameters.getUpdater().toString(), 24),
-        networkParameters.getNumberOfEpochs());
-      index++;
-    }
-  }
-
-  public static void displayNetworks(final String networkType) throws IOException {
-    BufferedReader scanner = new BufferedReader(new InputStreamReader(System.in));
-    log.info("Loading networks for display (this could take a minute, please be patient)...");
-    List<NetworkCandidate> networkCandidates = loadNetworks(networkType);
-    if (networkCandidates.size() > 0) {
-      while (true) {
-        displayNetworkList(networkCandidates);
-        System.out.println("Enter the number of a network to see more about it (just press Enter to quit).");
-        String line = scanner.readLine();
-        if (StringUtils.isEmpty(line)) {
-          break;
-        }
-        if (StringUtils.isNumeric(line)) {
-          int networkNumber = Integer.parseInt(line);
-          if (networkNumber > 0 && networkNumber <= networkCandidates.size()) {
-            System.out.println(networkCandidates.get(networkNumber - 1).getNetworkParameters());
-          } else {
-            System.out.printf("%d is not one of the choices. Please choose a network from the list (or just press enter to quit).%n", networkNumber);
-          }
+        // Get a listing of *.dl4j.zip
+        String[] dl4jNetworkFileNames = networkDirectory.list((dir, name) -> name.endsWith(DL4J_NETWORK_EPILOGUE));
+        if (dl4jNetworkFileNames != null && dl4jNetworkFileNames.length > 0) {
+            String[] networkFileNames = new String[dl4jNetworkFileNames.length];
+            log.debug(String.format("Found %d networks at %s", dl4jNetworkFileNames.length, networkDirectoryName));
+            int index = 0;
+            //
+            // Need the full path to the network file
+            for (String dl4jNetworkFileName : dl4jNetworkFileNames) {
+                networkFileNames[index++] = networkDirectoryName + File.separator + dl4jNetworkFileName;
+            }
+            ret = loadNetworkFiles(networkFileNames);
         } else {
-          System.out.printf("%s is not a valid choice. Please choose a network from the list (or just press enter to quit).%n", line);
+            log.warn(String.format("No networks found at %s", networkDirectoryName));
         }
-      }
-    } else {
-      log.warn("No saved networks exist. Train some networks, save one or more of them, and try again.");
+        return ret;
     }
-    System.out.println("Quitting.");
-  }
-  /**
-   * Fetches the name of the network directory using NetworkProperties settings
-   * and returns that name to the caller.
-   */
-  public static String fetchNetworkDirectoryAndCreateIfNecessary(final String networkType) {
-    //
-    // Compute the directory name from NetworkProperties settings
-    String directoryName = NetworkProperties.getBaseDirectory() + File.separator
-      + networkType;
-    //
-    // If necessary, create the directory
-    createDirectoryIfNecessary(directoryName);
-    directoryName += File.separator + NetworkProperties.getNetworkDirectoryName();
-    //
-    // If necessary, create the directory
-    createDirectoryIfNecessary(directoryName);
-    //
-    // Return the directory name to the caller
-    return directoryName;
-  }
 
-  /**
-   * Fetches the name of the simulation directory using NetworkProperties settings
-   * and returns that name to the caller.
-   */
-  public static String fetchSimulationDirectoryAndCreateIfNecessary(String networkType) {
-    //
-    // Compute the directory name from NetworkProperties settings
-    String directoryName = NetworkProperties.getBaseDirectory() + File.separator + networkType;
-    //
-    // If necessary, create the directory
-    createDirectoryIfNecessary(directoryName);
-    directoryName += File.separator + NetworkProperties.getSimulationDirectoryName();
-    //
-    // If necessary, create the directory
-    createDirectoryIfNecessary(directoryName);
-    //
-    // Return the directory name to the caller
-    return directoryName;
-  }
-
-  /**
-   * Helper method to create a directory. Insulates the caller from the details
-   * of the Java API used to do this.
-   */
-  public static void createDirectoryIfNecessary(String directoryName) {
-    try {
-      File directory = new File(directoryName);
-      if (!directory.exists()) {
-        log.warn("Directory '" + directoryName + "' does not exist. Creating it now...");
-        // Create the directory.
-        Path networkDirectoryPath = Files.createDirectory(Paths.get(directoryName));
-        log.warn("Network directory '" + networkDirectoryPath.toString() + "' created.");
-      }
-    } catch (IOException e) {
-      String message = "I/O Exception occurred while creating directory '" + directoryName + "'. Cannot continue!";
-      log.error(message, e);
-      throw new RuntimeException(message, e);
+    private static List<NetworkCandidate> loadNetworkFiles(final String[] networkFileNames) {
+        List<NetworkCandidate> ret = new ArrayList<>();
+        System.out.printf("Loading %d networks...%n", networkFileNames.length);
+        for (String networkFileName : networkFileNames) {
+            //
+            // Load the network
+            File networkFile = new File(networkFileName);
+            try {
+                MultiLayerNetwork network = ModelSerializer.restoreMultiLayerNetwork(networkFile, true);
+                if (network == null) {
+                    log.error(String.format("Network from file %s is null!", networkFileName));
+                    continue; // Do not add null network
+                }
+                NetworkParameters networkParameters = ModelSerializer.getObjectFromFile(networkFile, NetworkPersister.NETWORK_PARAMETERS_KEY);
+                if (networkParameters == null) {
+                    log.error(String.format("Network parameters from file %s is null!", networkFileName));
+                    continue; // Do not add null network parameters
+                }
+                //
+                // Everything looks good, add the loaded network to the return value
+                ret.add(new NetworkCandidate(networkParameters, network));
+            } catch (IOException e) {
+                String message = String.format("Error loading network: %s", networkFileName);
+                log.error(message, e);
+            }
+            System.out.print(".");
+        }
+        System.out.print("\n");
+        log.info("Loaded {} networks.", networkFileNames.length);
+        return ret;
     }
-  }
 
-  /**
-   * Returns a NxNxNxN style string showing the layer structure
-   * of a network that would have the specified layer structure.
-   * The 0th element contains the number of neurons in the input
-   * layer. The (<code>neuronLayerDescriptor</code>.size()-1)th element
-   * contains the number of neurons in the output layer.
-   */
-  public static String generateLayerStructureString(List<Integer> neuronLayerDescriptor) {
-    StringBuilder sb = new StringBuilder();
-    int aa = 0;
-    for (Integer neuronsCount : neuronLayerDescriptor) {
-      if (aa++ > 0) {
-        sb.append("x");
-      }
-      sb.append(neuronsCount);
+    public static void displayNetworkList(final List<NetworkCandidate> networkCandidates) {
+        System.out.printf("%9s%21s%11s(%%)%35s%10s%45s%30s%15s%n",
+                "Network #", "When Trained", "Accuracy", "Layer Structure", "Saved?", "Years (Training)", "Updater", "No. Epochs");
+        int index = 0;
+        log.debug("Sorting networks...");
+        //
+        // Sort the list, then present it
+        Collections.sort(networkCandidates);
+        log.debug("Rendering networks suitable for display...");
+        for (NetworkCandidate networkCandidate : networkCandidates) {
+            NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
+            System.out.printf("%9d%21s%13.2f%%%35s%10s%45s%30s%15d%n",
+                    index + 1,
+                    networkParameters.getWhenTrained().format(DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm")),
+                    networkParameters.getNetworkAccuracy() * 100.0,
+                    StringUtils.abbreviate(networkParameters.getNetworkLayout(), 32),
+                    networkParameters.isNetworkSaved() ? "Y" : "N",
+                    networkParameters.getTrainingYearsString(),
+                    StringUtils.abbreviate(networkParameters.getUpdater().toString(), 24),
+                    networkParameters.getNumberOfEpochs());
+            index++;
+        }
     }
-    return sb.toString();
-  }
 
-  /**
-   * Parses the specified network structure into an int array.
-   * See getNetworks() for a description of the structure.
-   */
-  public static int[] parseNetworkStructure(String networkStructure) {
-    List<Integer> structure = new ArrayList<>();
-    StringTokenizer strtok = new StringTokenizer(networkStructure, "x");
-    while (strtok.hasMoreTokens()) {
-      try {
-        int neuronsInLayer = Integer.parseInt(strtok.nextToken());
-        structure.add(neuronsInLayer);
-      } catch (NumberFormatException e) {
-        String errorMessage = String.format("Cannot make sense out of network structure: '%s' (alpha characters in layers, maybe?)", networkStructure);
-        log.error(errorMessage, e);
-        throw new RuntimeException(errorMessage, e);
-      }
+    public static void displayNetworks(final String networkType) throws IOException {
+        BufferedReader scanner = new BufferedReader(new InputStreamReader(System.in));
+        log.info("Loading networks for display (this could take a minute, please be patient)...");
+        List<NetworkCandidate> networkCandidates = loadNetworks(networkType);
+        if (networkCandidates.size() > 0) {
+            while (true) {
+                displayNetworkList(networkCandidates);
+                System.out.println("Enter the number of a network to see more about it (just press Enter to quit).");
+                String line = scanner.readLine();
+                if (StringUtils.isEmpty(line)) {
+                    break;
+                }
+                if (StringUtils.isNumeric(line)) {
+                    int networkNumber = Integer.parseInt(line);
+                    if (networkNumber > 0 && networkNumber <= networkCandidates.size()) {
+                        System.out.println(networkCandidates.get(networkNumber - 1).getNetworkParameters());
+                    } else {
+                        System.out.printf("%d is not one of the choices. Please choose a network from the list (or just press enter to quit).%n", networkNumber);
+                    }
+                } else {
+                    System.out.printf("%s is not a valid choice. Please choose a network from the list (or just press enter to quit).%n", line);
+                }
+            }
+        } else {
+            log.warn("No saved networks exist. Train some networks, save one or more of them, and try again.");
+        }
+        System.out.println("Quitting.");
     }
-    log.debug(String.format("Network layer structure: %s", NetworkUtils.generateLayerStructureString(structure)));
 
-    return structure.stream().mapToInt(Integer::intValue).toArray();
-  }
-  /**
-   * Validates the year. If not between the specified range, an exception is thrown,
-   * terminating the run.
-   *
-   * Note: as you add years to the DB, you will need to modify this method accordingly.
-   *
-   * @param year
-   *          The year to validate.
-   *
-   * @throws RuntimeException
-   *           - if the year to validate is outside the supported range.
-   */
-  public static void validateYear(final Integer year, final TournamentParticipantDao tournamentParticipantDao) {
-    List<Integer> validTournamentYears = tournamentParticipantDao.fetchValidTournamentYears();
-    if (!validTournamentYears.contains(year)) {
-      throw new RuntimeException(String.format("Invalid year: " + year + " (must be one of %s)", StringUtils.join(validTournamentYears.toArray(), ',')));
+    /**
+     * Fetches the name of the network directory using NetworkProperties settings
+     * and returns that name to the caller.
+     */
+    public static String fetchNetworkDirectoryAndCreateIfNecessary(final String networkType) {
+        //
+        // Compute the directory name from NetworkProperties settings
+        String directoryName = NetworkProperties.getBaseDirectory() + File.separator
+                + networkType;
+        //
+        // If necessary, create the directory
+        createDirectoryIfNecessary(directoryName);
+        directoryName += File.separator + NetworkProperties.getNetworkDirectoryName();
+        //
+        // If necessary, create the directory
+        createDirectoryIfNecessary(directoryName);
+        //
+        // Return the directory name to the caller
+        return directoryName;
     }
-  }
 
-  public static String nice(final String string) {
-    String ret = "0";
-    if (StringUtils.isNotEmpty(string)) {
-      ret = StringUtils.remove(StringUtils.trim(string), '%');
+    /**
+     * Fetches the name of the simulation directory using NetworkProperties settings
+     * and returns that name to the caller.
+     */
+    public static String fetchSimulationDirectoryAndCreateIfNecessary(String networkType) {
+        //
+        // Compute the directory name from NetworkProperties settings
+        String directoryName = NetworkProperties.getBaseDirectory() + File.separator + networkType;
+        //
+        // If necessary, create the directory
+        createDirectoryIfNecessary(directoryName);
+        directoryName += File.separator + NetworkProperties.getSimulationDirectoryName();
+        //
+        // If necessary, create the directory
+        createDirectoryIfNecessary(directoryName);
+        //
+        // Return the directory name to the caller
+        return directoryName;
     }
-    return ret;
-  }
+
+    /**
+     * Helper method to create a directory. Insulates the caller from the details
+     * of the Java API used to do this.
+     */
+    public static void createDirectoryIfNecessary(String directoryName) {
+        try {
+            File directory = new File(directoryName);
+            if (!directory.exists()) {
+                log.warn("Directory '" + directoryName + "' does not exist. Creating it now...");
+                // Create the directory.
+                Path networkDirectoryPath = Files.createDirectory(Paths.get(directoryName));
+                log.warn("Network directory '" + networkDirectoryPath.toString() + "' created.");
+            }
+        } catch (IOException e) {
+            String message = "I/O Exception occurred while creating directory '" + directoryName + "'. Cannot continue!";
+            log.error(message, e);
+            throw new RuntimeException(message, e);
+        }
+    }
+
+    /**
+     * Returns a NxNxNxN style string showing the layer structure
+     * of a network that would have the specified layer structure.
+     * The 0th element contains the number of neurons in the input
+     * layer. The (<code>neuronLayerDescriptor</code>.size()-1)th element
+     * contains the number of neurons in the output layer.
+     */
+    public static String generateLayerStructureString(List<Integer> neuronLayerDescriptor) {
+        StringBuilder sb = new StringBuilder();
+        int aa = 0;
+        for (Integer neuronsCount : neuronLayerDescriptor) {
+            if (aa++ > 0) {
+                sb.append("x");
+            }
+            sb.append(neuronsCount);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Parses the specified network structure into an int array.
+     * See getNetworks() for a description of the structure.
+     */
+    public static int[] parseNetworkStructure(String networkStructure) {
+        List<Integer> structure = new ArrayList<>();
+        StringTokenizer strtok = new StringTokenizer(networkStructure, "x");
+        while (strtok.hasMoreTokens()) {
+            try {
+                int neuronsInLayer = Integer.parseInt(strtok.nextToken());
+                structure.add(neuronsInLayer);
+            } catch (NumberFormatException e) {
+                String errorMessage = String.format("Cannot make sense out of network structure: '%s' (alpha characters in layers, maybe?)", networkStructure);
+                log.error(errorMessage, e);
+                throw new RuntimeException(errorMessage, e);
+            }
+        }
+        log.debug(String.format("Network layer structure: %s", NetworkUtils.generateLayerStructureString(structure)));
+
+        return structure.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    /**
+     * Validates the year. If not between the specified range, an exception is thrown,
+     * terminating the run.
+     * <p>
+     * Note: as you add years to the DB, you will need to modify this method accordingly.
+     *
+     * @param year The year to validate.
+     * @throws RuntimeException - if the year to validate is outside the supported range.
+     */
+    public static void validateYear(final Integer year, final TournamentParticipantDao tournamentParticipantDao) {
+        List<Integer> validTournamentYears = tournamentParticipantDao.fetchValidTournamentYears();
+        if (!validTournamentYears.contains(year)) {
+            throw new RuntimeException(String.format("Invalid year: " + year + " (must be one of %s)", StringUtils.join(validTournamentYears.toArray(), ',')));
+        }
+    }
+
+    public static String nice(final String string) {
+        String ret = "0";
+        if (StringUtils.isNotEmpty(string)) {
+            ret = StringUtils.remove(StringUtils.trim(string), '%');
+        }
+        return ret;
+    }
 
     public static String generateSampleNetworkLayout(final Integer numberOfInputs, final Integer numberOfOutputs) {
-      List<Integer> neuronLayerDescriptor = new ArrayList<>();
-      int numberOfHiddenLayers = NetworkProperties.getNumberOfHiddenLayers();
-      Integer primeSeed = NetworkProperties.getPrimeSeed();
-      Integer primeDivisor = NetworkProperties.getPrimeDivisor();
-      Integer fudgeFactor = NetworkProperties.getFudgeFactor();
-      if (numberOfHiddenLayers < 6) {
-          String errorMessage = String.format("Algorithm does not work with < 6 hidden layers, you specified %s", numberOfHiddenLayers);
-          log.error("generateSampleNetworkLayout({}, {}): {}", numberOfInputs, numberOfOutputs, numberOfHiddenLayers);
-          throw new RuntimeException(errorMessage);
-      }
-      int middleLayerIndex = numberOfHiddenLayers / 2 + 1;
-      // First layer: numberOfInputs * primeSeed
-        neuronLayerDescriptor.add(numberOfInputs * primeSeed);
-      for (int index = 1; index < middleLayerIndex; index++) {
-          neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor) * fudgeFactor);
-      }
+        List<Integer> neuronLayerDescriptor = new ArrayList<>();
+        int numberOfHiddenLayers = NetworkProperties.getNumberOfHiddenLayers();
+        Integer primeSeed = NetworkProperties.getPrimeSeed();
+        Integer primeDivisor = NetworkProperties.getPrimeDivisor();
+        int fudgeFactor = NetworkProperties.getFudgeFactor();
+        if (numberOfHiddenLayers < 6) {
+            String errorMessage = String.format("Algorithm does not work with < 6 hidden layers, you specified %s", numberOfHiddenLayers);
+            log.error("generateSampleNetworkLayout({}, {}): {}", numberOfInputs, numberOfOutputs, numberOfHiddenLayers);
+            throw new RuntimeException(errorMessage);
+        }
+        int middleLayerIndex = numberOfHiddenLayers / 2 + 1;
+        // First layer: numberOfInputs * primeSeed
+        neuronLayerDescriptor.add(numberOfInputs * numberOfInputs / primeDivisor);
+        for (int index = 1; index < middleLayerIndex; index++) {
+            neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor));
+        }
         // Middle layer: numberOfInputs * numberOfOutputs * fudgeFactor
-        neuronLayerDescriptor.add(middleLayerIndex, numberOfInputs * numberOfOutputs * fudgeFactor);
-      for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers - 1; index++) {
-          neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor) * fudgeFactor);
-      }
-      neuronLayerDescriptor.add(numberOfOutputs * numberOfOutputs * numberOfOutputs);
-      return generateLayerStructureString(neuronLayerDescriptor);
+        neuronLayerDescriptor.add(middleLayerIndex, numberOfInputs * numberOfOutputs);
+        for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers - 1; index++) {
+            neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor));
+        }
+        neuronLayerDescriptor.add(numberOfOutputs * numberOfOutputs * numberOfOutputs);
+        return generateLayerStructureString(neuronLayerDescriptor);
     }
 }
