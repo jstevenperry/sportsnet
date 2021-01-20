@@ -130,7 +130,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses);
             //
             // Generate network structure
-            networkParameters.setNetworkLayout(computeNetworkStructure(networkParameters));
+            networkParameters.setNetworkLayout(computeNetworkStructure(networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs()));
             log.info("Using network layout: {}", networkParameters.getNetworkLayout());
             log.debug("Network parameters acquired.");
             int iterationNumber = 0;
@@ -326,9 +326,9 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         }
     }
 
-    protected String computeNetworkStructure(final NetworkParameters networkParameters) {
-        String hiddenLayerStructure = NetworkUtils.generateSampleNetworkLayout(networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
-        return String.format("%dx%sx%d", networkParameters.getNumberOfInputs(), hiddenLayerStructure, networkParameters.getNumberOfOutputs());
+    protected String computeNetworkStructure(final int numberOfInputs, final int numberOfOutputs) {
+        String hiddenLayerStructure = NetworkUtils.generateSampleNetworkLayout(numberOfInputs, numberOfOutputs);
+        return String.format("%dx%sx%d", numberOfInputs, hiddenLayerStructure, numberOfOutputs);
     }
 
     /**
@@ -370,11 +370,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             //
             // Fetch years to train and evaluate the network
             scanYearsToTrainAndEvaluateNetwork(scanner, networkParameters, tournamentParticipantDao);
+            //
+            // Get the network layout in HL1xHL2xHL3x...HLn format, where HL1 is the first hidden layer, HLn is the nth.
+            String networkLayout = scanNetworkLayout(scanner, networkParameters.getNetworkLayout(), networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
+            networkParameters.setNetworkLayout(networkLayout);
             if (!isBatch) {
-                //
-                // Get the network layout in HL1xHL2xHL3x...HLn format, where HL1 is the first hidden layer, HLn is the nth.
-                String networkLayout = scanNetworkLayout(scanner, networkParameters.getNetworkLayout(), networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
-                networkParameters.setNetworkLayout(networkLayout);
                 //
                 // Get the activation function
                 Activation activation = scanActivationFunction(scanner, networkParameters.getActivationFunction());
@@ -638,27 +638,25 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         }
     }
 
-    private static String scanNetworkLayout(final BufferedReader scanner,
+    private String scanNetworkLayout(final BufferedReader scanner,
                                             final String networkLayout,
                                             final Integer numberOfInputs,
                                             final Integer numberOfOutputs) throws IOException {
-        String ret = (StringUtils.isNotEmpty(networkLayout)) ? networkLayout : NetworkUtils.generateSampleNetworkLayout(numberOfInputs, numberOfOutputs);
+        String ret = (StringUtils.isNotEmpty(networkLayout)) ? networkLayout : computeNetworkStructure(numberOfInputs, numberOfOutputs);
         String userInput = null;
         while (StringUtils.isEmpty(userInput)) {
             System.out.println("Enter the network structure (for example, " + ret + ")");
             System.out.printf("Note: only specify the hidden layer structure. Input layer (%d neurons) and output layer (%d neurons) are already specified.%n",
                     numberOfInputs, numberOfOutputs);
             System.out.println("==> ");
-            if (StringUtils.isNotEmpty(networkLayout)) {
-                int[] existingNetworkLayout = NetworkUtils.parseNetworkStructure(networkLayout);
-                // Strip off the first layer and set it to the number of inputs (if the user has added or removed data elements the previous number of inputs will be wrong)
-                existingNetworkLayout[0] = numberOfInputs;
-                ret = StringUtils.join(existingNetworkLayout, 'x');
-                System.out.println("Press enter to keep your previous choice of " + ret + " or enter a new one below:");
-            }
+            int[] existingNetworkLayout = NetworkUtils.parseNetworkStructure(ret);
+            // Strip off the first layer and set it to the number of inputs (if the user has added or removed data elements the previous number of inputs will be wrong)
+            existingNetworkLayout[0] = numberOfInputs;
+            ret = StringUtils.join(existingNetworkLayout, 'x');
+            System.out.println("Press enter to use " + ret + " or enter a new one below:");
             userInput = scanner.readLine();
             if (StringUtils.isEmpty(userInput)) {
-                System.out.println("Using your previous choice of " + ret + "....");
+                System.out.println("Using: " + ret + "....");
                 break;
             } else if (StringUtils.isNotEmpty(userInput)) {
                 ret = String.format("%dx%sx%d", numberOfInputs, StringUtils.join(NetworkUtils.parseNetworkStructure(userInput), 'x'), numberOfOutputs);
