@@ -130,7 +130,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses);
             //
             // Generate network structure
-            networkParameters.setNetworkLayout(computeNetworkStructure(networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs()));
             log.info("Using network layout: {}", networkParameters.getNetworkLayout());
             log.debug("Network parameters acquired.");
             int iterationNumber = 0;
@@ -657,6 +656,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             userInput = scanner.readLine();
             if (StringUtils.isEmpty(userInput)) {
                 System.out.println("Using: " + ret + "....");
+                ret = userInput;
                 break;
             } else if (StringUtils.isNotEmpty(userInput)) {
                 ret = String.format("%dx%sx%d", numberOfInputs, StringUtils.join(NetworkUtils.parseNetworkStructure(userInput), 'x'), numberOfOutputs);
