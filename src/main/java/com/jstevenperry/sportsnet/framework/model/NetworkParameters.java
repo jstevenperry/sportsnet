@@ -2,6 +2,7 @@ package com.jstevenperry.sportsnet.framework.model;
 
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
 import com.jstevenperry.sportsnet.framework.menus.DataNormalizationMenu;
+import com.jstevenperry.sportsnet.framework.util.NetworkProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
@@ -14,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NetworkParameters implements Serializable {
+
+  public static final long serialVersionUID = 1L;
 
   private Integer numberOfInputs;
   private Integer numberOfOutputs;
@@ -253,10 +256,6 @@ public class NetworkParameters implements Serializable {
 
   public String getTrainingYearsString() {
     return listToCsvString(getYearsToTrainAndEvaluateNetwork().get(0));
-  }
-
-  public String getEvaluationYearsString() {
-    return listToCsvString(getYearsToTrainAndEvaluateNetwork().get(1));
   }
 
   public String toString() {

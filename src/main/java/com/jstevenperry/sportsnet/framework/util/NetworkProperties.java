@@ -15,6 +15,8 @@
  */
 package com.jstevenperry.sportsnet.framework.util;
 
+import com.jstevenperry.sportsnet.framework.menus.ActivationFunctionMenu;
+import com.jstevenperry.sportsnet.framework.menus.UpdaterMenu;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 /**
  * Provides access to the network properties.
@@ -94,7 +99,7 @@ public class NetworkProperties {
           log.error(errorMessage, e);
           throw new RuntimeException(errorMessage, e);
         }
-        log.info(String.format("Loaded properties file: %s", propertiesFileNameFromEnvironmentVariable));
+        log.debug(String.format("Loaded properties file: %s", propertiesFileNameFromEnvironmentVariable));
       } else {
         log.warn("System property {} not set, attempting to load network properties file: {} from the classpath...", NETWORK_PROPERTIES_FILE, PROPERTIES_FILE_NAME);
         propertiesFile = new PropertiesFile(PROPERTIES_FILE_NAME);
@@ -115,8 +120,27 @@ public class NetworkProperties {
    * the training loop at the bottom of the current epoch. Most of the time this
    * appears to be instantaneous.
    */
-  public static boolean killSwitchActivated() { return getBooleanPropertyValue(KILL_SWITCH_ACTIVATED, false); }
+  public static boolean killSwitchActivated() { return getBooleanPropertyValue(KILL_SWITCH_ACTIVATED); }
 
+  public static List<ActivationFunctionMenu.ActivationFunctionChoice> getActivationFunctions() {
+    List<ActivationFunctionMenu.ActivationFunctionChoice> ret = new ArrayList<>();
+    String activationFunctionsCsv = getStringPropertyValue("activation.functions", null);
+    if (StringUtils.isNotEmpty(activationFunctionsCsv)) {
+      StringTokenizer strtok = new StringTokenizer(activationFunctionsCsv, ",;:");
+      while (strtok.hasMoreElements()) {
+        String token = strtok.nextToken();
+        try {
+          ActivationFunctionMenu.ActivationFunctionChoice activationFunctionChoice = ActivationFunctionMenu.ActivationFunctionChoice.valueOf(token);
+          ret.add(activationFunctionChoice);
+        } catch (IllegalArgumentException e) {
+          String errorMessage = String.format("No ActivationFunctionChoice enum member called %s", token);
+          log.error("getActivationFunctions(): {}", errorMessage, e);
+          throw new RuntimeException(errorMessage, e);
+        }
+      }
+    }
+    return ret;
+  }
   /**
    * The base directory. Used a LOT by the application. You MUST PROVIDE A
    * VALUE IN THE PROPERTIES FILE FOR THIS PROPERTY!
@@ -129,44 +153,22 @@ public class NetworkProperties {
     return getStringPropertyValue(BASE_DIRECTORY, ".");
   }
 
-  public static String getDatabaseName() {
-    return getStringPropertyValue("database.name", "ncaabb");
-  }
-
-  public static String getDatabaseUser() {
-    return getStringPropertyValue("database.user", "sperry");
-  }
-
-  public static String getDatePrologue() {
-    return getStringPropertyValue("date.prologue", "Through Games");
-  }
-
   public static Double getDropoutProbability() {
     return getDoublePropertyValue("dropout.probability", 0.25);
   }
 
-  public static Integer getEpochBreakIterationCount() {
-    return getIntegerPropertyValue("epoch.break.iteration.count", 3000);
+  public static Integer getEpochStatsIndexCount() {
+    return getIntegerPropertyValue("epoch.stats.index.count", 100);
   }
 
-  public static String getHeaderRank() {
-    return getStringPropertyValue("header.rank", "Rank");
-  }
-
-  public static Boolean getLearningRuleIsBatchMode() {
-    return getBooleanPropertyValue("learning.rule.is.batch.mode", false);
-  }
+  public static Integer getFudgeFactor() { return getIntegerPropertyValue("fudge.factor", 2); }
 
   public static Double getLearningRuleLearningRate() {
-    return getDoublePropertyValue("learning.rule.learning.rate", 0.05);
+    return getDoublePropertyValue("learning.rule.learning.rate", 1.0);
   }
 
   public static Double getLearningRuleMomentumMax() {
     return getDoublePropertyValue("learning.rule.momentum.max", 0.25);
-  }
-
-  public static Double getLearningRuleMomentumMin() {
-    return getDoublePropertyValue("learning.rule.momentum.min", 0.1);
   }
 
   public static Integer getMaxLearningIterations() {
@@ -177,57 +179,17 @@ public class NetworkProperties {
     return getDoublePropertyValue("max.network.error", 0.01); // 1%
   }
 
-  public static Double getMaxNetworkErrorUptrend() {
-    return getDoublePropertyValue("max.network.error.uptrend", -0.001);
-  }
-
   public static Integer getMaxNetworkIterations() {
     return getIntegerPropertyValue("max.network.iterations", 10);
-  }
-
-  public static Double getMaxWeight() {
-    return getDoublePropertyValue("max.weight", 1.0);
-  }
-
-  public static Double getMinMaxWeight() {
-    return getDoublePropertyValue("min.max.weight", 0.7);
-  }
-
-  public static Double getMinMinWeight() {
-    return getDoublePropertyValue("min.min.weight", -0.7);
-  }
-
-  public static Double getMinWeight() {
-    return getDoublePropertyValue("min.weight", -1.0);
-  }
-
-  public static Double getMomentumDefaultValue() {
-    return getDoublePropertyValue("momentum.default.value", 0.10);
   }
 
   public static String getNetworkDirectoryName() {
     return getStringPropertyValue("network.directory.name", "Networks");
   }
 
-  public static String getNetworkFileBase() {
-    return getStringPropertyValue("network.file.base", "NCAA-BB-MLP-Network");
-  }
+  public static Integer getNetworkEvaluationIndex() { return getIntegerPropertyValue("network.evaluation.index", 10); }
 
-  public static String getNetworkFileExtension() {
-    return getStringPropertyValue("network.file.extension", ".ann");
-  }
-
-  public static String getNetworksFileName() {
-    return getStringPropertyValue("networks.file.name", "networks.txt");
-  }
-
-  public static Integer getNumberOfInputs() {
-    return getIntegerPropertyValue("number.of.inputs", 46);
-  }
-
-  public static Integer getNumberOfOutputs() {
-    return getIntegerPropertyValue("number.of.outputs", 2);
-  }
+  public static Integer getNumberOfHiddenLayers() { return getIntegerPropertyValue("number.of.hidden.layers", 7); }
 
   public static BigDecimal getPerformanceThreshold() {
     Integer performanceThreshold = getIntegerPropertyValue("performance.threshold", 70);
@@ -239,49 +201,32 @@ public class NetworkProperties {
     return BigDecimal.valueOf(performanceThreshold).setScale(0, RoundingMode.HALF_UP);
   }
 
-  public static BigDecimal getSymmetricPerformanceThreshold() {
-    Integer performanceThreshold = getIntegerPropertyValue("symmetric.performance.threshold", 60);
-    return BigDecimal.valueOf(performanceThreshold).setScale(0, RoundingMode.HALF_UP);
-  }
+  public static Integer getPrimeDivisor() { return getIntegerPropertyValue("prime.divisor", 3); }
+
+  public static Integer getPrimeSeed() { return getIntegerPropertyValue("prime.seed", 31); }
 
   public static String getSimulationDirectoryName() {
     return getStringPropertyValue("simulation.directory.name", "Simulation");
   }
 
-  public static String getStatcatHeader() {
-    return getStringPropertyValue("statcat.header", "NCAA Men's Basketball");
-  }
-
-  public static String getStatcatPrologue() {
-    return getStringPropertyValue("statcat.prologue", "Division I");
-  }
-
-  public static Boolean getRandomizeMomentum() {
-    return getBooleanPropertyValue("randomize.momentum", Boolean.TRUE);
-  }
-
-  public static String getTournamentTemplateFileName() {
-    return getStringPropertyValue("tournament.template.file.name", "tournament-template-ncaabb.txt");
-  }
-
-  public static String getTeamMatrixFileName() {
-    return getStringPropertyValue("team.matrix.file.name", "all-vs");
-  }
-
-  public static String getTrainingDataFileBase() {
-    return getStringPropertyValue("training.data.file.base", "NCAA-BB-TRAINING_DATA");
-  }
-
-  public static String getTrainingDataFileExtension() {
-    return getStringPropertyValue("training.data.file.extension", ".trn");
-  }
-
-  public static String getTrainingDirectoryName() {
-    return getStringPropertyValue("training.directory", "TrainingData");
-  }
-
-  public static Boolean getUseBiasNeurons() {
-    return getBooleanPropertyValue("use.bias.neurons", Boolean.TRUE);
+  public static List<UpdaterMenu.UpdaterChoice> getUpdaters() {
+    List<UpdaterMenu.UpdaterChoice> ret = new ArrayList<>();
+    String updaters = getStringPropertyValue("updaters", null);
+    if (StringUtils.isNotEmpty(updaters)) {
+      StringTokenizer strtok = new StringTokenizer(updaters, ",;:");
+      while (strtok.hasMoreElements()) {
+        String token = strtok.nextToken();
+        try {
+          UpdaterMenu.UpdaterChoice updaterChoice = UpdaterMenu.UpdaterChoice.valueOf(token);
+          ret.add(updaterChoice);
+        } catch (IllegalArgumentException e) {
+          String errorMessage = String.format("No UpdaterChoice enum member called %s", token);
+          log.error("getUpdaters(): {}", errorMessage, e);
+          throw new RuntimeException(errorMessage, e);
+        }
+      }
+    }
+    return ret;
   }
 
   // ****************************
@@ -295,26 +240,16 @@ public class NetworkProperties {
    * 
    * @param propertyName
    *          The name of the property.
-   * @param defaultValue
-   *          If the defaultValue is <code>null</code>, then the property is
-   *          considered to be <em>required</em> and if not found, a <code>RuntimeException</code>
-   *          is thrown.
-   * @return Boolean - the value of the specified property, converted to a
-   *         Boolean.
    * @throws RuntimeException
    *           If the <code>defaultValue</code> is null, then the
    *           property is considered to be <em>required</em> and if it cannot be located in the
    *           properties file, this exception is thrown.
    */
-  private static Boolean getBooleanPropertyValue(String propertyName, Boolean defaultValue) {
-    Boolean ret = defaultValue;
+  private static Boolean getBooleanPropertyValue(String propertyName) {
+    boolean ret = false;
     String propertyValue = getPropertiesFile().getProperty(propertyName);
     if (propertyValue != null) {
-      ret = Boolean.valueOf(propertyValue);
-    }
-    if (ret == null) {
-      throw new RuntimeException(
-          "You must specify a value for property '" + propertyName + "' in " + PROPERTIES_FILE_NAME + "!");
+      ret = Boolean.parseBoolean(propertyValue);
     }
     return ret;
   }
