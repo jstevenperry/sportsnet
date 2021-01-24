@@ -197,7 +197,16 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     //
     // If the network is valid for the tournament year, we're good to go, otherwise throw it out
     return networkCandidates.stream()
-      .filter(networkCandidate -> networkCandidate.getNetworkParameters().isValidYearForTournamentPrediction(getTournamentYear()))
+      .filter(networkCandidate ->  {
+        if (networkCandidate.getNetworkParameters().isValidYearForTournamentPrediction(getTournamentYear())) {
+          return true;
+        } else {
+          log.warn("computeValidNetworksForTournamentYear(): Network invalid for tournament year {}: {}",
+                  getTournamentYear(), networkCandidate.getNetworkParameters().toStringOneLine()
+          );
+          return false;
+        }
+      })
       .collect(Collectors.toList());
   }
 

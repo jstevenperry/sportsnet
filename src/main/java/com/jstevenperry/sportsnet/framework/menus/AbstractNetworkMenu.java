@@ -3,7 +3,7 @@ package com.jstevenperry.sportsnet.framework.menus;
 import com.jstevenperry.sportsnet.framework.AbstractNetworkEvaluator;
 import com.jstevenperry.sportsnet.framework.AbstractNetworkRunner;
 import com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer;
-import com.jstevenperry.sportsnet.framework.NetworkPersister;
+import com.jstevenperry.sportsnet.framework.util.NetworkPersister;
 import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
