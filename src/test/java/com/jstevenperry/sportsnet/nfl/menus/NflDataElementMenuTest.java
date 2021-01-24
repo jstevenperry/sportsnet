@@ -14,9 +14,7 @@ class NflDataElementMenuTest {
     void valuesDifferByOne() {
         NflDataElementMenu dataElementMenu = new NflDataElementMenu();
 
-        dataElementMenu.values().forEach(choice -> {
-            assertEquals(choice.getOrdinalValue() - choice.getElementIndex(), 1);
-        });
+        dataElementMenu.values().forEach(choice -> assertEquals(choice.getOrdinalValue() - choice.getElementIndex(), 1));
     }
 
     @Test

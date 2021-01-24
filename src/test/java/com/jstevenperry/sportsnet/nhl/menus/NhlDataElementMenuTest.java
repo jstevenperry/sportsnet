@@ -14,9 +14,7 @@ class NhlDataElementMenuTest {
     void valuesDifferByOne() {
         NhlDataElementMenu dataElementMenu = new NhlDataElementMenu();
 
-        dataElementMenu.values().forEach(choice -> {
-            assertEquals(choice.getOrdinalValue() - choice.getElementIndex(), 1);
-        });
+        dataElementMenu.values().forEach(choice -> assertEquals(choice.getOrdinalValue() - choice.getElementIndex(), 1));
     }
 
     @Test
