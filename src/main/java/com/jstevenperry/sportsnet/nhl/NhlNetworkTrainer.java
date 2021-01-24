@@ -41,12 +41,12 @@ public class NhlNetworkTrainer extends AbstractNetworkTrainer<NhlSeasonData> {
     }
     int middleLayerIndex = numberOfHiddenLayers / 2 + 1;
     // First layer: numberOfInputs * primeSeed
-    neuronLayerDescriptor.add(numberOfInputs * numberOfInputs * primeSeed);
+    neuronLayerDescriptor.add(numberOfInputs * numberOfInputs * primeDivisor);
     for (int index = 1; index < middleLayerIndex; index++) {
       neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor));
     }
     // Middle layer: numberOfInputs * numberOfOutputs * fudgeFactor
-    neuronLayerDescriptor.add(middleLayerIndex, numberOfInputs * numberOfOutputs * primeSeed);
+    neuronLayerDescriptor.add(middleLayerIndex, numberOfInputs * numberOfOutputs * primeDivisor);
     for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers - 1; index++) {
       neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor));
     }
