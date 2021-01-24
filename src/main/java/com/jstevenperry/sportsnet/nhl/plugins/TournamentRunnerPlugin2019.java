@@ -14,7 +14,7 @@ public class TournamentRunnerPlugin2019 extends AbstractNhlTournamentRunnerPlugi
 
   @Override
   public Integer getTournamentYear() {
-    return 2019;
+    return 2018;
   }
 
 
