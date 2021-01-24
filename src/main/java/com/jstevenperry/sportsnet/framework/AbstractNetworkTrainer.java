@@ -656,7 +656,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             userInput = scanner.readLine();
             if (StringUtils.isEmpty(userInput)) {
                 System.out.println("Using: " + ret + "....");
-                ret = userInput;
                 break;
             } else if (StringUtils.isNotEmpty(userInput)) {
                 ret = String.format("%dx%sx%d", numberOfInputs, StringUtils.join(NetworkUtils.parseNetworkStructure(userInput), 'x'), numberOfOutputs);
