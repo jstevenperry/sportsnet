@@ -15,9 +15,7 @@ class NcaaBbDataElementMenuTest {
     void valuesDifferByOne() {
         NcaaBbDataElementMenu dataElementMenu = new NcaaBbDataElementMenu();
 
-        dataElementMenu.values().forEach(choice -> {
-            assertEquals(choice.getOrdinalValue() - choice.getElementIndex(), 1);
-        });
+        dataElementMenu.values().forEach(choice -> assertEquals(choice.getOrdinalValue() - choice.getElementIndex(), 1));
     }
 
     @Test

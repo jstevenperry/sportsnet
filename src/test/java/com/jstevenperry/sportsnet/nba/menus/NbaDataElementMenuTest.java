@@ -15,9 +15,7 @@ class NbaDataElementMenuTest {
     void valuesDifferByOne() {
         NbaDataElementMenu nbaDataElementMenu = new NbaDataElementMenu();
 
-        nbaDataElementMenu.values().forEach(choice -> {
-            assertEquals(choice.getOrdinalValue() - choice.getElementIndex(), 1);
-        });
+        nbaDataElementMenu.values().forEach(choice -> assertEquals(choice.getOrdinalValue() - choice.getElementIndex(), 1));
     }
 
     @Test
