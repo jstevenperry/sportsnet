@@ -2,12 +2,13 @@ package com.jstevenperry.sportsnet.framework.model;
 
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
 import com.jstevenperry.sportsnet.framework.menus.DataNormalizationMenu;
-import com.jstevenperry.sportsnet.framework.util.NetworkProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -17,6 +18,8 @@ import java.util.List;
 public class NetworkParameters implements Serializable {
 
   public static final long serialVersionUID = 1L;
+
+  private static final Logger log = LoggerFactory.getLogger(NetworkParameters.class);
 
   private Integer numberOfInputs;
   private Integer numberOfOutputs;
@@ -249,6 +252,9 @@ public class NetworkParameters implements Serializable {
   public boolean isValidYearForTournamentPrediction(final Integer tournamentYear) {
     boolean ret = true;
     if (getYearsToTrainNetwork().contains(tournamentYear)) {
+      log.warn("isValidYearForTournamentPrediction({}): current network is not valid for tournament prediction based on its training years: {}",
+              tournamentYear, StringUtils.join(getYearsToTrainAndEvaluateNetwork().toArray(), ", "));
+
       ret = false;
     }
     return ret;
@@ -294,6 +300,16 @@ public class NetworkParameters implements Serializable {
       String.format("\tNormalizer                : %s%n", getNormalizer()) +
       String.format("\tDropout probability       : %3.2f%%%n", getDropoutProbability()*100) +
       String.format("\tL2 Regularization Lambda  : %5.5f%n", getL2RegularizationLambda());
+  }
+
+  public String toStringOneLine() {
+    return "Network info\t" +
+            String.format("Network structure: %s, ", getNetworkLayout()) +
+            String.format("Training Years: %s, ", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(0), ',')) +
+            String.format("Activation function: %s, ", getActivationFunction().name()) +
+            String.format("Updater function: %s, ", getUpdater()) +
+            String.format("Loss function: %s, ", getLossFunction()) +
+            String.format("Weight init function: %s", getWeightInit());
   }
 
   public double getL2RegularizationLambda() {

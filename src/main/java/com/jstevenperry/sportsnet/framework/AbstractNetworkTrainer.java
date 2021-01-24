@@ -12,6 +12,7 @@ import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
+import com.jstevenperry.sportsnet.framework.util.NetworkPersister;
 import com.jstevenperry.sportsnet.framework.util.NetworkProperties;
 import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import org.apache.commons.lang3.StringUtils;

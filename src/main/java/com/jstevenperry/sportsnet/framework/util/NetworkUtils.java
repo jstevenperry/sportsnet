@@ -1,6 +1,5 @@
 package com.jstevenperry.sportsnet.framework.util;
 
-import com.jstevenperry.sportsnet.framework.NetworkPersister;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;

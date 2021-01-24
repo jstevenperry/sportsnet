@@ -1,8 +1,7 @@
-package com.jstevenperry.sportsnet.framework;
+package com.jstevenperry.sportsnet.framework.util;
 
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
-import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import org.apache.commons.lang.StringUtils;
 import org.deeplearning4j.util.ModelSerializer;
 import org.slf4j.Logger;

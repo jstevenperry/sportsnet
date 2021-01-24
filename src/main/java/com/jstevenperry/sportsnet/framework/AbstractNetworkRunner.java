@@ -4,6 +4,7 @@ import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import com.jstevenperry.sportsnet.framework.model.GameCoordinate;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
+import com.jstevenperry.sportsnet.framework.util.NetworkPersister;
 import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
