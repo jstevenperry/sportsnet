@@ -6,8 +6,8 @@ import com.jstevenperry.sportsnet.nfl.model.NflSeasonData;
 import java.util.List;
 
 public class NflNetworkEvaluator extends AbstractNetworkEvaluator<NflSeasonData> {
-  @Override
-  public List<Double> seasonDataAsDoubleList(final NflSeasonData seasonData, final Double resultClass, final boolean isTraining) {
-    return NflSeasonData.asDoubleList(seasonData, resultClass, isTraining);
-  }
+    @Override
+    public List<Double> seasonDataAsDoubleList(final NflSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+        return NflSeasonData.asDoubleList(seasonData, resultClass, isTraining);
+    }
 }

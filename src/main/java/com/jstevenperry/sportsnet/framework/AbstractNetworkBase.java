@@ -29,94 +29,94 @@ import java.util.Map;
 
 public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
 
-  private static final Logger log = LoggerFactory.getLogger(AbstractNetworkBase.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractNetworkBase.class);
 
-  private final Map<Integer, List<TournamentResult>> tournamentYearResultsMap = new HashMap<>();
-  private final Map<Integer, Map<String, T>> tournamentYearSeasonDataMap = new HashMap<>();
+    private final Map<Integer, List<TournamentResult>> tournamentYearResultsMap = new HashMap<>();
+    private final Map<Integer, Map<String, T>> tournamentYearSeasonDataMap = new HashMap<>();
 
-  public abstract List<Double> seasonDataAsDoubleList(final T seasonData,
-                                                      final Double resultClass,
-                                                      final boolean isTraining);
+    public abstract List<Double> seasonDataAsDoubleList(final T seasonData,
+                                                        final Double resultClass,
+                                                        final boolean isTraining);
 
-  private List<TournamentResult> getTournamentResults(final Integer tournamentYear) {
-    return tournamentYearResultsMap.computeIfAbsent(tournamentYear, k -> new ArrayList<>());
-  }
-
-  private Map<String, T> getTeamSeasonData(final Integer tournamentYear) {
-    return tournamentYearSeasonDataMap.computeIfAbsent(tournamentYear, k -> new HashMap<>());
-  }
-
-  public List<Double> seasonDataAsDoubleList(final T seasonData) {
-    return seasonDataAsDoubleList(seasonData, null, false);
-  }
-
-  protected T pullSeasonData(final Integer year, final String teamName, final SeasonDataDao<T> seasonDataDao) {
-    T seasonData = getTeamSeasonData(year).get(teamName);
-    if (seasonData == null) {
-      log.debug(String.format("Reading %s %d season data from DB...", teamName, year));
-      seasonData = seasonDataDao.fetchByYearAndTeamName(year, teamName);
-      getTeamSeasonData(year).put(teamName, seasonData);
+    private List<TournamentResult> getTournamentResults(final Integer tournamentYear) {
+        return tournamentYearResultsMap.computeIfAbsent(tournamentYear, k -> new ArrayList<>());
     }
-    return seasonData;
-  }
 
-  protected List<TournamentResult> pullTournamentResults(final Integer year, final TournamentResultDao tournamentResultDao) {
-    List<TournamentResult> ret = getTournamentResults(year);
-    if (ret.isEmpty()) {
-      log.debug(String.format("Reading %d tournament results from DB...", year));
-      ret.addAll(tournamentResultDao.fetchAllByYear(year));
+    private Map<String, T> getTeamSeasonData(final Integer tournamentYear) {
+        return tournamentYearSeasonDataMap.computeIfAbsent(tournamentYear, k -> new HashMap<>());
     }
-    return ret;
-  }
 
-  public RecordReaderDataSetIterator createIterator(final List<Integer> yearsToPull,
-                                                    final SeasonDataDao<T> seasonDataDao,
-                                                    final TournamentResultDao tournamentResultDao,
-                                                    final TournamentParticipantDao tournamentParticipantDao,
-                                                    final NetworkParameters networkParameters) throws IOException, InterruptedException {
-    StringWriter stringWriter = new StringWriter();
-    CSVWriter csvWriter = new CSVWriter(stringWriter);
-    for (Integer year : yearsToPull) {
-      List<TournamentResult> tournamentResults = pullTournamentResults(year, tournamentResultDao);
-      Collections.shuffle(tournamentResults); // Shake things up a little
-      for (TournamentResult tournamentResult : tournamentResults) {
-        String winningTeamName = tournamentResult.getWinningTeamName();
-        T seasonDataWinning = pullSeasonData(year, winningTeamName, seasonDataDao);
-        if (seasonDataWinning == null) {
-          String message = String.format("Could not locate season data for team %s", winningTeamName);
-          log.error(message);
-          throw new RuntimeException(message);
+    public List<Double> seasonDataAsDoubleList(final T seasonData) {
+        return seasonDataAsDoubleList(seasonData, null, false);
+    }
+
+    protected T pullSeasonData(final Integer year, final String teamName, final SeasonDataDao<T> seasonDataDao) {
+        T seasonData = getTeamSeasonData(year).get(teamName);
+        if (seasonData == null) {
+            log.debug(String.format("Reading %s %d season data from DB...", teamName, year));
+            seasonData = seasonDataDao.fetchByYearAndTeamName(year, teamName);
+            getTeamSeasonData(year).put(teamName, seasonData);
         }
-        TournamentParticipant tournamentParticipant = tournamentParticipantDao.fetchByYear(winningTeamName, year);
-        //
-        // Transform the data, then write out the data
-        List<Double> rowWinDouble = seasonDataAsDoubleList(seasonDataWinning, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
-        String[] rowWinString = networkParameters.transformRow(rowWinDouble, true);
-        csvWriter.writeNext(rowWinString);
-          log.debug(String.format("Winning Team: %s (%d), data: %s", winningTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowWinString)));
-        // Losing team
-        String losingTeamName = tournamentResult.getLosingTeamName();
-        T seasonDataLosing = pullSeasonData(year, losingTeamName, seasonDataDao);
-        if (seasonDataLosing == null) {
-          String message = String.format("Could not locate season data for team %s", losingTeamName);
-          log.error(message);
-          throw new RuntimeException(message);
-        }
-        tournamentParticipant = tournamentParticipantDao.fetchByYear(losingTeamName, year);
-        //
-        // Transform the data, then write out the data
-        List<Double> rowLossDouble = seasonDataAsDoubleList(seasonDataLosing, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
-        String[] rowLossString = networkParameters.transformRow(rowLossDouble, true);
-        csvWriter.writeNext(rowLossString);
-          log.debug(String.format("Losing Team: %s (%d), data: %s", losingTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowLossString)));
-      }
+        return seasonData;
     }
-    //
-    // Get the underlying String and via dl4j's arcane class structure transform it into a DataSet and return it
-    StringBuffer stringBuffer = stringWriter.getBuffer();
-    RecordReader recordReader = new CSVRecordReader(0, ',');
-    recordReader.initialize(new InputStreamInputSplit(new ByteArrayInputStream(CharStreams.toString(new StringReader(stringBuffer.toString())).getBytes())));
-    return new RecordReaderDataSetIterator(recordReader, 1000, networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
-  }
+
+    protected List<TournamentResult> pullTournamentResults(final Integer year, final TournamentResultDao tournamentResultDao) {
+        List<TournamentResult> ret = getTournamentResults(year);
+        if (ret.isEmpty()) {
+            log.debug(String.format("Reading %d tournament results from DB...", year));
+            ret.addAll(tournamentResultDao.fetchAllByYear(year));
+        }
+        return ret;
+    }
+
+    public RecordReaderDataSetIterator createIterator(final List<Integer> yearsToPull,
+                                                      final SeasonDataDao<T> seasonDataDao,
+                                                      final TournamentResultDao tournamentResultDao,
+                                                      final TournamentParticipantDao tournamentParticipantDao,
+                                                      final NetworkParameters networkParameters) throws IOException, InterruptedException {
+        StringWriter stringWriter = new StringWriter();
+        CSVWriter csvWriter = new CSVWriter(stringWriter);
+        for (Integer year : yearsToPull) {
+            List<TournamentResult> tournamentResults = pullTournamentResults(year, tournamentResultDao);
+            Collections.shuffle(tournamentResults); // Shake things up a little
+            for (TournamentResult tournamentResult : tournamentResults) {
+                String winningTeamName = tournamentResult.getWinningTeamName();
+                T seasonDataWinning = pullSeasonData(year, winningTeamName, seasonDataDao);
+                if (seasonDataWinning == null) {
+                    String message = String.format("Could not locate season data for team %s", winningTeamName);
+                    log.error(message);
+                    throw new RuntimeException(message);
+                }
+                TournamentParticipant tournamentParticipant = tournamentParticipantDao.fetchByYear(winningTeamName, year);
+                //
+                // Transform the data, then write out the data
+                List<Double> rowWinDouble = seasonDataAsDoubleList(seasonDataWinning, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
+                String[] rowWinString = networkParameters.transformRow(rowWinDouble, true);
+                csvWriter.writeNext(rowWinString);
+                log.debug(String.format("Winning Team: %s (%d), data: %s", winningTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowWinString)));
+                // Losing team
+                String losingTeamName = tournamentResult.getLosingTeamName();
+                T seasonDataLosing = pullSeasonData(year, losingTeamName, seasonDataDao);
+                if (seasonDataLosing == null) {
+                    String message = String.format("Could not locate season data for team %s", losingTeamName);
+                    log.error(message);
+                    throw new RuntimeException(message);
+                }
+                tournamentParticipant = tournamentParticipantDao.fetchByYear(losingTeamName, year);
+                //
+                // Transform the data, then write out the data
+                List<Double> rowLossDouble = seasonDataAsDoubleList(seasonDataLosing, tournamentParticipant.getNumberOfVictories().doubleValue(), true);
+                String[] rowLossString = networkParameters.transformRow(rowLossDouble, true);
+                csvWriter.writeNext(rowLossString);
+                log.debug(String.format("Losing Team: %s (%d), data: %s", losingTeamName, tournamentParticipant.getNumberOfVictories(), Arrays.toString(rowLossString)));
+            }
+        }
+        //
+        // Get the underlying String and via dl4j's arcane class structure transform it into a DataSet and return it
+        StringBuffer stringBuffer = stringWriter.getBuffer();
+        RecordReader recordReader = new CSVRecordReader(0, ',');
+        recordReader.initialize(new InputStreamInputSplit(new ByteArrayInputStream(CharStreams.toString(new StringReader(stringBuffer.toString())).getBytes())));
+        return new RecordReaderDataSetIterator(recordReader, 1000, networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
+    }
 
 }

@@ -8,28 +8,28 @@ import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
 import java.util.List;
 
 public abstract class AbstractNhlTournamentRunnerPlugin extends AbstractTournamentRunnerPlugin<NhlSeasonData> {
-  public AbstractNhlTournamentRunnerPlugin(final SeasonDataDao<NhlSeasonData> seasonDataDao) {
-    super(seasonDataDao);
-    setTeamCoordinateSeasonDataMap(buildTeamCoordinateMap());
-  }
+    public AbstractNhlTournamentRunnerPlugin(final SeasonDataDao<NhlSeasonData> seasonDataDao) {
+        super(seasonDataDao);
+        setTeamCoordinateSeasonDataMap(buildTeamCoordinateMap());
+    }
 
-  @Override
-  public String getTournamentTemplateFileName() {
-    return "/nhl/playoff-matchups-template-nhl.txt";
-  }
+    @Override
+    public String getTournamentTemplateFileName() {
+        return "/nhl/playoff-matchups-template-nhl.txt";
+    }
 
-  @Override
-  protected String getTournamentResultsTemplateFileName() {
-    return "/nhl/playoff-results.csv";
-  }
+    @Override
+    protected String getTournamentResultsTemplateFileName() {
+        return "/nhl/playoff-results.csv";
+    }
 
-  @Override
-  protected String getNetworkType() {
-    return NhlNetworkMenu.NETWORK_TYPE;
-  }
+    @Override
+    protected String getNetworkType() {
+        return NhlNetworkMenu.NETWORK_TYPE;
+    }
 
-  @Override
-  public List<Double> seasonDataAsDoubleList(final NhlSeasonData seasonData, final Double resultClass, final boolean isTraining) {
-    return NhlSeasonData.asDoubleList(seasonData, resultClass, isTraining);
-  }
+    @Override
+    public List<Double> seasonDataAsDoubleList(final NhlSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+        return NhlSeasonData.asDoubleList(seasonData, resultClass, isTraining);
+    }
 }

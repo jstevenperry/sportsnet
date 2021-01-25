@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class AbstractTournamentParticipantFlatFileDao<T extends AbstractSeasonData> extends AbstractFlatFileProcessor<T>  implements TournamentParticipantDao {
+public abstract class AbstractTournamentParticipantFlatFileDao<T extends AbstractSeasonData> extends AbstractFlatFileProcessor<T> implements TournamentParticipantDao {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractTournamentParticipantFlatFileDao.class);
 

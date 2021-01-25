@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
  * @author J Steven Perry
  */
 @Configuration
-@ComponentScan(basePackages = { "com.jstevenperry.sportsnet" })
+@ComponentScan(basePackages = {"com.jstevenperry.sportsnet"})
 public class ApplicationConfig {
-  // Nothing to do
+    // Nothing to do
 }

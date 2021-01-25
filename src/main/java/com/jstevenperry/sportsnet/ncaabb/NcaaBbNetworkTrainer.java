@@ -10,15 +10,15 @@ import java.io.IOException;
 import java.util.List;
 
 public class NcaaBbNetworkTrainer extends AbstractNetworkTrainer<NcaaBbSeasonData> {
-  @Override
-  protected List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner, final List<AbstractDataElementChoice> choices) throws IOException {
-    NcaaBbDataElementMenu dataElementMenu = new NcaaBbDataElementMenu();
-    return dataElementMenu.go(scanner, choices);
-  }
+    @Override
+    protected List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner, final List<AbstractDataElementChoice> choices) throws IOException {
+        NcaaBbDataElementMenu dataElementMenu = new NcaaBbDataElementMenu();
+        return dataElementMenu.go(scanner, choices);
+    }
 
-  @Override
-  public List<Double> seasonDataAsDoubleList(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
-    return NcaaBbSeasonData.asDoubleList(seasonData, resultClass, isTraining);
-  }
+    @Override
+    public List<Double> seasonDataAsDoubleList(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+        return NcaaBbSeasonData.asDoubleList(seasonData, resultClass, isTraining);
+    }
 
 }

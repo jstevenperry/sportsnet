@@ -143,7 +143,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
 
     /**
      * Start here.
-     *
+     * <p>
      * This is the top-level batch training loop. Each network configuration
      * is tested starting here to try and find the optimal network settings
      * without having to try them all manually.
@@ -639,9 +639,9 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     }
 
     private String scanNetworkLayout(final BufferedReader scanner,
-                                            final String networkLayout,
-                                            final Integer numberOfInputs,
-                                            final Integer numberOfOutputs) throws IOException {
+                                     final String networkLayout,
+                                     final Integer numberOfInputs,
+                                     final Integer numberOfOutputs) throws IOException {
         String ret = (StringUtils.isNotEmpty(networkLayout)) ? networkLayout : computeNetworkStructure(numberOfInputs, numberOfOutputs);
         String userInput = null;
         while (StringUtils.isEmpty(userInput)) {

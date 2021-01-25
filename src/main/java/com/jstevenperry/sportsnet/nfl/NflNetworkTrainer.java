@@ -13,17 +13,17 @@ import java.util.List;
 
 public class NflNetworkTrainer extends AbstractNetworkTrainer<NflSeasonData> {
 
-  private static final Logger log = LoggerFactory.getLogger(NflNetworkTrainer.class);
+    private static final Logger log = LoggerFactory.getLogger(NflNetworkTrainer.class);
 
-  @Override
-  protected List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner, final List<AbstractDataElementChoice> choices) {
-    // Don't bother to show the menu, just add ALL NFL data
-    return new ArrayList<>(new NflDataElementMenu().values());
-  }
+    @Override
+    protected List<AbstractDataElementChoice> scanDataElementChoice(final BufferedReader scanner, final List<AbstractDataElementChoice> choices) {
+        // Don't bother to show the menu, just add ALL NFL data
+        return new ArrayList<>(new NflDataElementMenu().values());
+    }
 
-  @Override
-  public List<Double> seasonDataAsDoubleList(final NflSeasonData seasonData, final Double resultClass, final boolean isTraining) {
-    return NflSeasonData.asDoubleList(seasonData, resultClass, isTraining);
-  }
+    @Override
+    public List<Double> seasonDataAsDoubleList(final NflSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+        return NflSeasonData.asDoubleList(seasonData, resultClass, isTraining);
+    }
 
 }
