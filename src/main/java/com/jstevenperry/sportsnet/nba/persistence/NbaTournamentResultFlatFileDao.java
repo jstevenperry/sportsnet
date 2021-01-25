@@ -14,7 +14,7 @@ public class NbaTournamentResultFlatFileDao extends AbstractTournamentResultFlat
 
     @Override
     protected String[][] getDataFileNames() {
-        return new String[][] {
+        return new String[][]{
                 {"2010", "/nba/2010-11-Playoff-Results.csv"},
                 {"2011", "/nba/2011-12-Playoff-Results.csv"},
                 {"2012", "/nba/2012-13-Playoff-Results.csv"},

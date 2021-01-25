@@ -49,11 +49,11 @@ public class NflTournamentPlugin2020 extends AbstractNflTournamentRunnerPlugin {
         createTeamCoordinateMapping(ret, 1, 0, 5, "Chicago Bears");
         //
         // Round 1 - Division Playoffs
-        createTeamCoordinateMapping(ret,0,1,0,"Kansas City Chiefs");
+        createTeamCoordinateMapping(ret, 0, 1, 0, "Kansas City Chiefs");
         // [0, 1, 1] - Wildcard winner - must be computed3
         // [0, 1, 3] - Wildcard winner - must be computed
         // [0, 1, 5] - Wildcard winner - must be computed
-        createTeamCoordinateMapping(ret,1,1,0,"Green Bay Packers");
+        createTeamCoordinateMapping(ret, 1, 1, 0, "Green Bay Packers");
         // [1, 1, 1] - Wildcard winner - must be computed
         // [1, 1, 3] - Wildcard winner - must be computed
         // [1, 1, 5] - Wildcard winner - must be computed

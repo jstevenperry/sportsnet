@@ -26,75 +26,75 @@ import java.util.List;
 
 public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> extends AbstractNetworkBase<T> {
 
-  private static final Logger log = LoggerFactory.getLogger(AbstractNetworkEvaluator.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractNetworkEvaluator.class);
 
-  public void go(final BufferedReader scanner,
-                 final List<NetworkCandidate> networkCandidateList,
-                 final SeasonDataDao<T> seasonDataDao,
-                 final TournamentResultDao tournamentResultDao,
-                 final TournamentParticipantDao tournamentParticipantDao,
-                 final String networkType) throws IOException, InterruptedException {
-    //
-    // Load saved networks
-    List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks(networkType);
-    //
-    // Add loaded networks to networkCandidateList
-    List<NetworkCandidate> allNetworks = new ArrayList<>();
-    allNetworks.addAll(savedNetworks);
-    allNetworks.addAll(networkCandidateList);
-    if (!allNetworks.isEmpty()) {
-      //
-      // Ask the user what they want to do
-      promptUser(scanner, allNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao);
-    } else {
-      log.info("No networks to run. Train some networks and try again.");
-    }
-  }
-
-  private void promptUser(final BufferedReader scanner,
-                          final List<NetworkCandidate> allNetworks,
-                          final SeasonDataDao<T> seasonDataDao,
-                          final TournamentResultDao tournamentResultDao,
-                          final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
-    //
-    // Get the network the user wants to run
-    List<NetworkCandidate> selectedNetwork = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.Action.EVALUATE);
-    if (!selectedNetwork.isEmpty()) {
-      NetworkCandidate networkCandidate = selectedNetwork.get(0); // There should be only one
-      NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
-      //
-      // Prompt the user for the year(s) they want to evaluate
-      System.out.println("Enter year(s) for evaluation/validation (enter multiple years separated by commas)");
-      List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
-      AbstractNetworkTrainer.scanListOfValidYears(scanner, yearsToEvaluate, tournamentParticipantDao);
-      log.info("Evaluation data year(s): " + StringUtils.join(yearsToEvaluate, ','));
-      //
-      // Run the evaluation
-      log.info("Pulling evaluation data...");
-      RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
-      DataSet evaluationData = evaluationDataIterator.next();
-      DataNormalization normalization = networkParameters.getNormalizer().getDataNormalization();
-      normalization.fit(evaluationData);           // Collect the statistics (mean/stdev) from the training data. This does not modify the input data
-      normalization.transform(evaluationData);     // Apply normalization to the training data
-      double[][] trainingDataFeatures = evaluationData.getFeatures().toDoubleMatrix();
-      // Dump out a few records as a sanity check
-      int sampleSize = 5;
-      int sampleCount = 0;
-      for (double[] feature : trainingDataFeatures) {
-        if (sampleCount++ == sampleSize) {
-          break;
+    public void go(final BufferedReader scanner,
+                   final List<NetworkCandidate> networkCandidateList,
+                   final SeasonDataDao<T> seasonDataDao,
+                   final TournamentResultDao tournamentResultDao,
+                   final TournamentParticipantDao tournamentParticipantDao,
+                   final String networkType) throws IOException, InterruptedException {
+        //
+        // Load saved networks
+        List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks(networkType);
+        //
+        // Add loaded networks to networkCandidateList
+        List<NetworkCandidate> allNetworks = new ArrayList<>();
+        allNetworks.addAll(savedNetworks);
+        allNetworks.addAll(networkCandidateList);
+        if (!allNetworks.isEmpty()) {
+            //
+            // Ask the user what they want to do
+            promptUser(scanner, allNetworks, seasonDataDao, tournamentResultDao, tournamentParticipantDao);
+        } else {
+            log.info("No networks to run. Train some networks and try again.");
         }
-        log.debug(String.format("Training Data Sample:\n%s", Arrays.toString(feature)));
-      }
-      Evaluation eval = new Evaluation(networkParameters.getNumberOfOutputs());
-      INDArray output = networkCandidate.getMultiLayerNetwork().output(evaluationData.getFeatures());
-      eval.eval(evaluationData.getLabels(), output, evaluationData.getExampleMetaData(RecordMetaData.class)); // Note we are passing in the test set metadata here
-      networkParameters.setNetworkAccuracy(eval.accuracy());
-      log.info(String.format("Evaluator stats: %s", eval.stats()));
-      log.info(String.format("Network accuracy: %f%%", eval.accuracy() * 100.0));
-      log.info(networkParameters.toString());
-    } else {
-      System.out.println("No network selected, quitting.");
     }
-  }
+
+    private void promptUser(final BufferedReader scanner,
+                            final List<NetworkCandidate> allNetworks,
+                            final SeasonDataDao<T> seasonDataDao,
+                            final TournamentResultDao tournamentResultDao,
+                            final TournamentParticipantDao tournamentParticipantDao) throws IOException, InterruptedException {
+        //
+        // Get the network the user wants to run
+        List<NetworkCandidate> selectedNetwork = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.Action.EVALUATE);
+        if (!selectedNetwork.isEmpty()) {
+            NetworkCandidate networkCandidate = selectedNetwork.get(0); // There should be only one
+            NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
+            //
+            // Prompt the user for the year(s) they want to evaluate
+            System.out.println("Enter year(s) for evaluation/validation (enter multiple years separated by commas)");
+            List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
+            AbstractNetworkTrainer.scanListOfValidYears(scanner, yearsToEvaluate, tournamentParticipantDao);
+            log.info("Evaluation data year(s): " + StringUtils.join(yearsToEvaluate, ','));
+            //
+            // Run the evaluation
+            log.info("Pulling evaluation data...");
+            RecordReaderDataSetIterator evaluationDataIterator = createIterator(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+            DataSet evaluationData = evaluationDataIterator.next();
+            DataNormalization normalization = networkParameters.getNormalizer().getDataNormalization();
+            normalization.fit(evaluationData);           // Collect the statistics (mean/stdev) from the training data. This does not modify the input data
+            normalization.transform(evaluationData);     // Apply normalization to the training data
+            double[][] trainingDataFeatures = evaluationData.getFeatures().toDoubleMatrix();
+            // Dump out a few records as a sanity check
+            int sampleSize = 5;
+            int sampleCount = 0;
+            for (double[] feature : trainingDataFeatures) {
+                if (sampleCount++ == sampleSize) {
+                    break;
+                }
+                log.debug(String.format("Training Data Sample:\n%s", Arrays.toString(feature)));
+            }
+            Evaluation eval = new Evaluation(networkParameters.getNumberOfOutputs());
+            INDArray output = networkCandidate.getMultiLayerNetwork().output(evaluationData.getFeatures());
+            eval.eval(evaluationData.getLabels(), output, evaluationData.getExampleMetaData(RecordMetaData.class)); // Note we are passing in the test set metadata here
+            networkParameters.setNetworkAccuracy(eval.accuracy());
+            log.info(String.format("Evaluator stats: %s", eval.stats()));
+            log.info(String.format("Network accuracy: %f%%", eval.accuracy() * 100.0));
+            log.info(networkParameters.toString());
+        } else {
+            System.out.println("No network selected, quitting.");
+        }
+    }
 }

@@ -6,8 +6,8 @@ import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
 import java.util.List;
 
 public class NcaaBbNetworkEvaluator extends AbstractNetworkEvaluator<NcaaBbSeasonData> {
-  @Override
-  public List<Double> seasonDataAsDoubleList(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
-    return NcaaBbSeasonData.asDoubleList(seasonData, resultClass, isTraining);
-  }
+    @Override
+    public List<Double> seasonDataAsDoubleList(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+        return NcaaBbSeasonData.asDoubleList(seasonData, resultClass, isTraining);
+    }
 }

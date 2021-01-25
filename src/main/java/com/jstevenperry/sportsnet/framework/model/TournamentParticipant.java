@@ -1,45 +1,45 @@
 package com.jstevenperry.sportsnet.framework.model;
 
 public class TournamentParticipant {
-  private Integer id;
-  private Integer year;
-  private String teamName;
-  private Integer numberOfVictories;
+    private Integer id;
+    private Integer year;
+    private String teamName;
+    private Integer numberOfVictories;
 
-  public Integer getId() {
-    return id;
-  }
+    public Integer getId() {
+        return id;
+    }
 
-  public TournamentParticipant setId(final Integer id) {
-    this.id = id;
-    return this;
-  }
+    public TournamentParticipant setId(final Integer id) {
+        this.id = id;
+        return this;
+    }
 
-  public Integer getYear() {
-    return year;
-  }
+    public Integer getYear() {
+        return year;
+    }
 
-  public TournamentParticipant setYear(final Integer year) {
-    this.year = year;
-    return this;
-  }
+    public TournamentParticipant setYear(final Integer year) {
+        this.year = year;
+        return this;
+    }
 
-  public String getTeamName() {
-    return teamName;
-  }
+    public String getTeamName() {
+        return teamName;
+    }
 
-  public TournamentParticipant setTeamName(final String teamName) {
-    this.teamName = teamName;
-    return this;
-  }
+    public TournamentParticipant setTeamName(final String teamName) {
+        this.teamName = teamName;
+        return this;
+    }
 
-  public Integer getNumberOfVictories() {
-    return numberOfVictories;
-  }
+    public Integer getNumberOfVictories() {
+        return numberOfVictories;
+    }
 
-  public TournamentParticipant setNumberOfVictories(final Integer numberOfVictories) {
-    this.numberOfVictories = numberOfVictories;
-    return this;
-  }
+    public TournamentParticipant setNumberOfVictories(final Integer numberOfVictories) {
+        this.numberOfVictories = numberOfVictories;
+        return this;
+    }
 
 }

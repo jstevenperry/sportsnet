@@ -17,17 +17,17 @@ import java.util.List;
 @Component
 public class NcaaBbNetworkRunner extends AbstractNetworkRunner<NcaaBbSeasonData> {
 
-  @Override
-  protected List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> loadPlugins(final SeasonDataDao<NcaaBbSeasonData> ncaaBbSeasonDataDao) {
-    List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> ret = new ArrayList<>();
-    ret.add(new TournamentRunnerPlugin2018(ncaaBbSeasonDataDao));
-    ret.add(new TournamentRunnerPlugin2019(ncaaBbSeasonDataDao));
+    @Override
+    protected List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> loadPlugins(final SeasonDataDao<NcaaBbSeasonData> ncaaBbSeasonDataDao) {
+        List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> ret = new ArrayList<>();
+        ret.add(new TournamentRunnerPlugin2018(ncaaBbSeasonDataDao));
+        ret.add(new TournamentRunnerPlugin2019(ncaaBbSeasonDataDao));
 
-    return ret;
-  }
+        return ret;
+    }
 
-  @Override
-  public List<Double> seasonDataAsDoubleList(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
-    return NcaaBbSeasonData.asDoubleList(seasonData, resultClass, isTraining);
-  }
+    @Override
+    public List<Double> seasonDataAsDoubleList(final NcaaBbSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+        return NcaaBbSeasonData.asDoubleList(seasonData, resultClass, isTraining);
+    }
 }

@@ -14,102 +14,102 @@ import java.util.function.Supplier;
 
 public class DataNormalizationMenu {
 
-  private static final Logger log = LoggerFactory.getLogger(DataNormalizationMenu.class);
+    private static final Logger log = LoggerFactory.getLogger(DataNormalizationMenu.class);
 
-  public static Optional<DataNormalizationChoice> go(final BufferedReader scanner,
-                                                     final DataNormalizationChoice dataNormalization) throws IOException {
-    String thing = "normalizer";
-    Optional<DataNormalizationChoice> ret = Optional.ofNullable(dataNormalization);
-    String userInput = null;
-    while (StringUtils.isEmpty(userInput)) {
-      System.out.printf("Enter the number of the %s you want to use: %n", thing);
-      if (dataNormalization != null) {
-        System.out.printf("Press enter to use the %s you used last time: %s%n", thing, dataNormalization);
-      }
-      displayMenuItems(DataNormalizationChoice.values());
-      userInput = scanner.readLine();
-      if (StringUtils.isEmpty(userInput)) {
-        // User wants their previous choice
-        break;
-      } else if (StringUtils.isNumeric(userInput)) {
-        int userChoice = Integer.parseInt(userInput);
-        Optional<DataNormalizationChoice> menuChoice = DataNormalizationChoice.from(userChoice);
-        if (menuChoice.isPresent()) {
-          log.debug("You chose normalizer: " + menuChoice.get());
-          ret = menuChoice;
-        } else {
-          System.out.printf("%d is not a valid choice, please choose from the list.%n", userChoice);
-          userInput = null;
+    public static Optional<DataNormalizationChoice> go(final BufferedReader scanner,
+                                                       final DataNormalizationChoice dataNormalization) throws IOException {
+        String thing = "normalizer";
+        Optional<DataNormalizationChoice> ret = Optional.ofNullable(dataNormalization);
+        String userInput = null;
+        while (StringUtils.isEmpty(userInput)) {
+            System.out.printf("Enter the number of the %s you want to use: %n", thing);
+            if (dataNormalization != null) {
+                System.out.printf("Press enter to use the %s you used last time: %s%n", thing, dataNormalization);
+            }
+            displayMenuItems(DataNormalizationChoice.values());
+            userInput = scanner.readLine();
+            if (StringUtils.isEmpty(userInput)) {
+                // User wants their previous choice
+                break;
+            } else if (StringUtils.isNumeric(userInput)) {
+                int userChoice = Integer.parseInt(userInput);
+                Optional<DataNormalizationChoice> menuChoice = DataNormalizationChoice.from(userChoice);
+                if (menuChoice.isPresent()) {
+                    log.debug("You chose normalizer: " + menuChoice.get());
+                    ret = menuChoice;
+                } else {
+                    System.out.printf("%d is not a valid choice, please choose from the list.%n", userChoice);
+                    userInput = null;
+                }
+            } else {
+                String message = String.format("Not a valid value: %s", userInput);
+                log.warn(message);
+                userInput = null;
+            }
         }
-      } else {
-        String message = String.format("Not a valid value: %s", userInput);
-        log.warn(message);
-        userInput = null;
-      }
+        return ret;
     }
-    return ret;
-  }
 
-  private static void displayMenuItems(DataNormalizationChoice[] choices) {
-    int numberOfColumns = 3;
-    int numberOfRows = choices.length / numberOfColumns + choices.length % numberOfColumns;
-    for (int row = 0; row < numberOfRows; row++) {
-      for (int column = 0; column < numberOfColumns; column++) {
-        int index = row + (column * numberOfRows);
-        if (index < choices.length) {
-          DataNormalizationChoice choice = choices[index];
-          System.out.printf("%2d - %30s", choice.getOrdinal(), choice.name());
+    private static void displayMenuItems(DataNormalizationChoice[] choices) {
+        int numberOfColumns = 3;
+        int numberOfRows = choices.length / numberOfColumns + choices.length % numberOfColumns;
+        for (int row = 0; row < numberOfRows; row++) {
+            for (int column = 0; column < numberOfColumns; column++) {
+                int index = row + (column * numberOfRows);
+                if (index < choices.length) {
+                    DataNormalizationChoice choice = choices[index];
+                    System.out.printf("%2d - %30s", choice.getOrdinal(), choice.name());
+                }
+                System.out.print("\t\t");
+            }
+            System.out.print('\n');
         }
-        System.out.print("\t\t");
-      }
-      System.out.print('\n');
-    }
-  }
-
-  public enum DataNormalizationChoice {
-    NORMALIZER_STANDARDIZE(NormalizerStandardize::new, 1),
-    NORMALIZER_ZERO_TO_ONE(() -> new NormalizerMinMaxScaler(0, 1), 2),
-    NORMALIZER_NEGATIVE_ONE_TO_ONE(() -> new NormalizerMinMaxScaler(-1, 1), 3),
-    ;
-
-    private final Supplier<DataNormalization> dataNormalizationSupplier;
-    private final int ordinal;
-
-    DataNormalizationChoice(final Supplier<DataNormalization> dataNormalizationSupplier, final int ordinal) {
-
-      this.dataNormalizationSupplier = dataNormalizationSupplier;
-      this.ordinal = ordinal;
     }
 
-    private static Optional<DataNormalizationChoice> from(final int choice) {
-      Optional<DataNormalizationChoice> ret = Optional.empty();
-      for (DataNormalizationChoice menuChoice : DataNormalizationChoice.values()) {
-        if (menuChoice.getOrdinal() == choice) {
-          ret = Optional.of(menuChoice);
-          break;
+    public enum DataNormalizationChoice {
+        NORMALIZER_STANDARDIZE(NormalizerStandardize::new, 1),
+        NORMALIZER_ZERO_TO_ONE(() -> new NormalizerMinMaxScaler(0, 1), 2),
+        NORMALIZER_NEGATIVE_ONE_TO_ONE(() -> new NormalizerMinMaxScaler(-1, 1), 3),
+        ;
+
+        private final Supplier<DataNormalization> dataNormalizationSupplier;
+        private final int ordinal;
+
+        DataNormalizationChoice(final Supplier<DataNormalization> dataNormalizationSupplier, final int ordinal) {
+
+            this.dataNormalizationSupplier = dataNormalizationSupplier;
+            this.ordinal = ordinal;
         }
-      }
-      return ret;
-    }
 
-    private static Optional<DataNormalizationChoice> from(final DataNormalization dataNormalization) {
-      Optional<DataNormalizationChoice> ret = Optional.empty();
-      for (DataNormalizationChoice menuChoice : DataNormalizationChoice.values()) {
-        if (menuChoice.getDataNormalization().equals(dataNormalization)) {
-          ret = Optional.of(menuChoice);
-          break;
+        private static Optional<DataNormalizationChoice> from(final int choice) {
+            Optional<DataNormalizationChoice> ret = Optional.empty();
+            for (DataNormalizationChoice menuChoice : DataNormalizationChoice.values()) {
+                if (menuChoice.getOrdinal() == choice) {
+                    ret = Optional.of(menuChoice);
+                    break;
+                }
+            }
+            return ret;
         }
-      }
-      return ret;
-    }
 
-    public DataNormalization getDataNormalization() {
-      return dataNormalizationSupplier.get();
-    }
+        private static Optional<DataNormalizationChoice> from(final DataNormalization dataNormalization) {
+            Optional<DataNormalizationChoice> ret = Optional.empty();
+            for (DataNormalizationChoice menuChoice : DataNormalizationChoice.values()) {
+                if (menuChoice.getDataNormalization().equals(dataNormalization)) {
+                    ret = Optional.of(menuChoice);
+                    break;
+                }
+            }
+            return ret;
+        }
 
-    public int getOrdinal() {
-      return ordinal;
-    }
+        public DataNormalization getDataNormalization() {
+            return dataNormalizationSupplier.get();
+        }
 
-  }
+        public int getOrdinal() {
+            return ordinal;
+        }
+
+    }
 }

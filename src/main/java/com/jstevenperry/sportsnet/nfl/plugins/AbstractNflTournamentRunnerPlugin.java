@@ -8,27 +8,27 @@ import com.jstevenperry.sportsnet.nfl.model.NflSeasonData;
 import java.util.List;
 
 public abstract class AbstractNflTournamentRunnerPlugin extends AbstractTournamentRunnerPlugin<NflSeasonData> {
-  public AbstractNflTournamentRunnerPlugin(final SeasonDataDao<NflSeasonData> seasonDataDao) {
-    super(seasonDataDao);
-  }
+    public AbstractNflTournamentRunnerPlugin(final SeasonDataDao<NflSeasonData> seasonDataDao) {
+        super(seasonDataDao);
+    }
 
-  @Override
-  protected String getTournamentResultsTemplateFileName() {
-    return "/nfl/playoff-results-nfl.csv";
-  }
+    @Override
+    protected String getTournamentResultsTemplateFileName() {
+        return "/nfl/playoff-results-nfl.csv";
+    }
 
-  @Override
-  protected String getNetworkType() {
-    return NflNetworkMenu.NETWORK_TYPE;
-  }
+    @Override
+    protected String getNetworkType() {
+        return NflNetworkMenu.NETWORK_TYPE;
+    }
 
-  @Override
-  public String getTournamentTemplateFileName() {
-    return "/nfl/playoff-matchups-template-nfl.txt";
-  }
+    @Override
+    public String getTournamentTemplateFileName() {
+        return "/nfl/playoff-matchups-template-nfl.txt";
+    }
 
-  @Override
-  public List<Double> seasonDataAsDoubleList(final NflSeasonData seasonData, final Double resultClass, final boolean isTraining) {
-    return NflSeasonData.asDoubleList(seasonData, resultClass, isTraining);
-  }
+    @Override
+    public List<Double> seasonDataAsDoubleList(final NflSeasonData seasonData, final Double resultClass, final boolean isTraining) {
+        return NflSeasonData.asDoubleList(seasonData, resultClass, isTraining);
+    }
 }

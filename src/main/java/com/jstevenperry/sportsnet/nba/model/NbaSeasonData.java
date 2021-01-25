@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NbaSeasonData extends AbstractSeasonData {
-    
+
     public static List<Double> seasonDataAsDoubleList(final NbaSeasonData seasonData, final Double resultClass, final boolean isTraining) {
         List<Double> ret = new ArrayList<>();
         ret.add(asDouble(seasonData.getTeamStatsRank()));
@@ -86,10 +86,10 @@ public class NbaSeasonData extends AbstractSeasonData {
         if (isTraining) {
             ret.add(resultClass);
         }
-        
+
         return ret;
     }
-    
+
     // Team stats
     int teamStatsRank;
     int gamesPlayed;

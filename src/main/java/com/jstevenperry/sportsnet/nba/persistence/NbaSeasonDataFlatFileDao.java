@@ -23,7 +23,7 @@ public class NbaSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NbaS
 
     @Override
     protected String[][] getDataFileNames() {
-        return new String[][] {
+        return new String[][]{
                 {"2010", "/nba/2010-11-Team-Stats.csv", "/nba/2010-11-Opponent-Stats.csv", "/nba/2010-11-Miscellaneous-Stats.csv"},
                 {"2011", "/nba/2011-12-Team-Stats.csv", "/nba/2011-12-Opponent-Stats.csv", "/nba/2011-12-Miscellaneous-Stats.csv"},
                 {"2012", "/nba/2012-13-Team-Stats.csv", "/nba/2012-13-Opponent-Stats.csv", "/nba/2012-13-Miscellaneous-Stats.csv"},

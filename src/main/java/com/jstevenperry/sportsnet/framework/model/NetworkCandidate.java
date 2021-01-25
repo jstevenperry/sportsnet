@@ -9,45 +9,45 @@ import org.jetbrains.annotations.NotNull;
  * is a candidate for persistence. Hence the name.
  */
 public class NetworkCandidate implements Comparable<NetworkCandidate> {
-  private final NetworkParameters networkParameters;
-  private final MultiLayerNetwork multiLayerNetwork;
+    private final NetworkParameters networkParameters;
+    private final MultiLayerNetwork multiLayerNetwork;
 
-  public NetworkCandidate(final NetworkParameters networkParameters,
-                          final MultiLayerNetwork multiLayerNetwork) {
+    public NetworkCandidate(final NetworkParameters networkParameters,
+                            final MultiLayerNetwork multiLayerNetwork) {
 
-    this.networkParameters = networkParameters;
-    this.multiLayerNetwork = multiLayerNetwork;
-  }
-
-  public NetworkParameters getNetworkParameters() {
-    return networkParameters;
-  }
-
-  public MultiLayerNetwork getMultiLayerNetwork() {
-    return multiLayerNetwork;
-  }
-
-  @Override
-  public String toString() {
-    return "NetworkCandidate{" +
-      "networkParameters=" + networkParameters.getNetworkLayout() +
-      ", multiLayerNetwork=" + multiLayerNetwork +
-      '}';
-  }
-
-
-  @Override
-  public int compareTo(@NotNull final NetworkCandidate that) {
-    NetworkParameters thisNetworkParameters = this.getNetworkParameters();
-    NetworkParameters thatNetworkParameters = that.getNetworkParameters();
-    int result = Double.compare(thisNetworkParameters.getNetworkAccuracy(), thatNetworkParameters.getNetworkAccuracy());
-    if (result == 0) {
-      // Largest first
-      result = thisNetworkParameters.getWhenTrained().toLocalDate().compareTo(thatNetworkParameters.getWhenTrained().toLocalDate());
+        this.networkParameters = networkParameters;
+        this.multiLayerNetwork = multiLayerNetwork;
     }
-    if (result == 0) {
-      result = thisNetworkParameters.getNetworkLayout().compareTo(thatNetworkParameters.getNetworkLayout());
+
+    public NetworkParameters getNetworkParameters() {
+        return networkParameters;
     }
-    return result;
-  }
+
+    public MultiLayerNetwork getMultiLayerNetwork() {
+        return multiLayerNetwork;
+    }
+
+    @Override
+    public String toString() {
+        return "NetworkCandidate{" +
+                "networkParameters=" + networkParameters.getNetworkLayout() +
+                ", multiLayerNetwork=" + multiLayerNetwork +
+                '}';
+    }
+
+
+    @Override
+    public int compareTo(@NotNull final NetworkCandidate that) {
+        NetworkParameters thisNetworkParameters = this.getNetworkParameters();
+        NetworkParameters thatNetworkParameters = that.getNetworkParameters();
+        int result = Double.compare(thisNetworkParameters.getNetworkAccuracy(), thatNetworkParameters.getNetworkAccuracy());
+        if (result == 0) {
+            // Largest first
+            result = thisNetworkParameters.getWhenTrained().toLocalDate().compareTo(thatNetworkParameters.getWhenTrained().toLocalDate());
+        }
+        if (result == 0) {
+            result = thisNetworkParameters.getNetworkLayout().compareTo(thatNetworkParameters.getNetworkLayout());
+        }
+        return result;
+    }
 }
