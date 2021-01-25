@@ -2,16 +2,18 @@ package com.jstevenperry.sportsnet.nhl;
 
 import com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer;
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
+import com.jstevenperry.sportsnet.framework.menus.SportsnetChoice;
 import com.jstevenperry.sportsnet.framework.util.NetworkProperties;
 import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import com.jstevenperry.sportsnet.nhl.menus.NhlDataElementMenu;
+import com.jstevenperry.sportsnet.nhl.menus.NhlNetworkMenu;
 import com.jstevenperry.sportsnet.nhl.model.NhlSeasonData;
+import org.nd4j.common.io.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class NhlNetworkTrainer extends AbstractNetworkTrainer<NhlSeasonData> {
@@ -30,29 +32,16 @@ public class NhlNetworkTrainer extends AbstractNetworkTrainer<NhlSeasonData> {
 
   @Override
   protected String computeNetworkStructure(final int numberOfInputs, final int numberOfOutputs) {
-    List<Integer> neuronLayerDescriptor = new ArrayList<>();
-    int numberOfHiddenLayers = NetworkProperties.getNumberOfHiddenLayers();
-    int primeSeed = NetworkProperties.getPrimeSeed();
-    Integer primeDivisor = NetworkProperties.getPrimeDivisor();
-    if (numberOfHiddenLayers < 6) {
-      String errorMessage = String.format("Algorithm does not work with < 6 hidden layers, you specified %s", numberOfHiddenLayers);
-      log.error("generateSampleNetworkLayout({}, {}): {}", numberOfInputs, numberOfOutputs, numberOfHiddenLayers);
-      throw new RuntimeException(errorMessage);
+    // Read from a property (NHL.network.layout)
+    String hiddenLayerStructure = NetworkProperties.getNetworkLayout(NhlNetworkMenu.NETWORK_TYPE);
+    String ret = String.format("%dx%sx%d", numberOfInputs, hiddenLayerStructure, numberOfOutputs);
+    if (StringUtils.isEmpty(hiddenLayerStructure)) {
+      // If property not specified use the default
+      ret = NetworkUtils.generateSampleNetworkLayout(numberOfInputs, numberOfOutputs);
+      log.debug("computeNetworkStructure({}, {}): Using default network structure: {}", numberOfInputs, numberOfOutputs, ret);
+    } else {
+      log.debug("computeNetworkStructure({}, {}): Using custom NHL network structure: {}", numberOfInputs, numberOfOutputs, ret);
     }
-    int middleLayerIndex = numberOfHiddenLayers / 2 + 1;
-    // First layer: numberOfInputs * primeSeed
-    neuronLayerDescriptor.add(numberOfInputs * numberOfInputs * primeDivisor);
-    for (int index = 1; index < middleLayerIndex; index++) {
-      neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor));
-    }
-    // Middle layer: numberOfInputs * numberOfOutputs * fudgeFactor
-    neuronLayerDescriptor.add(middleLayerIndex, numberOfInputs * numberOfOutputs * primeDivisor);
-    for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers - 1; index++) {
-      neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor));
-    }
-    neuronLayerDescriptor.add(numberOfOutputs * numberOfOutputs * numberOfOutputs);
-    String hiddenLayerStructure = NetworkUtils.generateLayerStructureString(neuronLayerDescriptor);
-    return String.format("%dx%sx%d", numberOfInputs, hiddenLayerStructure, numberOfOutputs);
-
+    return ret;
   }
 }

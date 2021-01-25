@@ -189,6 +189,10 @@ public class NetworkProperties {
 
   public static Integer getNetworkEvaluationIndex() { return getIntegerPropertyValue("network.evaluation.index", 10); }
 
+  public static String getNetworkLayout(final String sport) {
+    return getStringPropertyValue(sport + ".network.layout", StringUtils.EMPTY);
+  }
+
   public static Integer getNumberOfHiddenLayers() { return getIntegerPropertyValue("number.of.hidden.layers", 7); }
 
   public static BigDecimal getPerformanceThreshold() {
