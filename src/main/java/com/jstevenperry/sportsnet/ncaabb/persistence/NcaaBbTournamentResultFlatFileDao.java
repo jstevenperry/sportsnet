@@ -24,54 +24,35 @@ public class NcaaBbTournamentResultFlatFileDao extends AbstractTournamentResultF
 
     private static final Logger log = LoggerFactory.getLogger(NcaaBbTournamentResultFlatFileDao.class);
 
-    // TODO: Break up the (giant) results file into (smaller) more manageable files by year
-    private static final String FILE_NAME = "/ncaabb/tournament_result.csv";
-
     @Override
     protected String[][] getDataFileNames() {
-        throw new UnsupportedOperationException("getDataFileNames() not implemented, reason = Method not appropriate for this class");
+        return new String[][]{
+                {"2010", "/ncaabb/2010/tournament_result.csv"},
+                {"2011", "/ncaabb/2011/tournament_result.csv"},
+                {"2012", "/ncaabb/2012/tournament_result.csv"},
+                {"2013", "/ncaabb/2013/tournament_result.csv"},
+                {"2014", "/ncaabb/2014/tournament_result.csv"},
+                {"2015", "/ncaabb/2015/tournament_result.csv"},
+                {"2016", "/ncaabb/2016/tournament_result.csv"},
+                {"2017", "/ncaabb/2017/tournament_result.csv"},
+                {"2018", "/ncaabb/2018/tournament_result.csv"}
+        };
     }
 
     @Override
     protected int getNumberOfFields() {
-        return 7;
-    }
-
-    @Override
-    protected void loadData() {
-        String databaseFileName = FILE_NAME;
-        InputStream inputStream = NcaaBbTournamentResultFlatFileDao.class.getResourceAsStream(databaseFileName);
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-            CSVReader csvReader = new CSVReader(bufferedReader);
-            csvReader.readNext(); // Read header
-            String[] line = csvReader.readNext();
-            while (line != null) {
-                if (line.length == getNumberOfFields()) {
-                    TournamentResult data = parseLine(null, line);
-                    List<TournamentResult> tournamentResults = getDatabase().computeIfAbsent(data.getYear(), k -> new ArrayList<>());
-                    tournamentResults.add(data);
-                } else {
-                    throw new RuntimeException(String.format("Expected %d fields, got %d instead.", getNumberOfFields(), line.length));
-                }
-                line = csvReader.readNext();
-            }
-        } catch (IOException e) {
-            String message = String.format("Error reading database file name '%s': %s", databaseFileName, e.getLocalizedMessage());
-            log.error(message, e);
-            throw new RuntimeException(message, e);
-        }
+        return 6;
     }
 
     @Override
     protected TournamentResult parseLine(final Integer year, final String[] line) {
         TournamentResult ret = new TournamentResult();
-        ret.setId(Integer.parseInt(line[0]));
-        ret.setYear(Integer.parseInt(line[1]));
-        ret.setGameDate(Date.from(LocalDate.parse(line[2]).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
-        ret.setWinningTeamName(StringUtils.trim(line[3]));
-        ret.setWinningScore(Integer.parseInt(line[4]));
-        ret.setLosingTeamName(StringUtils.trim(line[5]));
-        ret.setLosingScore(Integer.parseInt(line[6]));
+        ret.setYear(Integer.parseInt(line[0]));
+        ret.setGameDate(Date.from(LocalDate.parse(line[1]).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+        ret.setWinningTeamName(StringUtils.trim(line[2]));
+        ret.setWinningScore(Integer.parseInt(line[3]));
+        ret.setLosingTeamName(StringUtils.trim(line[4]));
+        ret.setLosingScore(Integer.parseInt(line[5]));
         return ret;
     }
 
