@@ -10,16 +10,16 @@ public class NhlTournamentParticipantFlatFileDao extends AbstractTournamentParti
     @Override
     protected String[][] getDataFileNames() {
         return new String[][]{
-                {"2010", "/nhl/2010-11-tournament_participant.csv"},
-                {"2011", "/nhl/2011-12-tournament_participant.csv"},
-                {"2012", "/nhl/2012-13-tournament_participant.csv"},
-                {"2013", "/nhl/2013-14-tournament_participant.csv"},
-                {"2014", "/nhl/2014-15-tournament_participant.csv"},
-                {"2015", "/nhl/2015-16-tournament_participant.csv"},
-                {"2016", "/nhl/2016-17-tournament_participant.csv"},
-                {"2017", "/nhl/2017-18-tournament_participant.csv"},
-                {"2018", "/nhl/2018-19-tournament_participant.csv"},
-                {"2019", "/nhl/2019-20-tournament_participant.csv"},
+                {"2010", "/nhl/2010/2010-11-tournament_participant.csv"},
+                {"2011", "/nhl/2011/2011-12-tournament_participant.csv"},
+                {"2012", "/nhl/2012/2012-13-tournament_participant.csv"},
+                {"2013", "/nhl/2013/2013-14-tournament_participant.csv"},
+                {"2014", "/nhl/2014/2014-15-tournament_participant.csv"},
+                {"2015", "/nhl/2015/2015-16-tournament_participant.csv"},
+                {"2016", "/nhl/2016/2016-17-tournament_participant.csv"},
+                {"2017", "/nhl/2017/2017-18-tournament_participant.csv"},
+                {"2018", "/nhl/2018/2018-19-tournament_participant.csv"},
+                {"2019", "/nhl/2019/2019-20-tournament_participant.csv"},
         };
     }
 

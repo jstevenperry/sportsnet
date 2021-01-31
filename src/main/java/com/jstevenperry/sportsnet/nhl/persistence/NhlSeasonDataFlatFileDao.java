@@ -27,16 +27,16 @@ public class NhlSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NhlS
     @Override
     protected String[][] getDataFileNames() {
         return new String[][]{
-                {"2010", "/nhl/2010-11-Summary.csv"},
-                {"2011", "/nhl/2011-12-Summary.csv"},
-                {"2012", "/nhl/2012-13-Summary.csv"},
-                {"2013", "/nhl/2013-14-Summary.csv"},
-                {"2014", "/nhl/2014-15-Summary.csv"},
-                {"2015", "/nhl/2015-16-Summary.csv"},
-                {"2016", "/nhl/2016-17-Summary.csv"},
-                {"2017", "/nhl/2017-18-Summary.csv"},
-                {"2018", "/nhl/2018-19-Summary.csv"},
-                {"2019", "/nhl/2019-20-Summary.csv"}
+                {"2010", "/nhl/2010/2010-11-Summary.csv"},
+                {"2011", "/nhl/2011/2011-12-Summary.csv"},
+                {"2012", "/nhl/2012/2012-13-Summary.csv"},
+                {"2013", "/nhl/2013/2013-14-Summary.csv"},
+                {"2014", "/nhl/2014/2014-15-Summary.csv"},
+                {"2015", "/nhl/2015/2015-16-Summary.csv"},
+                {"2016", "/nhl/2016/2016-17-Summary.csv"},
+                {"2017", "/nhl/2017/2017-18-Summary.csv"},
+                {"2018", "/nhl/2018/2018-19-Summary.csv"},
+                {"2019", "/nhl/2019/2019-20-Summary.csv"}
         };
     }
 
