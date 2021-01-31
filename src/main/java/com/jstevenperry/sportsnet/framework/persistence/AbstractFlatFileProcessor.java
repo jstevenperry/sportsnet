@@ -1,6 +1,7 @@
 package com.jstevenperry.sportsnet.framework.persistence;
 
 import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,15 @@ public abstract class AbstractFlatFileProcessor<T extends AbstractSeasonData> {
             throw new RuntimeException(errorMessage);
         }
         return ret;
+    }
+
+    protected boolean lineEmpty(final String[] line) {
+        return line == null ||
+                StringUtils.isEmpty(line[0]);
+    }
+
+    protected boolean lineNotEmpty(final String[] line) {
+        return !lineEmpty(line);
     }
 
 }

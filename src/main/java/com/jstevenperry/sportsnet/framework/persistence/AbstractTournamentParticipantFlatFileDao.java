@@ -48,12 +48,14 @@ public abstract class AbstractTournamentParticipantFlatFileDao<T extends Abstrac
                 csvReader.readNext(); // Read header
                 String[] line = csvReader.readNext();
                 while (line != null) {
-                    if (line.length == getNumberOfFields()) {
-                        TournamentParticipant data = parseLine(year, line);
-                        Map<String, TournamentParticipant> teamDataMap = getDatabase().computeIfAbsent(year, k -> new HashMap<>());
-                        teamDataMap.put(data.getTeamName(), data);
-                    } else {
-                        throw new RuntimeException(String.format("File %s: Expected %d fields, got %d instead.", dataFileName, getNumberOfFields(), line.length));
+                    if (lineNotEmpty(line)) {
+                        if (line.length == getNumberOfFields()) {
+                            TournamentParticipant data = parseLine(year, line);
+                            Map<String, TournamentParticipant> teamDataMap = getDatabase().computeIfAbsent(year, k -> new HashMap<>());
+                            teamDataMap.put(data.getTeamName(), data);
+                        } else {
+                            throw new RuntimeException(String.format("File %s: Expected %d fields, got %d instead.", dataFileName, getNumberOfFields(), line.length));
+                        }
                     }
                     line = csvReader.readNext();
                 }

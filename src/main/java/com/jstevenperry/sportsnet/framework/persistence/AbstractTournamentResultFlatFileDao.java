@@ -46,12 +46,14 @@ public abstract class AbstractTournamentResultFlatFileDao<T extends AbstractSeas
                 csvReader.readNext(); // Read header
                 String[] line = csvReader.readNext();
                 while (line != null) {
-                    if (line.length == getNumberOfFields()) {
-                        TournamentResult data = parseLine(year, line);
-                        List<TournamentResult> tournamentResults = getDatabase().computeIfAbsent(year, k -> new ArrayList<>());
-                        tournamentResults.add(data);
-                    } else {
-                        throw new RuntimeException(String.format("Expected %d fields, got %d instead. (Line data: [%s])", getNumberOfFields(), line.length, Arrays.toString(line)));
+                    if (lineNotEmpty(line)) {
+                        if (line.length == getNumberOfFields()) {
+                            TournamentResult data = parseLine(year, line);
+                            List<TournamentResult> tournamentResults = getDatabase().computeIfAbsent(year, k -> new ArrayList<>());
+                            tournamentResults.add(data);
+                        } else {
+                            throw new RuntimeException(String.format("Expected %d fields, got %d instead. (Line data: [%s])", getNumberOfFields(), line.length, Arrays.toString(line)));
+                        }
                     }
                     line = csvReader.readNext();
                 }

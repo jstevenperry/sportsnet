@@ -12,6 +12,8 @@ public class TournamentRunnerPlugin2018 extends AbstractNcaaBbTournamentRunnerPl
 
     public static final String NCAABB_TOURNAMENT_TEMPLATE_NCAABB_2018_TXT = "/ncaabb/tournament-template-ncaabb-2018.txt";
 
+    public static final String NCAABB_TOURNAMENT_RESULTS_TEMPLATE_2018 = "/ncaabb/tournament-results-template-2018.csv";
+
     public TournamentRunnerPlugin2018(final SeasonDataDao<NcaaBbSeasonData> seasonDataDao) {
         super(seasonDataDao);
         setTeamCoordinateSeasonDataMap(buildTeamCoordinateMap());
@@ -19,7 +21,7 @@ public class TournamentRunnerPlugin2018 extends AbstractNcaaBbTournamentRunnerPl
 
     @Override
     public Integer getTournamentYear() {
-        return 2018;
+        return 2019;
     }
 
     @Override
@@ -27,6 +29,14 @@ public class TournamentRunnerPlugin2018 extends AbstractNcaaBbTournamentRunnerPl
         return NCAABB_TOURNAMENT_TEMPLATE_NCAABB_2018_TXT;
     }
 
+    @Override
+    protected String getTournamentResultsTemplateFileName() {
+        return NCAABB_TOURNAMENT_RESULTS_TEMPLATE_2018;
+    }
+
+    /**
+     * Builds the internal map of TeamCoordinate -> SeasonData
+     */
     @Override
     protected Map<TeamCoordinate, NcaaBbSeasonData> buildTeamCoordinateMap() {
         // Map a team to its initial team coordinates
@@ -42,126 +52,126 @@ public class TournamentRunnerPlugin2018 extends AbstractNcaaBbTournamentRunnerPl
     }
 
     private void createFirstFourMappings(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 0, 0, "NC Central");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 0, 1, "Texas Southern");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 0, 0, "LIU Brooklyn");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 0, 1, "Radford");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 0, 8, "St Bonaventure");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 0, 9, "UCLA");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 0, 8, "Arizona St");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 0, 9, "Syracuse");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 0, 0, "North Dakota St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 0, 1, "NC Central");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 0, 8, "Arizona St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 0, 9, "St Johns NY");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 0, 0, "Prairie View");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 0, 1, "Fairleigh Dickinson");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 0, 8, "Belmont");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 0, 9, "Temple");
     }
 
-    // For 2018 Region 0 is the South
+    // For 2018 Region 0 is the East
     private void createRoundOneMappingsRegion0(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [0,1,0],[0,1,1]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 0, "Virginia");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 1, "UMBC");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 0, "Duke");
+        // [0,1,1] is First Four Winner, cannot initialize this TeamCoordinate (it must be computed)
 //    [0,1,2],[0,1,3]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 2, "Creighton");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 3, "Kansas St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 2, "VCU");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 3, "UCF");
 //    [0,1,4],[0,1,5]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 4, "Kentucky");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 5, "Davidson");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 4, "Mississippi St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 5, "Liberty");
 //    [0,1,6],[0,1,7]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 6, "Arizona");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 7, "Buffalo");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 6, "Virginia Tech");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 7, "Saint Louis");
 //    [0,1,8],[0,1,9]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 8, "Miami FL");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 9, "Loyola Chicago");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 8, "Maryland");
+        // [0,1,9] is First Four Winner, cannot initialize this TeamCoordinate (it must be computed)
 //    [0,1,10],[0,1,11]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 10, "Tennessee");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 11, "Wright St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 10, "LSU");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 11, "Yale");
 //    [0,1,12],[0,1,13]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 12, "Nevada");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 13, "Texas");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 12, "Louisville");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 13, "Minnesota");
 //    [0,1,14],[0,1,15]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 14, "Cincinnati");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 15, "Georgia St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 14, "Michigan St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 15, "Bradley");
     }
 
     // For 2018 Region 1 is the West
     private void createRoundOneMappingsRegion1(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [1,1,0],[1,1,1]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 0, "Xavier");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 0, "Gonzaga");
         // [1,1,1] is First Four Winner, cannot initialize this TeamCoordinate (it must be computed)
 //    [1,1,2],[1,1,3]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 2, "Missouri");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 3, "Florida St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 2, "Syracuse");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 3, "Baylor");
 //    [1,1,4],[1,1,5]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 4, "Ohio St");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 5, "South Dakota St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 4, "Marquette");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 5, "Murray St");
 //    [1,1,6],[1,1,7]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 6, "Gonzaga");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 7, "UNC Greensboro");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 6, "Florida St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 7, "Vermont");
 //    [1,1,8],[1,1,9]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 8, "Houston");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 9, "San Diego St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 8, "Buffalo");
+        // [1,1,9] is First Four Winner, cannot initialize this TeamCoordinate (it must be computed)
 //    [1,1,10],[1,1,11]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 10, "Michigan");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 11, "Montana");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 10, "Texas Tech");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 11, "Northern Ky");
 //    [1,1,12],[1,1,13]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 12, "Texas AM");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 13, "Providence");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 12, "Nevada");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 13, "Florida");
 //    [1,1,14],[1,1,15]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 14, "North Carolina");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 15, "Lipscomb");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 14, "Michigan");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 15, "Montana");
     }
 
-    // For 2018 Region 2 is the East
+    // For 2018 Region 2 is the South
     private void createRoundOneMappingsRegion2(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [2,1,0],[2,1,1]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 0, "Villanova");
-        // [2,1,1] is First Four Winner, cannot initialize this TeamCoordinate (it must be computed)
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 0, "Virginia");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 1, "Gardner-Webb");
 //    [2,1,2],[2,1,3]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 2, "Virginia Tech");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 3, "Alabama");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 2, "Ole Miss");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 3, "Oklahoma");
 //    [2,1,4],[2,1,5]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 4, "West Virginia");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 5, "Murray St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 4, "Wisconsin");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 5, "Oregon");
 //    [2,1,6],[2,1,7]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 6, "Wichita St");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 7, "Marshall");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 6, "Kansas St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 7, "UC Irvine");
 //    [2,1,8],[2,1,9]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 8, "Florida");
-        // [2,1,9] is First Four Winner, cannot initialize this TeamCoordinate (it must be computed)
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 8, "Villanova");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 9, "Saint Marys CA");
 //    [2,1,10],[2,1,11]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 10, "Texas Tech");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 11, "SFA");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 10, "Purdue");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 11, "Old Dominion");
 //    [2,1,12],[2,1,13]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 12, "Arkansas");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 13, "Butler");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 12, "Cincinnati");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 13, "Iowa");
 //    [2,1,14],[2,1,15]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 14, "Purdue");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 15, "Cal St Fullerton");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 14, "Tennessee");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 15, "Colgate");
     }
 
     // For 2019 Region 3 is the Midwest
     private void createRoundOneMappingsRegion3(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [3,1,0],[3,1,1]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 0, "Kansas");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 1, "Penn");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 0, "North Carolina");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 1, "Iona");
 //    [3,1,2],[3,1,3]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 2, "Seton Hall");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 3, "NC State");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 2, "Utah St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 3, "Washington");
 //    [3,1,4],[3,1,5]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 4, "Clemson");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 4, "Auburn");
         createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 5, "New Mexico St");
 //    [3,1,6],[3,1,7]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 6, "Auburn");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 7, "Col of Charleston");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 6, "Kansas");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 7, "Northeastern");
 //    [3,1,8],[3,1,9]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 8, "TCU");
-        // [3,1,9] is First Four Winner, cannot initialize this TeamCoordinate (it must be computed)
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 8, "Iowa St");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 9, "Ohio St");
 //    [3,1,10],[3,1,11]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 10, "Michigan St");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 11, "Bucknell");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 10, "Houston");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 11, "Georgia St");
 //    [3,1,12],[3,1,13]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 12, "Rhode Island");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 13, "Oklahoma");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 12, "Wofford");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 13, "Seton Hall");
 //    [3,1,14],[3,1,15]
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 14, "Duke");
-        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 15, "Iona");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 14, "Kentucky");
+        createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 15, "Abilene Christian");
     }
 
     @Override

@@ -34,16 +34,15 @@ public class NcaaBbSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<N
     @Override
     protected String[][] getDataFileNames() {
         return new String[][]{
-                {"2011", "/ncaabb/2010/SeasonData-2010-2011.csv"},
-                {"2012", "/ncaabb/2011/SeasonData-2011-2012.csv"},
-                {"2013", "/ncaabb/2012/SeasonData-2012-2013.csv"},
-                {"2014", "/ncaabb/2013/SeasonData-2013-2014.csv"},
-                {"2015", "/ncaabb/2014/SeasonData-2014-2015.csv"},
-                {"2016", "/ncaabb/2015/SeasonData-2015-2016.csv"},
-                {"2017", "/ncaabb/2016/SeasonData-2016-2017.csv"},
-                {"2018", "/ncaabb/2017/SeasonData-2017-2018.csv"},
-                {"2019", "/ncaabb/2018/SeasonData-2018-2019.csv"},
-                {"2020", "/ncaabb/2019/SeasonData-2019-2020.csv"}
+                {"2010", "/ncaabb/2010/SeasonData-2010-2011.csv"},
+                {"2011", "/ncaabb/2011/SeasonData-2011-2012.csv"},
+                {"2012", "/ncaabb/2012/SeasonData-2012-2013.csv"},
+                {"2013", "/ncaabb/2013/SeasonData-2013-2014.csv"},
+                {"2014", "/ncaabb/2014/SeasonData-2014-2015.csv"},
+                {"2015", "/ncaabb/2015/SeasonData-2015-2016.csv"},
+                {"2016", "/ncaabb/2016/SeasonData-2016-2017.csv"},
+                {"2017", "/ncaabb/2017/SeasonData-2017-2018.csv"},
+                {"2018", "/ncaabb/2018/SeasonData-2018-2019.csv"}
         };
     }
 
