@@ -40,7 +40,7 @@ public abstract class AbstractTournamentResultFlatFileDao<T extends AbstractSeas
         for (final String[] tournamentEntry : getDataFileNames()) {
             Integer year = Integer.parseInt(tournamentEntry[0]);
             String dataFileName = tournamentEntry[1];
-            InputStream inputStream = NhlTournamentResultFlatFileDao.class.getResourceAsStream(dataFileName);
+            InputStream inputStream = getClass().getResourceAsStream(dataFileName);
             try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
                 CSVReader csvReader = new CSVReader(bufferedReader);
                 csvReader.readNext(); // Read header
