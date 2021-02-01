@@ -52,7 +52,7 @@ public class TournamentRunnerPlugin2017 extends AbstractNcaaBbTournamentRunnerPl
         createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 0, 9, "Syracuse");
     }
 
-    // For 2018 Region 0 is the South
+    // For 2017-18 Region 0 is the South
     private void createRoundOneMappingsRegion0(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [0,1,0],[0,1,1]
         createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 0, "Virginia");
@@ -80,7 +80,7 @@ public class TournamentRunnerPlugin2017 extends AbstractNcaaBbTournamentRunnerPl
         createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 15, "Georgia St");
     }
 
-    // For 2018 Region 1 is the West
+    // For 2017-18 Region 1 is the West
     private void createRoundOneMappingsRegion1(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [1,1,0],[1,1,1]
         createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 0, "Xavier");
@@ -108,7 +108,7 @@ public class TournamentRunnerPlugin2017 extends AbstractNcaaBbTournamentRunnerPl
         createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 15, "Lipscomb");
     }
 
-    // For 2018 Region 2 is the East
+    // For 2017-18 Region 2 is the East
     private void createRoundOneMappingsRegion2(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [2,1,0],[2,1,1]
         createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 0, "Villanova");
@@ -136,7 +136,7 @@ public class TournamentRunnerPlugin2017 extends AbstractNcaaBbTournamentRunnerPl
         createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 15, "Cal St Fullerton");
     }
 
-    // For 2019 Region 3 is the Midwest
+    // For 2017-18 Region 3 is the Midwest
     private void createRoundOneMappingsRegion3(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [3,1,0],[3,1,1]
         createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 0, "Kansas");
