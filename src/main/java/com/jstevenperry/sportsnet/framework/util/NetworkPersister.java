@@ -18,7 +18,7 @@ public class NetworkPersister {
 
     public static final String NETWORK_PARAMETERS_KEY = "network.parameters";
     private static final Logger log = LoggerFactory.getLogger(NetworkPersister.class);
-    private static final byte KEEP_LOOPING = -1;
+    private static final int KEEP_LOOPING = -1;
 
     public enum Action {
         PERSIST,
@@ -45,7 +45,7 @@ public class NetworkPersister {
                                                                      final List<NetworkCandidate> networkCandidates,
                                                                      final Action action) throws IOException {
         List<NetworkCandidate> ret = new ArrayList<>();
-        byte networkNumber = KEEP_LOOPING;
+        int networkNumber = KEEP_LOOPING;
         while (networkNumber == KEEP_LOOPING && !networkCandidates.isEmpty()) {
             System.out.printf("Enter the number of the network you want to %s (enter 0 to quit):%n", action);
             NetworkUtils.displayNetworkList(networkCandidates);
@@ -53,7 +53,7 @@ public class NetworkPersister {
             String line = scanner.readLine();
             if (StringUtils.isNotEmpty(line)) {
                 if (StringUtils.isNumeric(line)) {
-                    networkNumber = Byte.parseByte(StringUtils.strip(line));
+                    networkNumber = Integer.parseInt(StringUtils.strip(line));
                     if (networkNumber < 0 || networkNumber > networkCandidates.size()) {
                         // Invalid choice, keep looping
                         log.warn("Invalid choice: {}, please try again.", networkNumber);

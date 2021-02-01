@@ -21,7 +21,7 @@ public class TournamentRunnerPlugin2018 extends AbstractNcaaBbTournamentRunnerPl
 
     @Override
     public Integer getTournamentYear() {
-        return 2019;
+        return 2018;
     }
 
     @Override
