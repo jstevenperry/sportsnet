@@ -10,10 +10,6 @@ import java.util.Map;
 
 public class TournamentRunnerPlugin2018 extends AbstractNcaaBbTournamentRunnerPlugin {
 
-    public static final String NCAABB_TOURNAMENT_TEMPLATE_NCAABB_2018_TXT = "/ncaabb/tournament-template-ncaabb-2018.txt";
-
-    public static final String NCAABB_TOURNAMENT_RESULTS_TEMPLATE_2018 = "/ncaabb/tournament-results-template-2018.csv";
-
     public TournamentRunnerPlugin2018(final SeasonDataDao<NcaaBbSeasonData> seasonDataDao) {
         super(seasonDataDao);
         setTeamCoordinateSeasonDataMap(buildTeamCoordinateMap());
@@ -26,12 +22,12 @@ public class TournamentRunnerPlugin2018 extends AbstractNcaaBbTournamentRunnerPl
 
     @Override
     public String getTournamentTemplateFileName() {
-        return NCAABB_TOURNAMENT_TEMPLATE_NCAABB_2018_TXT;
+        return "/ncaabb/2018/tournament-template-ncaabb-2018.txt";
     }
 
     @Override
     protected String getTournamentResultsTemplateFileName() {
-        return NCAABB_TOURNAMENT_RESULTS_TEMPLATE_2018;
+        return "/ncaabb/2018/tournament-results-template-2018.csv";
     }
 
     /**
