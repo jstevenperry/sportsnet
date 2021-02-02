@@ -24,17 +24,17 @@ public class NbaSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NbaS
     @Override
     protected String[][] getDataFileNames() {
         return new String[][]{
-                {"2010", "/nba/2010-11-Team-Stats.csv", "/nba/2010-11-Opponent-Stats.csv", "/nba/2010-11-Miscellaneous-Stats.csv"},
-                {"2011", "/nba/2011-12-Team-Stats.csv", "/nba/2011-12-Opponent-Stats.csv", "/nba/2011-12-Miscellaneous-Stats.csv"},
-                {"2012", "/nba/2012-13-Team-Stats.csv", "/nba/2012-13-Opponent-Stats.csv", "/nba/2012-13-Miscellaneous-Stats.csv"},
-                {"2013", "/nba/2013-14-Team-Stats.csv", "/nba/2013-14-Opponent-Stats.csv", "/nba/2013-14-Miscellaneous-Stats.csv"},
-                {"2014", "/nba/2014-15-Team-Stats.csv", "/nba/2014-15-Opponent-Stats.csv", "/nba/2014-15-Miscellaneous-Stats.csv"},
-                {"2015", "/nba/2015-16-Team-Stats.csv", "/nba/2015-16-Opponent-Stats.csv", "/nba/2015-16-Miscellaneous-Stats.csv"},
-                {"2016", "/nba/2016-17-Team-Stats.csv", "/nba/2016-17-Opponent-Stats.csv", "/nba/2016-17-Miscellaneous-Stats.csv"},
-                {"2017", "/nba/2017-18-Team-Stats.csv", "/nba/2017-18-Opponent-Stats.csv", "/nba/2017-18-Miscellaneous-Stats.csv"},
-                {"2018", "/nba/2018-19-Team-Stats.csv", "/nba/2018-19-Opponent-Stats.csv", "/nba/2018-19-Miscellaneous-Stats.csv"},
-                {"2019", "/nba/2019-20-Team-Stats.csv", "/nba/2019-20-Opponent-Stats.csv", "/nba/2019-20-Miscellaneous-Stats.csv"},
-                //{"2020", "/nba/2020-21-Team-Stats.csv", "/nba/2020-21-Opponent-Stats.csv", "/nba/2020-21-Miscellaneous-Stats.csv"}
+                {"2010", "/nba/2010-11-Team-Stats.csv", "/nba/2010-11-Opponent-Stats.csv"},
+                {"2011", "/nba/2011-12-Team-Stats.csv", "/nba/2011-12-Opponent-Stats.csv"},
+                {"2012", "/nba/2012-13-Team-Stats.csv", "/nba/2012-13-Opponent-Stats.csv"},
+                {"2013", "/nba/2013-14-Team-Stats.csv", "/nba/2013-14-Opponent-Stats.csv"},
+                {"2014", "/nba/2014-15-Team-Stats.csv", "/nba/2014-15-Opponent-Stats.csv"},
+                {"2015", "/nba/2015-16-Team-Stats.csv", "/nba/2015-16-Opponent-Stats.csv"},
+                {"2016", "/nba/2016-17-Team-Stats.csv", "/nba/2016-17-Opponent-Stats.csv"},
+                {"2017", "/nba/2017-18-Team-Stats.csv", "/nba/2017-18-Opponent-Stats.csv"},
+                {"2018", "/nba/2018-19-Team-Stats.csv", "/nba/2018-19-Opponent-Stats.csv"},
+                {"2019", "/nba/2019-20-Team-Stats.csv", "/nba/2019-20-Opponent-Stats.csv"},
+                //{"2020", "/nba/2020-21-Team-Stats.csv", "/nba/2020-21-Opponent-Stats.csv"}
         };
     }
 
@@ -57,9 +57,6 @@ public class NbaSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NbaS
                         break;
                     case 2:
                         processOpponentStatsFile(year, seasonDataFileName, teamSeasonDataMap);
-                        break;
-                    case 3:
-                        processMiscellaneousStatsFile(year, seasonDataFileName, teamSeasonDataMap);
                         break;
                 }
             }
@@ -172,58 +169,6 @@ public class NbaSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NbaS
                 seasonData.setOppTurnovers(Integer.parseInt(nice(StringUtils.trim(line[22]))));
                 seasonData.setOppFouls(Integer.parseInt(nice(StringUtils.trim(line[23]))));
                 seasonData.setOppPoints(Integer.parseInt(nice(StringUtils.trim(line[24]))));
-
-                return seasonData;
-            }
-        });
-    }
-
-    private void processMiscellaneousStatsFile(final Integer year,
-                                               final String seasonDataFileName,
-                                               final Map<String, NbaSeasonData> teamSeasonDataMap) {
-        processSeasonDataFile(year, seasonDataFileName, teamSeasonDataMap, new FileProcessor<NbaSeasonData>() {
-
-            @Override
-            public String getRequiredFilenameEnding() {
-                return "Miscellaneous-Stats.csv";
-            }
-
-            @Override
-            public int getNumberOfFields() {
-                return 28;
-            }
-
-            @Override
-            public NbaSeasonData parseAndProcessFileLine(final String[] line, final Map<String, NbaSeasonData> teamSeasonDataMap) {
-                String teamName = StringUtils.remove(StringUtils.remove(StringUtils.trim(line[1]), '*'), '.');
-                NbaSeasonData seasonData = getSeasonDataComputeIfAbsent(teamSeasonDataMap, teamName);
-                seasonData.setMiscellaneousStatsRank(Integer.parseInt(nice(StringUtils.trim(line[0]))));
-                seasonData.setAgeOnFeb1(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[2], '%')))));
-                seasonData.setWins(Integer.parseInt(nice(StringUtils.trim(line[3]))));
-                seasonData.setLosses(Integer.parseInt(nice(StringUtils.trim(line[4]))));
-                seasonData.setPythagoreanWins(Integer.parseInt(nice(StringUtils.trim(line[5]))));
-                seasonData.setPythagoreanLosses(Integer.parseInt(nice(StringUtils.trim(line[6]))));
-                seasonData.setMarginOfVictory(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[7], '%')))));
-                seasonData.setStrengthOfSchedule(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[8], '%')))));
-                seasonData.setSimpleRatingSystem(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[9], '%')))));
-                seasonData.setOffensiveRating(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[10], '%')))));
-                seasonData.setDefensiveRating(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[11], '%')))));
-                seasonData.setNetRating(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[12], '%')))));
-                seasonData.setPace(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[13], '%')))));
-                seasonData.setFreeThrowAttRate(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[14], '%')))));
-                seasonData.setThreePtAttRate(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[15], '%')))));
-                seasonData.setTrueShootingPct(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[16], '%')))));
-                seasonData.setEffFieldGoalPct(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[17], '%')))));
-                seasonData.setTurnoverPct(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[18], '%')))));
-                seasonData.setOffensiveReboundPct(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[19], '%')))));
-                seasonData.setFreeThrowMadeRate(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[20], '%')))));
-                seasonData.setOppEffFieldGoalPct(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[21], '%')))));
-                seasonData.setOppTurnoverPct(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[22], '%')))));
-                seasonData.setOppOffensiveReboundPct(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[23], '%')))));
-                seasonData.setOppFreeThrowMadeRate(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[24], '%')))));
-                // ignore arena
-                // ignore attendance
-                seasonData.setAttendancePerGame(Double.parseDouble(nice(StringUtils.trim(StringUtils.remove(line[27], '%')))));
 
                 return seasonData;
             }
