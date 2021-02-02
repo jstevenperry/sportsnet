@@ -18,6 +18,11 @@ public class NbaPlayoffPlugin2018 extends AbstractNbaTournamentRunnerPlugin {
     }
 
     @Override
+    public String getTournamentYearForDisplay() {
+        return "2018-19";
+    }
+
+    @Override
     protected Map<TeamCoordinate, NbaSeasonData> buildTeamCoordinateMap() {
         Map<TeamCoordinate, NbaSeasonData> ret = new HashMap<>();
         //

@@ -18,6 +18,11 @@ public class NflTournamentPlugin2020 extends AbstractNflTournamentRunnerPlugin {
     }
 
     @Override
+    public String getTournamentYearForDisplay() {
+        return "2020-21";
+    }
+
+    @Override
     protected String getTournamentResultsTemplateFileName() {
         return "/nfl/2020/playoff-results-nfl.csv";
     }
