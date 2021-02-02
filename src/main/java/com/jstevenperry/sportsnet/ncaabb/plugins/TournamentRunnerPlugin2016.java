@@ -21,6 +21,11 @@ public class TournamentRunnerPlugin2016 extends AbstractNcaaBbTournamentRunnerPl
     }
 
     @Override
+    public String getTournamentYearForDisplay() {
+        return "2016-17";
+    }
+
+    @Override
     public String getTournamentTemplateFileName() {
         return "/ncaabb/2016/tournament-template-ncaabb.txt";
     }

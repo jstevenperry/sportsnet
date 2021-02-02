@@ -18,6 +18,11 @@ public class NflTournamentPlugin2018 extends AbstractNflTournamentRunnerPlugin {
     }
 
     @Override
+    public String getTournamentYearForDisplay() {
+        return "2018-19";
+    }
+
+    @Override
     protected Map<TeamCoordinate, NflSeasonData> buildTeamCoordinateMap() {
         Map<TeamCoordinate, NflSeasonData> ret = new HashMap<>();
         //

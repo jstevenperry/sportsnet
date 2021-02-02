@@ -17,6 +17,10 @@ public class TournamentRunnerPlugin2018 extends AbstractNhlTournamentRunnerPlugi
         return 2018;
     }
 
+    @Override
+    public String getTournamentYearForDisplay() {
+        return "2018-19";
+    }
 
     @Override
     protected Map<TeamCoordinate, NhlSeasonData> buildTeamCoordinateMap() {

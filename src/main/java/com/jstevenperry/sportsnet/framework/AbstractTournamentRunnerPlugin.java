@@ -79,6 +79,11 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     public abstract Integer getTournamentYear();
 
     /**
+     * Return the tournament year as it is to be displayed (e.g., 2018-19)
+     */
+    public abstract String getTournamentYearForDisplay();
+
+    /**
      * Return the tournament results template file name.
      * Used to visualize the brackets computed by the network
      * when it simulates a tournament.
@@ -412,12 +417,12 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         //
         // Open and write out the tournament results template for this specific tournament result
         String tournamentResultsFileName = NetworkUtils.fetchSimulationDirectoryAndCreateIfNecessary(getNetworkType()) + File.separatorChar
-                + getNetworkType() + "-TournamentYear_" + getTournamentYear() + "-"
+                + getNetworkType() + "-TournamentYear_" + getTournamentYearForDisplay() + "-"
                 + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")) + ".csv";
         try (BufferedWriter tournamentResultsWriter = new BufferedWriter(new FileWriter(tournamentResultsFileName))) {
             CSVWriter csvWriter = new CSVWriter(tournamentResultsWriter);
             csvWriter.writeNext(new String[]{
-                    String.format("Tournament year: %d", getTournamentYear())
+                    String.format("Tournament year: %s", getTournamentYearForDisplay())
             });
             //
             // Read each line in the templateRecords list and translate from team coordinates like [0,1,0] to
