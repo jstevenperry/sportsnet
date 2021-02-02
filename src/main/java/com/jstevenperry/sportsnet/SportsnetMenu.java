@@ -34,7 +34,7 @@ import java.io.InputStreamReader;
 public class SportsnetMenu {
 
     private static final Logger log = LoggerFactory.getLogger(SportsnetMenu.class);
-    private static final String SPORTSNET_VERSION = "2.5.0";
+    private static final String SPORTSNET_VERSION = "2.5.1";
 
     public static void main(final String[] args) {
         SpringApplication.run(SportsnetMenu.class, args);

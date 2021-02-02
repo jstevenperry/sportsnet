@@ -19,24 +19,24 @@ public class NbaPlayoffPlugin2019 extends AbstractNbaTournamentRunnerPlugin {
         // Add team coordinates
         // Region 0
         createTeamCoordinateMapping(ret, 0, 1, 0, "Milwaukee Bucks");
-        createTeamCoordinateMapping(ret, 0, 1, 1, "Detroit Pistons");
-        createTeamCoordinateMapping(ret, 0, 1, 2, "Boston Celtics");
+        createTeamCoordinateMapping(ret, 0, 1, 1, "Orlando Magic");
+        createTeamCoordinateMapping(ret, 0, 1, 2, "Miami Heat");
         createTeamCoordinateMapping(ret, 0, 1, 3, "Indiana Pacers");
         // Region 1
-        createTeamCoordinateMapping(ret, 1, 1, 0, "Philadelphia 76ers");
-        createTeamCoordinateMapping(ret, 1, 1, 1, "Brooklyn Nets");
+        createTeamCoordinateMapping(ret, 1, 1, 0, "Boston Celtics");
+        createTeamCoordinateMapping(ret, 1, 1, 1, "Philadelphia 76ers");
         createTeamCoordinateMapping(ret, 1, 1, 2, "Toronto Raptors");
-        createTeamCoordinateMapping(ret, 1, 1, 3, "Orlando Magic");
+        createTeamCoordinateMapping(ret, 1, 1, 3, "Brooklyn Nets");
         // Region 2
-        createTeamCoordinateMapping(ret, 2, 1, 0, "Golden State Warriors");
-        createTeamCoordinateMapping(ret, 2, 1, 1, "Los Angeles Clippers");
+        createTeamCoordinateMapping(ret, 2, 1, 0, "Los Angeles Lakers");
+        createTeamCoordinateMapping(ret, 2, 1, 1, "Portland Trail Blazers");
         createTeamCoordinateMapping(ret, 2, 1, 2, "Houston Rockets");
-        createTeamCoordinateMapping(ret, 2, 1, 3, "Utah Jazz");
+        createTeamCoordinateMapping(ret, 2, 1, 3, "Oklahoma City Thunder");
         // Region 3
-        createTeamCoordinateMapping(ret, 3, 1, 0, "Portland Trail Blazers");
-        createTeamCoordinateMapping(ret, 3, 1, 1, "Oklahoma City Thunder");
-        createTeamCoordinateMapping(ret, 3, 1, 2, "Denver Nuggets");
-        createTeamCoordinateMapping(ret, 3, 1, 3, "San Antonio Spurs");
+        createTeamCoordinateMapping(ret, 3, 1, 0, "Denver Nuggets");
+        createTeamCoordinateMapping(ret, 3, 1, 1, "Utah Jazz");
+        createTeamCoordinateMapping(ret, 3, 1, 2, "Los Angeles Clippers");
+        createTeamCoordinateMapping(ret, 3, 1, 3, "Dallas Mavericks");
         return ret;
     }
 }
