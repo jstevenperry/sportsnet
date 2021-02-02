@@ -17,10 +17,10 @@ public abstract class AbstractNbaTournamentRunnerPlugin extends AbstractTourname
         return NbaSeasonData.seasonDataAsDoubleList(seasonData, resultClass, isTraining);
     }
 
-    @Override
-    public Integer getTournamentYear() {
-        return 2019;
-    }
+    /**
+     * The tournament year for which the plugin runs
+     */
+    public abstract Integer getTournamentYear();
 
     @Override
     protected String getTournamentResultsTemplateFileName() {
