@@ -87,6 +87,9 @@ public class NetworkParameters implements Serializable {
         return yearsToTrainAndEvaluateNetwork.get(0);
     }
 
+    private List<Integer> getYearsToEvaluateNetwork() {
+        return yearsToTrainAndEvaluateNetwork.get(1);
+    }
     public String getNetworkLayout() {
         return networkLayout;
     }
@@ -253,6 +256,12 @@ public class NetworkParameters implements Serializable {
         boolean ret = true;
         if (getYearsToTrainNetwork().contains(tournamentYear)) {
             log.warn("isValidYearForTournamentPrediction({}): current network is not valid for tournament prediction based on its training years: {}",
+                    tournamentYear, StringUtils.join(getYearsToTrainAndEvaluateNetwork().toArray(), ", "));
+
+            ret = false;
+        }
+        if (getYearsToEvaluateNetwork().contains(tournamentYear)) {
+            log.warn("isValidYearForTournamentPrediction({}): current network is not valid for tournament prediction based on its evaluation years: {}",
                     tournamentYear, StringUtils.join(getYearsToTrainAndEvaluateNetwork().toArray(), ", "));
 
             ret = false;
