@@ -34,6 +34,8 @@ public class NcaaBbSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<N
     @Override
     protected String[][] getDataFileNames() {
         return new String[][]{
+                {"2008", "/ncaabb/2008/SeasonData-2008-2009.csv"},
+                {"2009", "/ncaabb/2009/SeasonData-2009-2010.csv"},
                 {"2010", "/ncaabb/2010/SeasonData-2010-2011.csv"},
                 {"2011", "/ncaabb/2011/SeasonData-2011-2012.csv"},
                 {"2012", "/ncaabb/2012/SeasonData-2012-2013.csv"},
