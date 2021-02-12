@@ -176,17 +176,23 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         final List<NetworkCandidate> networksToRun = computeValidNetworksForTournamentYear(networkCandidates);
         if (!networksToRun.isEmpty()) {
             gameList.forEach(gameCoordinate -> {
-                //
-                // Get the home team from the GameCoordinate
-                TeamCoordinate homeTeamCoordinate = gameCoordinate.getHome();
-                T homeTeamSeasonData = getTeamCoordinateSeasonDataMap().get(homeTeamCoordinate);
-                homeTeamCoordinate.setName(homeTeamSeasonData.getTeamName());
-                TeamCoordinate awayTeamCoordinate = gameCoordinate.getAway();
-                T awayTeamSeasonData = getTeamCoordinateSeasonDataMap().get(awayTeamCoordinate);
-                awayTeamCoordinate.setName(awayTeamSeasonData.getTeamName());
-                //
-                // Run all networks for this match up and average the results to compute the winner.
-                runAllNetworksAndComputeWinner(networkCandidates, homeTeamCoordinate, homeTeamSeasonData, awayTeamCoordinate, awayTeamSeasonData);
+                try {
+                    //
+                    // Get the home team from the GameCoordinate
+                    TeamCoordinate homeTeamCoordinate = gameCoordinate.getHome();
+                    T homeTeamSeasonData = getTeamCoordinateSeasonDataMap().get(homeTeamCoordinate);
+                    homeTeamCoordinate.setName(homeTeamSeasonData.getTeamName());
+                    TeamCoordinate awayTeamCoordinate = gameCoordinate.getAway();
+                    T awayTeamSeasonData = getTeamCoordinateSeasonDataMap().get(awayTeamCoordinate);
+                    awayTeamCoordinate.setName(awayTeamSeasonData.getTeamName());
+                    //
+                    // Run all networks for this match up and average the results to compute the winner.
+                    runAllNetworksAndComputeWinner(networkCandidates, homeTeamCoordinate, homeTeamSeasonData, awayTeamCoordinate, awayTeamSeasonData);
+                } catch (Exception e) {
+                    String errorMessage = String.format("runTournament(): Error while running game: %s", gameCoordinate);
+                    log.error(errorMessage, e);
+                    throw new RuntimeException(errorMessage, e);
+                }
             });
             //
             // Generate tournament results document
