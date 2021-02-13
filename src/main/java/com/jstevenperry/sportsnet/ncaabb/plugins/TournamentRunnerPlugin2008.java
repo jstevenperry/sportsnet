@@ -54,7 +54,6 @@ public class TournamentRunnerPlugin2008 extends AbstractNcaaBbTournamentRunnerPl
         createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 0, 1, "Alabama St");
     }
 
-    // For 2013-14 Region 0 is the South
     private void createRoundOneMappingsRegion0(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [0,1,0],[0,1,1]
         createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 0, "Louisville");
@@ -82,7 +81,6 @@ public class TournamentRunnerPlugin2008 extends AbstractNcaaBbTournamentRunnerPl
         createTeamCoordinateMapping(coordinateSeasonDataMap, 0, 1, 15, "Michigan St");
     }
 
-    // For 2013-14 Region 1 is the East
     private void createRoundOneMappingsRegion1(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [1,1,0],[1,1,1]
         createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 0, "UConn");
@@ -110,7 +108,6 @@ public class TournamentRunnerPlugin2008 extends AbstractNcaaBbTournamentRunnerPl
         createTeamCoordinateMapping(coordinateSeasonDataMap, 1, 1, 15, "CSUN");
     }
 
-    // For 2013-14 Region 2 is the West
     private void createRoundOneMappingsRegion2(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [2,1,0],[2,1,1]
         createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 0, "Pittsburgh");
@@ -138,7 +135,6 @@ public class TournamentRunnerPlugin2008 extends AbstractNcaaBbTournamentRunnerPl
         createTeamCoordinateMapping(coordinateSeasonDataMap, 2, 1, 15, "Binghamton");
     }
 
-    // For 2013-14 Region 3 is the Midwest
     private void createRoundOneMappingsRegion3(final Map<TeamCoordinate, NcaaBbSeasonData> coordinateSeasonDataMap) {
 //    [3,1,0],[3,1,1]
         createTeamCoordinateMapping(coordinateSeasonDataMap, 3, 1, 0, "North Carolina");
