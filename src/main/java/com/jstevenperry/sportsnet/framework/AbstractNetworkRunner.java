@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,55 +22,84 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
     private static final Logger log = LoggerFactory.getLogger(AbstractNetworkRunner.class);
 
     public void go(final BufferedReader scanner,
-                   final List<NetworkCandidate> networkCandidateList,
                    final SeasonDataDao<T> seasonDataDao,
                    final String networkType) throws IOException {
         //
-        // Load saved networks
-        log.info("Loading networks, please be patient...");
-        List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks(networkType);
-        //
-        // Add loaded networks to networkCandidateList
-        List<NetworkCandidate> allNetworks = new ArrayList<>();
-        allNetworks.addAll(savedNetworks);
-        allNetworks.addAll(networkCandidateList);
-        if (!allNetworks.isEmpty()) {
-            //
-            // Load plugins
-            List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins = loadPlugins(seasonDataDao);
-            if (!tournamentRunnerPlugins.isEmpty()) {
-                //
-                // Ask the user what they want to do
-                promptUser(scanner, allNetworks, tournamentRunnerPlugins);
-            } else {
-                log.error("No TournamentRunnerPlugins, cannot run a network to simulate a tournament!");
-            }
-        } else {
-            log.warn("No networks to run. Train some networks and try again.");
-        }
-    }
-
-    protected abstract List<AbstractTournamentRunnerPlugin<T>> loadPlugins(SeasonDataDao<T> seasonDataDao);
-
-    private void promptUser(final BufferedReader scanner,
-                            final List<NetworkCandidate> allNetworks,
-                            final List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins) throws IOException {
-        //
-        // Get the network the user wants to run
-        List<NetworkCandidate> selectedNetworks = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.Action.RUN);
-        if (!selectedNetworks.isEmpty()) {
+        // Load plugins
+        List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins = loadPlugins(seasonDataDao);
+        if (!tournamentRunnerPlugins.isEmpty()) {
             //
             // Prompt the user for the tournament plugin they want to run
             Optional<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPluginMaybe = selectPluginToRunMenu(scanner, tournamentRunnerPlugins);
             if (tournamentRunnerPluginMaybe.isPresent()) {
+                //
+                // Ask the user what they want to do
                 AbstractTournamentRunnerPlugin<T> tournamentRunnerPlugin = tournamentRunnerPluginMaybe.get();
-                List<GameCoordinate> gameList = tournamentRunnerPlugin.createTournamentGameList();
-                tournamentRunnerPlugin.runTournament(gameList, selectedNetworks);
+                List<NetworkCandidate> allSavedNetworks = NetworkUtils.loadNetworks(networkType);
+                List<NetworkCandidate> suitableNetworks = tournamentRunnerPlugin.computeValidNetworksForTournamentYear(allSavedNetworks);
+                if (!suitableNetworks.isEmpty()) {
+                    List<NetworkCandidate> selectedNetworks = NetworkPersister.displayNetworkSelectionMenu(scanner, suitableNetworks, NetworkPersister.Action.RUN);
+                    List<GameCoordinate> gameList = tournamentRunnerPlugin.createTournamentGameList();
+                    tournamentRunnerPlugin.runTournament(gameList, selectedNetworks);
+                } else {
+                    log.warn("NO NETWORKS SUITABLE FOR TOURNAMENT YEAR {}", tournamentRunnerPlugin.getTournamentYear());
+                }
             }
         } else {
-            log.info("No network selected, quitting.");
+            log.error("No TournamentRunnerPlugins, cannot run a network to simulate a tournament!");
         }
     }
+
+//    public void goDELETEME(final BufferedReader scanner,
+//                   final List<NetworkCandidate> networkCandidateList,
+//                   final SeasonDataDao<T> seasonDataDao,
+//                   final String networkType) throws IOException {
+//        //
+//        // Load saved networks
+//        log.info("Loading networks, please be patient...");
+//        List<NetworkCandidate> savedNetworks = NetworkUtils.loadNetworks(networkType);
+//        //
+//        // Add loaded networks to networkCandidateList
+//        List<NetworkCandidate> allNetworks = new ArrayList<>();
+//        allNetworks.addAll(savedNetworks);
+//        allNetworks.addAll(networkCandidateList);
+//        if (!allNetworks.isEmpty()) {
+//            //
+//            // Load plugins
+//            List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins = loadPlugins(seasonDataDao);
+//            if (!tournamentRunnerPlugins.isEmpty()) {
+//                //
+//                // Ask the user what they want to do
+//                promptUser(scanner, allNetworks, tournamentRunnerPlugins);
+//            } else {
+//                log.error("No TournamentRunnerPlugins, cannot run a network to simulate a tournament!");
+//            }
+//        } else {
+//            log.warn("No networks to run. Train some networks and try again.");
+//        }
+//    }
+
+    protected abstract List<AbstractTournamentRunnerPlugin<T>> loadPlugins(SeasonDataDao<T> seasonDataDao);
+
+//    private void promptUserDELETEME(final BufferedReader scanner,
+//                            final List<NetworkCandidate> allNetworks,
+//                            final List<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins) throws IOException {
+//        //
+//        // Get the network the user wants to run
+//        List<NetworkCandidate> selectedNetworks = NetworkPersister.displayNetworkSelectionMenu(scanner, allNetworks, NetworkPersister.Action.RUN);
+//        if (!selectedNetworks.isEmpty()) {
+//            //
+//            // Prompt the user for the tournament plugin they want to run
+//            Optional<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPluginMaybe = selectPluginToRunMenu(scanner, tournamentRunnerPlugins);
+//            if (tournamentRunnerPluginMaybe.isPresent()) {
+//                AbstractTournamentRunnerPlugin<T> tournamentRunnerPlugin = tournamentRunnerPluginMaybe.get();
+//                List<GameCoordinate> gameList = tournamentRunnerPlugin.createTournamentGameList();
+//                tournamentRunnerPlugin.runTournament(gameList, selectedNetworks);
+//            }
+//        } else {
+//            log.info("No network selected, quitting.");
+//        }
+//    }
 
     public Optional<AbstractTournamentRunnerPlugin<T>> selectPluginToRunMenu(final BufferedReader scanner,
                                                                              final List<? extends AbstractTournamentRunnerPlugin<T>> tournamentRunnerPlugins) throws IOException {
