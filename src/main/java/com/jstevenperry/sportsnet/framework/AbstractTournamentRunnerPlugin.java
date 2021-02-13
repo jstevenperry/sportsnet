@@ -204,10 +204,11 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         }
     }
 
-    private List<NetworkCandidate> computeValidNetworksForTournamentYear(final List<NetworkCandidate> networkCandidates) {
+    public List<NetworkCandidate> computeValidNetworksForTournamentYear(final List<NetworkCandidate> networkCandidates) {
+        log.info("computeValidNetworksForTournamentYear(): For tournament year {}, filtering {} networks...", getTournamentYear(), networkCandidates.size());
         //
         // If the network is valid for the tournament year, we're good to go, otherwise throw it out
-        return networkCandidates.stream()
+        List<NetworkCandidate> ret = networkCandidates.stream()
                 .filter(networkCandidate -> {
                     if (networkCandidate.getNetworkParameters().isValidYearForTournamentPrediction(getTournamentYear())) {
                         return true;
@@ -219,6 +220,8 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
                     }
                 })
                 .collect(Collectors.toList());
+        log.info("computeValidNetworksForTournamentYear(): There are {} networks valid for tournament year {}.", ret.size(), getTournamentYear());
+        return ret;
     }
 
     private void runAllNetworksAndComputeWinner(final List<NetworkCandidate> networkCandidates,
