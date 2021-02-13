@@ -170,7 +170,7 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
                 break;
             case RUN_NETWORK:
                 networkRunner.go(
-                        scanner, unsavedNetworks, seasonDataDao, getNetworkType()
+                        scanner, seasonDataDao, getNetworkType()
                 );
                 break;
             case PERSIST_UNSAVED_NETWORKS:
