@@ -2,6 +2,7 @@ package com.jstevenperry.sportsnet.framework.model;
 
 import com.jstevenperry.sportsnet.framework.menus.AbstractDataElementChoice;
 import com.jstevenperry.sportsnet.framework.menus.DataNormalizationMenu;
+import com.jstevenperry.sportsnet.framework.menus.UpdaterMenu;
 import org.apache.commons.lang3.StringUtils;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
@@ -90,6 +91,7 @@ public class NetworkParameters implements Serializable {
     private List<Integer> getYearsToEvaluateNetwork() {
         return yearsToTrainAndEvaluateNetwork.get(1);
     }
+
     public String getNetworkLayout() {
         return networkLayout;
     }
@@ -315,10 +317,30 @@ public class NetworkParameters implements Serializable {
         return "Network info\t" +
                 String.format("Network structure: %s, ", getNetworkLayout()) +
                 String.format("Training Years: %s, ", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(0), ',')) +
+                String.format("Evaluation Years: %s, ", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(1), ',')) +
                 String.format("Activation function: %s, ", getActivationFunction().name()) +
                 String.format("Updater function: %s, ", getUpdater()) +
                 String.format("Loss function: %s, ", getLossFunction()) +
-                String.format("Weight init function: %s", getWeightInit());
+                String.format("Weight init function: %s, ", getWeightInit()) +
+                String.format("Network accuracy: %3.4f", getNetworkAccuracy());
+    }
+
+    public String[] toStringCsv() {
+        return new String[]{
+                String.format("DRP: %3.4f%%", 100*(1.0-getDropoutProbability())),
+                String.format("ACC: %3.4f%%", 100*getNetworkAccuracy()),
+                String.format("ACT: %s", getActivationFunction().name()),
+                String.format("UPD: %s", UpdaterMenu.UpdaterChoice.from(getUpdater()).orElse(null)),
+                String.format("EP: %d", getNumberOfEpochs()),
+                StringUtils.EMPTY,
+                StringUtils.EMPTY,
+                StringUtils.EMPTY,
+                String.format("TRN YR: %s", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(0), '/')),
+                String.format("EVAL YR: %s", StringUtils.join(getYearsToTrainAndEvaluateNetwork().get(1), '/')),
+                String.format("NORM: %s", getNormalizer()),
+                String.format("%s", getNetworkLayout()),
+
+        };
     }
 
     public double getL2RegularizationLambda() {

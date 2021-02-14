@@ -170,10 +170,10 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     /**
      * Using the specified list of GameCoordinates, run the tournament.
      */
-    public void runTournament(final List<GameCoordinate> gameList, final List<NetworkCandidate> networkCandidates) {
+    public void runTournament(final List<GameCoordinate> gameList, final List<NetworkCandidate> networksToUse) {
         //
         // Throw out any networks that are not valid for the tournament year
-        final List<NetworkCandidate> networksToRun = computeValidNetworksForTournamentYear(networkCandidates);
+        final List<NetworkCandidate> networksToRun = computeValidNetworksForTournamentYear(networksToUse);
         if (!networksToRun.isEmpty()) {
             gameList.forEach(gameCoordinate -> {
                 try {
@@ -187,7 +187,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
                     awayTeamCoordinate.setName(awayTeamSeasonData.getTeamName());
                     //
                     // Run all networks for this match up and average the results to compute the winner.
-                    runAllNetworksAndComputeWinner(networkCandidates, homeTeamCoordinate, homeTeamSeasonData, awayTeamCoordinate, awayTeamSeasonData);
+                    runAllNetworksAndComputeWinner(networksToUse, homeTeamCoordinate, homeTeamSeasonData, awayTeamCoordinate, awayTeamSeasonData);
                 } catch (Exception e) {
                     String errorMessage = String.format("runTournament(): Error while running game: %s", gameCoordinate);
                     log.error(errorMessage, e);
@@ -196,10 +196,10 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
             });
             //
             // Generate tournament results document
-            visualizeTournamentResults();
+            visualizeTournamentResults(networksToUse);
         } else {
             log.error("***** SIMULATION CANCELLED *****");
-            log.error("Of the {} networks you specified to run, there are none suitable for tournament year {}.", networkCandidates.size(), getTournamentYear());
+            log.error("Of the {} networks you specified to run, there are none suitable for tournament year {}.", networksToUse.size(), getTournamentYear());
             log.error("***** SIMULATION CANCELLED: SEE PREVIOUS LOG ENTRIES FOR DETAILS. *****");
         }
     }
@@ -385,7 +385,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     /**
      * Generate the document showing the tournament results
      */
-    private void visualizeTournamentResults() {
+    private void visualizeTournamentResults(final List<NetworkCandidate> networksUsed) {
         //
         // Read the tournament results template, which contains team coordinates in specific spots in the
         // template that can be replaced with the actual team names that held those coordinates during any
@@ -394,7 +394,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         //
         // Replace the TeamCoordinates in the template with the actual team names for the specific tournament
         // that was simulated and write out the file so the user can open it up and visualize the results.
-        writeTournamentResultsFile(templateRecords, getTeamCoordinateSeasonDataMap());
+        writeTournamentResultsFile(templateRecords, getTeamCoordinateSeasonDataMap(), networksUsed);
     }
 
     private List<String[]> readTournamentTemplateFile() {
@@ -422,7 +422,8 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     }
 
     private void writeTournamentResultsFile(final List<String[]> templateRecords,
-                                            final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
+                                            final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap,
+                                            final List<NetworkCandidate> networksUsed) {
         //
         // Open and write out the tournament results template for this specific tournament result
         String tournamentResultsFileName = NetworkUtils.fetchSimulationDirectoryAndCreateIfNecessary(getNetworkType()) + File.separatorChar
@@ -464,6 +465,18 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
                 // Done with that record, write it out
                 csvWriter.writeNext(templateRecord);
             }
+            //
+            // Write network info
+            csvWriter.writeNext(new String[0]);
+            csvWriter.writeNext(new String[0]);
+            csvWriter.writeNext(new String[0]);
+            csvWriter.writeNext(new String[] { "Number of", "networks used", "for", String.format("simulation: %d", networksUsed.size()) });
+            csvWriter.writeNext(new String[] { "Details:" });
+            csvWriter.writeNext(new String[0]);
+            networksUsed.forEach(networkCandidate -> {
+                NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
+                csvWriter.writeNext(networkParameters.toStringCsv());
+            });
             log.info("writeTournamentResultsFile(): Wrote file: {}", tournamentResultsFileName);
         } catch (IOException e) {
             String message = String.format("Error writing tournament results output file %s", tournamentResultsFileName);
