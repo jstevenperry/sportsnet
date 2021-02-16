@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015-2021, James Steven Perry. All rights reserved.
+ */
+
 package com.jstevenperry.sportsnet.ncaabb.menus;
 
 import com.jstevenperry.sportsnet.framework.DataElementChoice;

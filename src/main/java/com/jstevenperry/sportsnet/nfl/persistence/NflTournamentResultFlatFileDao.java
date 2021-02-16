@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015-2021, James Steven Perry. All rights reserved.
+ */
+
 package com.jstevenperry.sportsnet.nfl.persistence;
 
 import com.jstevenperry.sportsnet.framework.model.TournamentResult;

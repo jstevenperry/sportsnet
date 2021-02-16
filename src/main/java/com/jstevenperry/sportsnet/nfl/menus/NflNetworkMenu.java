@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015-2021, James Steven Perry. All rights reserved.
+ */
+
 package com.jstevenperry.sportsnet.nfl.menus;
 
 import com.jstevenperry.sportsnet.framework.menus.AbstractNetworkMenu;

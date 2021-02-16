@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015-2021, James Steven Perry. All rights reserved.
+ */
+
 package com.jstevenperry.sportsnet.nhl;
 
 import com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer;
