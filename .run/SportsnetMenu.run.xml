@@ -1,3 +1,7 @@
+<!--
+  ~ Copyright 2015-2021, James Steven Perry. All rights reserved.
+  -->
+
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="SportsnetMenu" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="ALTERNATIVE_JRE_PATH" value="adopt-openjdk-11" />

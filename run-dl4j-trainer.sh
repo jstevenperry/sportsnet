@@ -1,5 +1,9 @@
 #! 
 #
+# Copyright 2015-2021, James Steven Perry. All rights reserved.
+#
+
+#
 # Script to run the MlpNetworkTrainer program.
 #
 # Program version
