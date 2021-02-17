@@ -137,9 +137,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             // Generate network structure
             log.info("Using network layout: {}", networkParameters.getNetworkLayout());
             log.debug("Network parameters acquired.");
-            int iterationNumber = 0;
             runBatchTrainingLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
-                    networkParameters, numberOfTrainingIterations, iterationNumber);
+                    networkParameters, numberOfTrainingIterations);
             NetworkUtils.displayNetworkList(networkCandidateList);
         }
         return networkParameters;
@@ -153,6 +152,29 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * without having to try them all manually.
      */
     private void runBatchTrainingLoop(final List<NetworkCandidate> networkCandidateList,
+                                      final SeasonDataDao<T> seasonDataDao,
+                                      final TournamentResultDao tournamentResultDao,
+                                      final TournamentParticipantDao tournamentParticipantDao,
+                                      final NetworkParameters networkParameters,
+                                      final int numberOfTrainingIterations) {
+        if (keepGoing()) {
+            int iterationNumber = 0;
+            while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
+                runBatchNetworkLayerTrainingLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
+                        networkParameters, numberOfTrainingIterations, iterationNumber);
+            }
+            log.info("**** END OF BATCH LOOP ****");
+        }
+    }
+
+    /**
+     * Start here.
+     * <p>
+     * This is the top-level batch training loop. Each network configuration
+     * is tested starting here to try and find the optimal network settings
+     * without having to try them all manually.
+     */
+    private void runBatchNetworkLayerTrainingLoop(final List<NetworkCandidate> networkCandidateList,
                                       final SeasonDataDao<T> seasonDataDao,
                                       final TournamentResultDao tournamentResultDao,
                                       final TournamentParticipantDao tournamentParticipantDao,
@@ -657,13 +679,18 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             // Strip off the first layer and set it to the number of inputs (if the user has added or removed data elements the previous number of inputs will be wrong)
             existingNetworkLayout[0] = numberOfInputs;
             ret = StringUtils.join(existingNetworkLayout, 'x');
-            System.out.println("Press enter to use " + ret + " or enter a new one below:");
+            System.out.println("Press enter to use " + ret + ", enter a new one below, or press r to regenerate the suggested layout:");
             userInput = scanner.readLine();
             if (StringUtils.isEmpty(userInput)) {
                 System.out.println("Using: " + ret + "....");
                 break;
             } else if (StringUtils.isNotEmpty(userInput)) {
-                ret = String.format("%dx%sx%d", numberOfInputs, StringUtils.join(NetworkUtils.parseNetworkStructure(userInput), 'x'), numberOfOutputs);
+                if (userInput.equalsIgnoreCase("r")) {
+                    ret = computeNetworkStructure(numberOfInputs, numberOfOutputs);
+                    userInput = null; // keep looping
+                } else {
+                    ret = String.format("%dx%sx%d", numberOfInputs, StringUtils.join(NetworkUtils.parseNetworkStructure(userInput), 'x'), numberOfOutputs);
+                }
             } else {
                 System.out.println("==> ");
             }
