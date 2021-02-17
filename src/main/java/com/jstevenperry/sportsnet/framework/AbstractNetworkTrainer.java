@@ -331,7 +331,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     }
 
     protected String computeNetworkStructure(final int numberOfInputs, final int numberOfOutputs) {
-        String hiddenLayerStructure = NetworkUtils.generateSampleNetworkLayout(numberOfInputs, numberOfOutputs);
+        String hiddenLayerStructure = NetworkUtils.generateRandomNetworkLayout(numberOfInputs, numberOfOutputs);
         return String.format("%dx%sx%d", numberOfInputs, hiddenLayerStructure, numberOfOutputs);
     }
 

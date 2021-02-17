@@ -151,10 +151,6 @@ public class NetworkProperties {
         return getIntegerPropertyValue("epoch.stats.index.count", 100);
     }
 
-    public static Integer getFudgeFactor() {
-        return getIntegerPropertyValue("fudge.factor", 2);
-    }
-
     public static Double getLearningRuleLearningRate() {
         return getDoublePropertyValue("learning.rule.learning.rate", 1.0);
     }
@@ -199,14 +195,6 @@ public class NetworkProperties {
     public static BigDecimal getPerformanceThresholdNetworkKeep() {
         Integer performanceThreshold = getIntegerPropertyValue("performance.threshold.network.keep", 40);
         return BigDecimal.valueOf(performanceThreshold).setScale(0, RoundingMode.HALF_UP);
-    }
-
-    public static Integer getPrimeDivisor() {
-        return getIntegerPropertyValue("prime.divisor", 3);
-    }
-
-    public static Integer getPrimeSeed() {
-        return getIntegerPropertyValue("prime.seed", 31);
     }
 
     public static String getSimulationDirectoryName() {
