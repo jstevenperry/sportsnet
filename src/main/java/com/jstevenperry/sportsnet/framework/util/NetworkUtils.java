@@ -24,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 public class NetworkUtils {
@@ -266,29 +267,48 @@ public class NetworkUtils {
         return ret;
     }
 
-    public static String generateSampleNetworkLayout(final Integer numberOfInputs, final Integer numberOfOutputs) {
+    public static String generateRandomNetworkLayout(final Integer numberOfInputs, final Integer numberOfOutputs) {
         List<Integer> neuronLayerDescriptor = new ArrayList<>();
         int numberOfHiddenLayers = NetworkProperties.getNumberOfHiddenLayers();
-        Integer primeSeed = NetworkProperties.getPrimeSeed();
-        Integer primeDivisor = NetworkProperties.getPrimeDivisor();
-        int fudgeFactor = NetworkProperties.getFudgeFactor();
         if (numberOfHiddenLayers < 6) {
             String errorMessage = String.format("Algorithm does not work with < 6 hidden layers, you specified %s", numberOfHiddenLayers);
             log.error("generateSampleNetworkLayout({}, {}): {}", numberOfInputs, numberOfOutputs, numberOfHiddenLayers);
             throw new RuntimeException(errorMessage);
         }
+        // First hidden layer
+        neuronLayerDescriptor.add(getRandomNumberUsingNextInt(
+                numberOfInputs * Math.min(numberOfHiddenLayers, numberOfOutputs),
+                numberOfInputs * Math.max(numberOfHiddenLayers, numberOfInputs)));
+        // Layers between first and middle
         int middleLayerIndex = numberOfHiddenLayers / 2 + 1;
-        // First layer: numberOfInputs * primeSeed
-        neuronLayerDescriptor.add(numberOfInputs * numberOfInputs / primeDivisor);
+        int numberOfNeuronsInMiddleLayer = numberOfInputs * numberOfOutputs;
         for (int index = 1; index < middleLayerIndex; index++) {
-            neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor));
+            int min = Math.min(neuronLayerDescriptor.get(index - 1), numberOfNeuronsInMiddleLayer/ index);
+            int max = Math.max(neuronLayerDescriptor.get(index - 1), numberOfNeuronsInMiddleLayer / index);
+            neuronLayerDescriptor.add(index, getRandomNumberUsingNextInt(min, max));
         }
-        // Middle layer: numberOfInputs * numberOfOutputs * fudgeFactor
-        neuronLayerDescriptor.add(middleLayerIndex, numberOfInputs * numberOfOutputs);
+        // Middle hidden layer
+        int numberOfNeuronsInLastLayer = numberOfOutputs * numberOfOutputs * numberOfOutputs;
+        neuronLayerDescriptor.add(middleLayerIndex, numberOfNeuronsInMiddleLayer);
         for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers - 1; index++) {
-            neuronLayerDescriptor.add(index, (neuronLayerDescriptor.get(index - 1) / primeDivisor));
+            int min = Math.min(neuronLayerDescriptor.get(index - 1), numberOfNeuronsInLastLayer/ index);
+            int max = Math.max(neuronLayerDescriptor.get(index - 1), numberOfNeuronsInLastLayer / index);
+            neuronLayerDescriptor.add(index, getRandomNumberUsingNextInt(min, max));
         }
-        neuronLayerDescriptor.add(numberOfOutputs * numberOfOutputs * numberOfOutputs);
+        // Last hidden layer (closest to output)
+        neuronLayerDescriptor.add(numberOfNeuronsInLastLayer);
         return generateLayerStructureString(neuronLayerDescriptor);
+    }
+
+    /**
+     * Source: https://www.baeldung.com/java-generating-random-numbers-in-range
+     *
+     * @param min The lowest possible number that is acceptable
+     * @param max The highest possible number that is acceptable
+     * @return A number between min and max
+     */
+    public static int getRandomNumberUsingNextInt(int min, int max) {
+        Random random = new Random();
+        return random.nextInt(max - min) + min;
     }
 }
