@@ -107,7 +107,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         //
         // Train the network. If nothing goes wrong, return the trained network.
         log.debug("Training network...");
-        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator.next(), evaluationDataIterator.next(), 1);
+        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator.next(), evaluationDataIterator.next(), "1.1");
         // Restore the value for next time since it will be set to the actual number used, and the user may not want that next time
         networkParameters.setNumberOfEpochs(numberOfEpochs);
         log.debug("Training network...DONE.");
@@ -160,8 +160,14 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         if (keepGoing()) {
             int iterationNumber = 0;
             while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
+                // Now generate a new network structure
+                String networkLayout = computeNetworkStructure(networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
+                log.info("runBatchTrainingLoop(OUTER Iteration {}): Using network layout: {}", iterationNumber, networkLayout);
+
+                networkParameters.setNetworkLayout(networkLayout);
                 runBatchNetworkLayerTrainingLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
                         networkParameters, numberOfTrainingIterations, iterationNumber);
+                log.info("runBatchTriningLoop(): OUTER Iteration {} DONE.", iterationNumber);
             }
             log.info("**** END OF BATCH LOOP ****");
         }
@@ -175,18 +181,19 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * without having to try them all manually.
      */
     private void runBatchNetworkLayerTrainingLoop(final List<NetworkCandidate> networkCandidateList,
-                                      final SeasonDataDao<T> seasonDataDao,
-                                      final TournamentResultDao tournamentResultDao,
-                                      final TournamentParticipantDao tournamentParticipantDao,
-                                      final NetworkParameters networkParameters,
-                                      final int numberOfTrainingIterations,
-                                      int iterationNumber) {
+                                                  final SeasonDataDao<T> seasonDataDao,
+                                                  final TournamentResultDao tournamentResultDao,
+                                                  final TournamentParticipantDao tournamentParticipantDao,
+                                                  final NetworkParameters networkParameters,
+                                                  final int numberOfTrainingIterations,
+                                                  final int parentIteration) {
         if (keepGoing()) {
+            int iterationNumber = 0;
             while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
                 runBatchActivationLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
-                        networkParameters, iterationNumber);
+                        networkParameters, String.format("%d.%d", parentIteration, iterationNumber));
             }
-            log.info("**** END OF BATCH LOOP ****");
+            log.info("**** END OF NETWORK LAYER LOOP ****");
         }
     }
 
@@ -200,7 +207,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                         final TournamentResultDao tournamentResultDao,
                                         final TournamentParticipantDao tournamentParticipantDao,
                                         final NetworkParameters networkParameters,
-                                        final int iterationNumber) {
+                                        final String iteration) {
         if (keepGoing()) {
             //
             // Use select activation functions to configure the network
@@ -215,7 +222,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                     //
                     // Use select updaters to configure the network
                     runBatchUpdaterLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
-                            networkParameters, iterationNumber);
+                            networkParameters, iteration);
                 } catch (Exception e) {
                     log.error("Activation {} does not appear to work for this particular network configuration. Moving on to the next one.", activationFunctionChoice, e);
                 }
@@ -234,7 +241,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                      final TournamentResultDao tournamentResultDao,
                                      final TournamentParticipantDao tournamentParticipantDao,
                                      final NetworkParameters networkParameters,
-                                     final int iterationNumber) {
+                                     final String iteration) {
         List<UpdaterMenu.UpdaterChoice> updaterChoicesToUseForTraining = fetchUpdaterChoices();
         if (keepGoing()) {
             log.info("**** BEGIN UPDATER LOOP ****");
@@ -251,7 +258,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                     //
                     // Use all normalizers within the current iteration using the same network configuration
                     runBatchNormalizerLoop(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
-                            networkParameters, iterationNumber, configuration);
+                            networkParameters, iteration, configuration);
                 } catch (Exception e) {
                     log.error("Updater {} does not appear to work for this particular network configuration. Moving on to the next one.", updaterChoice, e);
                 }
@@ -292,7 +299,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                         final TournamentResultDao tournamentResultDao,
                                         final TournamentParticipantDao tournamentParticipantDao,
                                         final NetworkParameters networkParameters,
-                                        final int iterationNumber,
+                                        final String iteration,
                                         final MultiLayerConfiguration configuration) throws IOException, InterruptedException {
         if (keepGoing()) {
             DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices = DataNormalizationMenu.DataNormalizationChoice.values();
@@ -303,7 +310,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                 // Set the normalizer to use
                 networkParameters.setNormalizer(dataNormalizationChoice);
                 runBatchLoopInternal(networkCandidateList, seasonDataDao, tournamentResultDao, tournamentParticipantDao,
-                        networkParameters, iterationNumber, configuration);
+                        networkParameters, iteration, configuration);
             }
         }
         log.info("**** END OF NORMALIZER LOOP ****");
@@ -314,7 +321,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                       final TournamentResultDao tournamentResultDao,
                                       final TournamentParticipantDao tournamentParticipantDao,
                                       final NetworkParameters networkParameters,
-                                      final int iterationNumber,
+                                      final String iteration,
                                       final MultiLayerConfiguration configuration) throws IOException, InterruptedException {
         //
         // Get the season data for the teams in the training years
@@ -334,7 +341,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         DataSet trainingData = trainingDataIterator.next();
         DataSet evaluationData = evaluationDataIterator.next();
         trainingDataIterator.setCollectMetaData(true);
-        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingData, evaluationData, iterationNumber);
+        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingData, evaluationData, iteration);
         //
         // Save the network if its performance is at or above the threshold.
         // If the network was not saved, retain it anyway in the networkCandidate list
@@ -343,12 +350,12 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         //
         // Only keep networks in memory that are above the keep threshold to avoid running out of memory for large batch runs.
         if (networkCandidate.getNetworkParameters().getNetworkAccuracy() * 100 >= NetworkProperties.getPerformanceThresholdNetworkKeep().doubleValue()) {
-            log.info("Iteration: {}, network retained.", iterationNumber);
+            log.info("INNER Iteration: {}, network retained.", iteration);
             log.info(computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, trainedNetwork).stats());
             networkCandidateList.add(networkCandidate);
-            saveNetworkIfAboveThreshold(networkCandidate, iterationNumber);
+            saveNetworkIfAboveThreshold(networkCandidate, iteration);
         } else {
-            log.debug("Iteration: {}, network discarded.", iterationNumber);
+            log.debug("INNER Iteration: {}, network discarded.", iteration);
         }
     }
 
@@ -396,11 +403,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             //
             // Fetch years to train and evaluate the network
             scanYearsToTrainAndEvaluateNetwork(scanner, networkParameters, tournamentParticipantDao);
-            //
-            // Get the network layout in HL1xHL2xHL3x...HLn format, where HL1 is the first hidden layer, HLn is the nth.
-            String networkLayout = scanNetworkLayout(scanner, networkParameters.getNetworkLayout(), networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
-            networkParameters.setNetworkLayout(networkLayout);
             if (!isBatch) {
+                //
+                // Get the network layout in HL1xHL2xHL3x...HLn format, where HL1 is the first hidden layer, HLn is the nth.
+                String networkLayout = scanNetworkLayout(scanner, networkParameters.getNetworkLayout(), networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
+                networkParameters.setNetworkLayout(networkLayout);
                 //
                 // Get the activation function
                 Activation activation = scanActivationFunction(scanner, networkParameters.getActivationFunction());
@@ -435,14 +442,14 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                                 final NetworkParameters networkParameters,
                                                 final DataSet trainingData,
                                                 final DataSet evaluationData,
-                                                final Integer iterationNumber) {
+                                                final String iteration) {
         //
         // Prepare the data
         DataNormalization normalizer = networkParameters.getNormalizer().getDataNormalization();
         normalizeTrainingData(trainingData, evaluationData, normalizer);
         //
         // The training loop, returns the trained network model
-        MultiLayerNetwork trainedNetwork = trainNetwork(configuration, networkParameters, trainingData, trainingData, iterationNumber);
+        MultiLayerNetwork trainedNetwork = trainNetwork(configuration, networkParameters, trainingData, trainingData, iteration);
         //
         // Evaluate the model on the evaluation set to see how well the trained model performs against unknown data
         Evaluation eval = computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, trainedNetwork);
@@ -467,7 +474,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                                   final NetworkParameters networkParameters,
                                                   final DataSet trainingData,
                                                   final DataSet evaluationData,
-                                                  final Integer iterationNumber) {
+                                                  final String iteration) {
         //
         // Compute the number of epochs at which the network will be periodically evaluated
         log.debug("trainNetwork: training up to {} epochs", NetworkProperties.getMaxLearningIterations());
@@ -498,7 +505,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                 }
             }
         }
-        log.info(String.format("\tIteration %d, Number of epochs: %d, Network error: %2.4f%%", iterationNumber, epochCount, computeNetworkError(
+        log.info(String.format("\tIteration %s, Number of epochs: %d, Network error: %2.4f%%", iteration, epochCount, computeNetworkError(
                 computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, network)) * 100));
         return network;
     }
@@ -547,16 +554,16 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         return ret;
     }
 
-    private static void saveNetworkIfAboveThreshold(final NetworkCandidate networkCandidate, final int iterationNumber) {
+    private static void saveNetworkIfAboveThreshold(final NetworkCandidate networkCandidate, final String iteration) {
         double performanceThreshold = NetworkProperties.getPerformanceThreshold().doubleValue();
         NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
         if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
-            log.info(String.format("*** Iteration %d: Performance threshold (%3.4f) EXCEEDED: %3.5f, saving network. ***",
-                    iterationNumber, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
+            log.info(String.format("*** Iteration %s: Performance threshold (%3.4f) EXCEEDED: %3.5f, saving network. ***",
+                    iteration, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
             NetworkPersister.saveNetwork(networkCandidate);
         } else {
-            log.info(String.format("\tIteration %d: Network accuracy (%3.5f) below performance threshold (%3.4f).",
-                    iterationNumber, networkParameters.getNetworkAccuracy() * 100, performanceThreshold));
+            log.info(String.format("\tIteration %s: Network accuracy (%3.5f) below performance threshold (%3.4f).",
+                    iteration, networkParameters.getNetworkAccuracy() * 100, performanceThreshold));
         }
     }
 
