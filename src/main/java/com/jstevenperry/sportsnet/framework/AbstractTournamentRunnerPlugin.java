@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -269,37 +271,37 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
                                          final TeamCoordinate homeTeamCoordinate,
                                          final TeamCoordinate awayTeamCoordinate) {
         TeamCoordinate winner;
-        double[] homeTeamProbabilities = results[0];
-        double[] awayTeamProbabilities = results[1];
+        BigDecimal[] homeTeamProbabilities = convertToBigDecimal(results[0]);
+        BigDecimal[] awayTeamProbabilities = convertToBigDecimal(results[1]);
         //
         // The winner is the team predicted to win more games
-        int homeTeamVictories = 0;
-        double homeTeamProbability = 0.0;
+        int homeTeamDistance = 0;
+        BigDecimal homeTeamProbability = BigDecimal.ZERO;
         int index = 0;
-        for (double probability : homeTeamProbabilities) {
-            if (probability > homeTeamProbability) {
+        for (BigDecimal probability : homeTeamProbabilities) {
+            if (probability.compareTo(homeTeamProbability) > 0) {
                 homeTeamProbability = probability; // highest probability so far
-                homeTeamVictories = index; // highest probability occurs at index
+                homeTeamDistance = index; // highest probability occurs at index
             }
             index++;
         }
-        int awayTeamVictories = 0;
-        double awayTeamProbability = 0.0;
+        int awayTeamDistance = 0;
+        BigDecimal awayTeamProbability = BigDecimal.ZERO;
         index = 0;
-        for (double probability : awayTeamProbabilities) {
-            if (probability > awayTeamProbability) {
+        for (BigDecimal probability : awayTeamProbabilities) {
+            if (probability.compareTo(awayTeamProbability) > 0) {
                 awayTeamProbability = probability;
-                awayTeamVictories = index;
+                awayTeamDistance = index;
             }
             index++;
         }
-        if (homeTeamVictories > awayTeamVictories) {
+        if (homeTeamDistance > awayTeamDistance) {
             // Home team is the winner
             winner = homeTeamCoordinate;
-        } else if (homeTeamVictories == awayTeamVictories) {
-            // Whichever has the highest probability for the same number of victories (that is, the network is more sure)
-            winner = (homeTeamProbability > awayTeamProbability) ? homeTeamCoordinate : awayTeamCoordinate;
-            log.warn("TIE-BREAKER: Giving the win to team: {} (hp/ap: {}/{})", winner.getName(), homeTeamProbability, awayTeamProbability);
+        } else if (homeTeamDistance == awayTeamDistance) {
+            // Whichever has the highest probability for the same tournament distance (that is, the network is more sure)
+            winner = (homeTeamProbability.compareTo(awayTeamProbability) > 0) ? homeTeamCoordinate : awayTeamCoordinate;
+            log.warn("TOURNAMENT DISTANCE TIE-BREAKER({}): Giving the win to team: {} (hp/ap: {}/{})", homeTeamDistance, winner.getName(), homeTeamProbability, awayTeamProbability);
         } else {
             // Away team is winner
             winner = awayTeamCoordinate;
@@ -308,11 +310,19 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
                 winner.getName(),
                 homeTeamCoordinate.getName(), Arrays.toString(homeTeamProbabilities), // vs
                 awayTeamCoordinate.getName(), Arrays.toString(awayTeamProbabilities), //:
-                homeTeamVictories, homeTeamProbability,
-                awayTeamVictories, awayTeamProbability
+                homeTeamDistance, homeTeamProbability,
+                awayTeamDistance, awayTeamProbability
         ));
 
         return winner;
+    }
+
+    private BigDecimal[] convertToBigDecimal(final double[] predictions) {
+        List<BigDecimal> ret = new ArrayList<>();
+        for (double prediction: predictions) {
+            ret.add(BigDecimal.valueOf(prediction).setScale(4, RoundingMode.HALF_UP));
+        }
+        return ret.toArray(new BigDecimal[0]);
     }
 
     private TeamCoordinate computeNextRoundCoordinates(final TeamCoordinate homeTeamCoordinate,
