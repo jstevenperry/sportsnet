@@ -20,8 +20,8 @@
     </appender>
 
     <appender name="RESULTS-FILE" class="ch.qos.logback.core.FileAppender">
-        <file>/tmp/sportsnet-results.log</file>
-        <append>true</append>
+        <file>sportsnet-results.log</file>
+        <append>false</append>
         <encoder>
             <pattern>%logger{1}:%L - %msg%n</pattern>
         </encoder>
