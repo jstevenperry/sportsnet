@@ -261,6 +261,8 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         T winnerSeasonData = (homeTeamWins >= awayTeamWins) ? homeTeamSeasonData : awayTeamSeasonData;
         teamCoordinate.setName(winnerSeasonData.getTeamName());
         getTeamCoordinateSeasonDataMap().put(teamCoordinate, winnerSeasonData);
+        log.debug("Winner: {} with {} wins in {} simulated matchups",
+                teamCoordinate.getName(), teamCoordinate.getHomeWinNetworkVotes(), networkCandidates.size());
     }
 
     private TeamCoordinate computeWinner(final double[][] results,
@@ -297,11 +299,13 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         } else if (homeTeamVictories == awayTeamVictories) {
             // Whichever has the highest probability for the same number of victories (that is, the network is more sure)
             winner = (homeTeamProbability > awayTeamProbability) ? homeTeamCoordinate : awayTeamCoordinate;
+            log.warn("TIE-BREAKER: Giving the win to team: {} (hp/ap: {}/{})", winner.getName(), homeTeamProbability, awayTeamProbability);
         } else {
             // Away team is winner
             winner = awayTeamCoordinate;
         }
-        log.debug(String.format("%s (%s) vs %s (%s): hv/hp %s/%s, av/ap %s/%s",
+        log.debug(String.format("Winner: %s: %s (%s) vs %s (%s): hv/hp %s/%s, av/ap %s/%s",
+                winner.getName(),
                 homeTeamCoordinate.getName(), Arrays.toString(homeTeamProbabilities), // vs
                 awayTeamCoordinate.getName(), Arrays.toString(awayTeamProbabilities), //:
                 homeTeamVictories, homeTeamProbability,
