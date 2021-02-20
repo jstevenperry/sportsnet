@@ -267,7 +267,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
                 teamCoordinate.getName(), teamCoordinate.getHomeWinNetworkVotes(), networkCandidates.size());
     }
 
-    private TeamCoordinate computeWinner(final double[][] results,
+    protected TeamCoordinate computeWinner(final double[][] results,
                                          final TeamCoordinate homeTeamCoordinate,
                                          final TeamCoordinate awayTeamCoordinate) {
         TeamCoordinate winner;
