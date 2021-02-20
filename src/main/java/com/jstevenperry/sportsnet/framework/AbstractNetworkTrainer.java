@@ -484,6 +484,9 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         network.init();
         int epochCount;
         for (epochCount = 0; epochCount < NetworkProperties.getMaxLearningIterations() && keepGoing(); epochCount++) {
+            // Shake it up
+            trainingData.shuffle();
+            evaluationData.shuffle();
             // Copy original network parameters because with each training loop it gets mutated
             //
             // Fit the model against the training data for a single epoch
