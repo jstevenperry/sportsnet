@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -268,35 +269,37 @@ public class NetworkUtils {
     }
 
     public static String generateRandomNetworkLayout(final Integer numberOfInputs, final Integer numberOfOutputs) {
-        List<Integer> neuronLayerDescriptor = new ArrayList<>();
         int numberOfHiddenLayers = NetworkProperties.getNumberOfHiddenLayers();
-        if (numberOfHiddenLayers < 6) {
-            String errorMessage = String.format("Algorithm does not work with < 6 hidden layers, you specified %s", numberOfHiddenLayers);
+        List<Integer> neuronLayerDescriptor = new ArrayList<>();
+        for (int aa = 0; aa < numberOfHiddenLayers; aa++) { neuronLayerDescriptor.add(0); }
+
+        if (numberOfHiddenLayers < 5) {
+            String errorMessage = String.format("Algorithm does not work well with < 5 hidden layers, you specified %s", numberOfHiddenLayers);
             log.error("generateSampleNetworkLayout({}, {}): {}", numberOfInputs, numberOfOutputs, numberOfHiddenLayers);
             throw new RuntimeException(errorMessage);
         }
         // First hidden layer
-        neuronLayerDescriptor.add(getRandomNumberUsingNextInt(
-                numberOfInputs * Math.min(numberOfHiddenLayers, numberOfOutputs),
-                numberOfInputs * Math.max(numberOfHiddenLayers, numberOfInputs)));
+        int numberOfNeuronsInFirstLayer = Math.min(numberOfInputs * numberOfHiddenLayers, numberOfInputs * numberOfOutputs * numberOfOutputs);
+        neuronLayerDescriptor.set(0, numberOfNeuronsInFirstLayer);
         // Layers between first and middle
-        int middleLayerIndex = numberOfHiddenLayers / 2 + 1;
+        int middleLayerIndex = numberOfHiddenLayers / 2;
         int numberOfNeuronsInMiddleLayer = numberOfInputs * numberOfOutputs;
-        for (int index = 1; index < middleLayerIndex; index++) {
-            int min = Math.min(neuronLayerDescriptor.get(index - 1), numberOfNeuronsInMiddleLayer/ index);
-            int max = Math.max(neuronLayerDescriptor.get(index - 1), numberOfNeuronsInMiddleLayer / index);
-            neuronLayerDescriptor.add(index, getRandomNumberUsingNextInt(min, max));
+        for (int index = middleLayerIndex; index > 0; index--) {
+            int min = Math.min(numberOfNeuronsInFirstLayer / index, numberOfNeuronsInMiddleLayer);
+            int max = Math.max(numberOfNeuronsInFirstLayer / index, numberOfNeuronsInMiddleLayer);
+            neuronLayerDescriptor.set(index, getRandomNumberUsingNextInt(min, max));
         }
         // Middle hidden layer
         int numberOfNeuronsInLastLayer = numberOfOutputs * numberOfOutputs * numberOfOutputs;
-        neuronLayerDescriptor.add(middleLayerIndex, numberOfNeuronsInMiddleLayer);
-        for (int index = middleLayerIndex + 1; index < numberOfHiddenLayers - 1; index++) {
-            int min = Math.min(neuronLayerDescriptor.get(index - 1), numberOfNeuronsInLastLayer/ index);
-            int max = Math.max(neuronLayerDescriptor.get(index - 1), numberOfNeuronsInLastLayer / index);
-            neuronLayerDescriptor.add(index, getRandomNumberUsingNextInt(min, max));
+        neuronLayerDescriptor.set(middleLayerIndex, numberOfNeuronsInMiddleLayer);
+        int lastLayerIndex = numberOfHiddenLayers - 1;
+        for (int index = lastLayerIndex - 1; index > middleLayerIndex; index--) {
+            int min = Math.min(numberOfNeuronsInLastLayer / index, numberOfNeuronsInLastLayer);
+            int max = Math.max(numberOfNeuronsInLastLayer / index, numberOfNeuronsInLastLayer);
+            neuronLayerDescriptor.set(index, getRandomNumberUsingNextInt(min, max));
         }
         // Last hidden layer (closest to output)
-        neuronLayerDescriptor.add(numberOfNeuronsInLastLayer);
+        neuronLayerDescriptor.set(lastLayerIndex, numberOfNeuronsInLastLayer);
         return generateLayerStructureString(neuronLayerDescriptor);
     }
 
@@ -309,6 +312,7 @@ public class NetworkUtils {
      */
     public static int getRandomNumberUsingNextInt(int min, int max) {
         Random random = new Random();
-        return random.nextInt(max - min) + min;
+        int bound = Math.max(max - min, 1);
+        return random.nextInt(bound) + min;
     }
 }
