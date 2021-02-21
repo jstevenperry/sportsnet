@@ -46,7 +46,7 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
         return tournamentYearResultsMap.computeIfAbsent(tournamentYear, k -> new ArrayList<>());
     }
 
-    protected Map<String, T> getTeamSeasonData(final Integer tournamentYear) {
+    private Map<String, T> getTeamSeasonData(final Integer tournamentYear) {
         return tournamentYearSeasonDataMap.computeIfAbsent(tournamentYear, k -> new HashMap<>());
     }
 
