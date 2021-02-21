@@ -180,6 +180,9 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         //
         // Throw out any networks that are not valid for the tournament year
         final List<NetworkCandidate> networksToRun = computeValidNetworksForTournamentYear(networksToUse);
+        // Populate SeasonData Map
+        seasonDataDao.fetchAllByYear(getTournamentYear())
+                .forEach(seasonData -> pullSeasonData(getTournamentYear(), seasonData.getTeamName(), seasonDataDao));
         if (!networksToRun.isEmpty()) {
             gameList.forEach(gameCoordinate -> {
                 try {
@@ -356,20 +359,36 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
                                                                           final NetworkParameters networkParameters) {
         Optional<RecordReaderDataSetIterator> ret;
         //
-        // Compute one row of data with home team first
-        String[] home = networkParameters.transformRow(seasonDataAsDoubleList(homeTeamSeasonData));
-        //
-        // Compute another row of data with away team first
-        String[] away = networkParameters.transformRow(seasonDataAsDoubleList(awayTeamSeasonData));
-        //
         // Wrap both rows in a CSVRecordReader, with all the bells and whistles and return the appropriate iterator
         StringBuilder stringSource = new StringBuilder();
+        //
+        // Compute one row of data with home team first
+        String[] home = networkParameters.transformRow(seasonDataAsDoubleList(homeTeamSeasonData));
         String homeString = String.join(",", home);
         stringSource.append(homeString);
         stringSource.append("\n");
+        //
+        // Compute another row of data with away team first
+        String[] away = networkParameters.transformRow(seasonDataAsDoubleList(awayTeamSeasonData));
         String awayString = String.join(",", away);
         stringSource.append(awayString);
         stringSource.append("\n");
+        // Now add the rest of the data so the values normalize correctly within the rest of the season data
+        // You're prolly thinking, wtf is this? Well, DataVec normalizes a DataSet based on all the data in that
+        // data set (which makes perfec sense when you think about it). So in order to truly normalize a team's
+        // season data, we need to supply all of the other teams' data as well, so the network predicts the same
+        // values for a given team each time it's run, not a different prediction each time because it only uses
+        // two values (that team's and its opponent) when we simulate a tournament.
+        Map<String, T> seasonDataMap = getTeamSeasonData(getTournamentYear());
+        Set<String> teamNames = seasonDataMap.keySet();
+        teamNames.forEach(teamName -> {
+            if (!teamName.equalsIgnoreCase(homeTeamSeasonData.getTeamName()) && !teamName.equalsIgnoreCase(awayTeamSeasonData.getTeamName())) {
+                String[] data = networkParameters.transformRow(seasonDataAsDoubleList(seasonDataMap.get(teamName)));
+                String csv = String.join(",", data);
+                stringSource.append(csv);
+                stringSource.append("\n");
+            }
+        });
         StringReader stringReader = new StringReader(stringSource.toString());
         try {
             InputStream inputStream = new ByteArrayInputStream(CharStreams.toString(stringReader).getBytes());
