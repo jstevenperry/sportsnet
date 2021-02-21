@@ -266,13 +266,13 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         T winnerSeasonData = (homeTeamWins >= awayTeamWins) ? homeTeamSeasonData : awayTeamSeasonData;
         teamCoordinate.setName(winnerSeasonData.getTeamName());
         getTeamCoordinateSeasonDataMap().put(teamCoordinate, winnerSeasonData);
-        log.debug("Winner: {} with {} wins in {} simulated matchups",
-                teamCoordinate.getName(), teamCoordinate.getHomeWinNetworkVotes(), networkCandidates.size());
+        log.debug("*** WINNER: {} with {} wins in {} simulated matchups ***",
+                teamCoordinate.getName(), Math.max(homeTeamWins, awayTeamWins), networkCandidates.size());
     }
 
     protected TeamCoordinate computeWinner(final double[][] results,
-                                         final TeamCoordinate homeTeamCoordinate,
-                                         final TeamCoordinate awayTeamCoordinate) {
+                                           final TeamCoordinate homeTeamCoordinate,
+                                           final TeamCoordinate awayTeamCoordinate) {
         TeamCoordinate winner;
         BigDecimal[] homeTeamProbabilities = convertToBigDecimal(results[0]);
         BigDecimal[] awayTeamProbabilities = convertToBigDecimal(results[1]);
@@ -322,7 +322,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
 
     private BigDecimal[] convertToBigDecimal(final double[] predictions) {
         List<BigDecimal> ret = new ArrayList<>();
-        for (double prediction: predictions) {
+        for (double prediction : predictions) {
             ret.add(BigDecimal.valueOf(prediction).setScale(4, RoundingMode.HALF_UP));
         }
         return ret.toArray(new BigDecimal[0]);
@@ -373,12 +373,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         String awayString = String.join(",", away);
         stringSource.append(awayString);
         stringSource.append("\n");
-        // Now add the rest of the data so the values normalize correctly within the rest of the season data
-        // You're prolly thinking, wtf is this? Well, DataVec normalizes a DataSet based on all the data in that
-        // data set (which makes perfec sense when you think about it). So in order to truly normalize a team's
-        // season data, we need to supply all of the other teams' data as well, so the network predicts the same
-        // values for a given team each time it's run, not a different prediction each time because it only uses
-        // two values (that team's and its opponent) when we simulate a tournament.
+        // Include all data for a season so normalized values (and network predictions based on them) are consistent
         Map<String, T> seasonDataMap = getTeamSeasonData(getTournamentYear());
         Set<String> teamNames = seasonDataMap.keySet();
         teamNames.forEach(teamName -> {
@@ -507,8 +502,8 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
             csvWriter.writeNext(new String[0]);
             csvWriter.writeNext(new String[0]);
             csvWriter.writeNext(new String[0]);
-            csvWriter.writeNext(new String[] { "Number of", "networks used", "for", String.format("simulation: %d", networksUsed.size()) });
-            csvWriter.writeNext(new String[] { "Details:" });
+            csvWriter.writeNext(new String[]{"Number of", "networks used", "for", String.format("simulation: %d", networksUsed.size())});
+            csvWriter.writeNext(new String[]{"Details:"});
             csvWriter.writeNext(new String[0]);
             networksUsed.forEach(networkCandidate -> {
                 NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
