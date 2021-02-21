@@ -3,7 +3,7 @@
   ~ Copyright 2015-2021, James Steven Perry. All rights reserved.
   -->
 
-<configuration>
+<configuration debug="false">
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -11,7 +11,7 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>sportsnet.log</file>
         <append>true</append>
         <encoder>
@@ -19,13 +19,25 @@
         </encoder>
     </appender>
 
+    <appender name="RESULTS-FILE" class="ch.qos.logback.core.FileAppender">
+        <file>sportsnet-results.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%logger{1}:%L - %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <logger name="com.jstevenperry.sportsnet" level="INFO"/>
 <!--    <logger name="com.jstevenperry.sportsnet.framework.util.NetworkUtils" level="DEBUG"/>-->
     <logger name="org.deeplearning4j.optimize.listeners" level="INFO"/>
 <!--    <logger name="com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer" level="DEBUG"/>-->
+    <logger name="com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin" level="DEBUG" additivity="false">
+        <appender-ref ref="RESULTS-FILE"/>
+    </logger>
     <root level="WARN">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
+        <appender-ref ref="RESULTS-FILE" />
     </root>
 
 </configuration>
