@@ -108,7 +108,7 @@ public class NetworkProperties {
      * appears to be instantaneous.
      */
     public static boolean killSwitchActivated() {
-        return getBooleanPropertyValue(KILL_SWITCH_ACTIVATED);
+        return getBooleanPropertyValue(KILL_SWITCH_ACTIVATED, false);
     }
 
     public static List<ActivationFunctionMenu.ActivationFunctionChoice> getActivationFunctions() {
@@ -183,6 +183,10 @@ public class NetworkProperties {
         return getStringPropertyValue(sport + ".network.layout", StringUtils.EMPTY);
     }
 
+    public static boolean getNormalizeAcrossAllSeasonData() {
+        return getBooleanPropertyValue("normalize.across.all.season.data", true);
+    }
+
     public static Integer getNumberOfHiddenLayers() {
         return getIntegerPropertyValue("number.of.hidden.layers", 7);
     }
@@ -235,8 +239,8 @@ public class NetworkProperties {
      *                          property is considered to be <em>required</em> and if it cannot be located in the
      *                          properties file, this exception is thrown.
      */
-    private static Boolean getBooleanPropertyValue(String propertyName) {
-        boolean ret = false;
+    private static Boolean getBooleanPropertyValue(String propertyName, boolean defaultValue) {
+        boolean ret = defaultValue;
         String propertyValue = getPropertiesFile().getProperty(propertyName);
         if (propertyValue != null) {
             ret = Boolean.parseBoolean(propertyValue);
