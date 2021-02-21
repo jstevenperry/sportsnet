@@ -41,6 +41,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,6 +61,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     private static final int BATCH_SIZE = 2000;
     private final SeasonDataDao<T> seasonDataDao;
     private Map<TeamCoordinate, T> teamCoordinateSeasonDataMap;
+    private Map<String, T> teamSeasonDataMap;
 
     public AbstractTournamentRunnerPlugin(final SeasonDataDao<T> seasonDataDao) {
         this.seasonDataDao = seasonDataDao;
@@ -77,6 +79,13 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
 
     public void setTeamCoordinateSeasonDataMap(final Map<TeamCoordinate, T> teamCoordinateSeasonDataMap) {
         this.teamCoordinateSeasonDataMap = teamCoordinateSeasonDataMap;
+    }
+
+    public Map<String, T> getTeamSeasonDataMap() {
+        if (teamSeasonDataMap == null) {
+            teamSeasonDataMap = new HashMap<>();
+        }
+        return teamSeasonDataMap;
     }
 
     /**
@@ -180,9 +189,18 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         //
         // Throw out any networks that are not valid for the tournament year
         final List<NetworkCandidate> networksToRun = computeValidNetworksForTournamentYear(networksToUse);
-        // Populate SeasonData Map
-        seasonDataDao.fetchAllByYear(getTournamentYear())
-                .forEach(seasonData -> pullSeasonData(getTournamentYear(), seasonData.getTeamName(), seasonDataDao));
+        // Build Team Season Data map for those teams in the tournament
+        Map<String, T> teamSeasonDataMap = getTeamSeasonDataMap();
+        gameList.forEach(gameCoordinate -> {
+            T homeTeamSeasonData = getTeamCoordinateSeasonDataMap().get(gameCoordinate.getHome());
+            if (homeTeamSeasonData != null) {
+                teamSeasonDataMap.computeIfAbsent(homeTeamSeasonData.getTeamName(), k -> homeTeamSeasonData);
+            }
+            T awayTeamSeasonData = getTeamCoordinateSeasonDataMap().get(gameCoordinate.getAway());
+            if (awayTeamSeasonData != null) {
+                teamSeasonDataMap.computeIfAbsent(awayTeamSeasonData.getTeamName(), k -> awayTeamSeasonData);
+            }
+        });
         if (!networksToRun.isEmpty()) {
             gameList.forEach(gameCoordinate -> {
                 try {
@@ -276,45 +294,41 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         TeamCoordinate winner;
         BigDecimal[] homeTeamProbabilities = convertToBigDecimal(results[0]);
         BigDecimal[] awayTeamProbabilities = convertToBigDecimal(results[1]);
+        // Sanity Check
+        if (homeTeamProbabilities.length != awayTeamProbabilities.length) {
+            String errorMessage = String.format("ERROR: homeTeamProbabilities array length (%d) is not equal to awayTeamProbabilities array length (%d)",
+                    homeTeamProbabilities.length, awayTeamProbabilities.length);
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
         //
         // The winner is the team predicted to win more games
-        int homeTeamDistance = 0;
-        BigDecimal homeTeamProbability = BigDecimal.ZERO;
-        int index = 0;
-        for (BigDecimal probability : homeTeamProbabilities) {
-            if (probability.compareTo(homeTeamProbability) > 0) {
-                homeTeamProbability = probability; // highest probability so far
-                homeTeamDistance = index; // highest probability occurs at index
-            }
-            index++;
+        double homeTeamDistanceScore = 0.0;
+        double awayTeamDistanceScore = 0.0;
+        for (int index = 0; index < homeTeamProbabilities.length; index++) {
+            BigDecimal homeTeamProbability = homeTeamProbabilities[index];
+            // Apply a weight based on index (where index is the round number, giving advantage to tournament distance)
+            homeTeamDistanceScore += homeTeamProbability.doubleValue() * Math.pow(2.0, index+1);
+            BigDecimal awayTeamProbability = awayTeamProbabilities[index];
+            // Apply a weight based on index (where index is the round number, giving advantage to tournament distance)
+            awayTeamDistanceScore += awayTeamProbability.doubleValue() * Math.pow(2.0, index+1);
         }
-        int awayTeamDistance = 0;
-        BigDecimal awayTeamProbability = BigDecimal.ZERO;
-        index = 0;
-        for (BigDecimal probability : awayTeamProbabilities) {
-            if (probability.compareTo(awayTeamProbability) > 0) {
-                awayTeamProbability = probability;
-                awayTeamDistance = index;
-            }
-            index++;
-        }
-        if (homeTeamDistance > awayTeamDistance) {
+        if (homeTeamDistanceScore > awayTeamDistanceScore) {
             // Home team is the winner
             winner = homeTeamCoordinate;
-        } else if (homeTeamDistance == awayTeamDistance) {
-            // Whichever has the highest probability for the same tournament distance (that is, the network is more sure)
-            winner = (homeTeamProbability.compareTo(awayTeamProbability) > 0) ? homeTeamCoordinate : awayTeamCoordinate;
-            log.warn("TOURNAMENT DISTANCE TIE-BREAKER({}): Giving the win to team: {} (hp/ap: {}/{})", homeTeamDistance, winner.getName(), homeTeamProbability, awayTeamProbability);
+        } else if (homeTeamDistanceScore == awayTeamDistanceScore) {
+            // Tie goes to home (it has to go to someone)
+            winner = homeTeamCoordinate;
+            log.warn("TOURNAMENT DISTANCE TIE-BREAKER({}): Giving the win to team: {}", homeTeamDistanceScore, winner.getName());
         } else {
             // Away team is winner
             winner = awayTeamCoordinate;
         }
-        log.debug(String.format("Winner: %s: %s (%s) vs %s (%s): hv/hp %s/%s, av/ap %s/%s",
+        log.debug(String.format("Winner: %s: %s (%s) vs %s (%s): hv/hp %3.4f, av/ap %3.4f",
                 winner.getName(),
                 homeTeamCoordinate.getName(), Arrays.toString(homeTeamProbabilities), // vs
                 awayTeamCoordinate.getName(), Arrays.toString(awayTeamProbabilities), //:
-                homeTeamDistance, homeTeamProbability,
-                awayTeamDistance, awayTeamProbability
+                homeTeamDistanceScore, awayTeamDistanceScore
         ));
 
         return winner;
@@ -374,7 +388,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         stringSource.append(awayString);
         stringSource.append("\n");
         // Include all data for a season so normalized values (and network predictions based on them) are consistent
-        Map<String, T> seasonDataMap = getTeamSeasonData(getTournamentYear());
+        Map<String, T> seasonDataMap = getTeamSeasonDataMap();
         Set<String> teamNames = seasonDataMap.keySet();
         teamNames.forEach(teamName -> {
             if (!teamName.equalsIgnoreCase(homeTeamSeasonData.getTeamName()) && !teamName.equalsIgnoreCase(awayTeamSeasonData.getTeamName())) {
