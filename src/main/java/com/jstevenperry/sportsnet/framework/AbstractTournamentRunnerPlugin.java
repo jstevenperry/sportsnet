@@ -10,6 +10,7 @@ import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.model.TeamCoordinate;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
+import com.jstevenperry.sportsnet.framework.util.NetworkProperties;
 import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -271,11 +272,16 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
                 INDArray indArrayResults = network.output(tournamentData.getFeatures());
                 //
                 // Figure out who we declare the winner and compute their TeamCoordinates according to the algorithm
-                TeamCoordinate winningTeamCoordinate = computeWinner(indArrayResults.toDoubleMatrix(), homeTeamCoordinate, awayTeamCoordinate);
-                if (winningTeamCoordinate.equals(homeTeamCoordinate)) {
-                    homeTeamWins++;
-                } else {
-                    awayTeamWins++;
+                try {
+                    TeamCoordinate winningTeamCoordinate = computeWinner(indArrayResults.toDoubleMatrix(), homeTeamCoordinate, awayTeamCoordinate);
+                    if (winningTeamCoordinate.equals(homeTeamCoordinate)) {
+                        homeTeamWins++;
+                    } else {
+                        awayTeamWins++;
+                    }
+                } catch (NumberFormatException e) {
+                    String errorMessage = String.format("NumberFormatException while running %s vs %s for network %s. Skipping.", networkCandidate, homeTeamCoordinate, awayTeamCoordinate);
+                    log.error(errorMessage);
                 }
             }
         }
@@ -308,10 +314,10 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         for (int index = 0; index < homeTeamProbabilities.length; index++) {
             BigDecimal homeTeamProbability = homeTeamProbabilities[index];
             // Apply a weight based on index (where index is the round number, giving advantage to tournament distance)
-            homeTeamDistanceScore += homeTeamProbability.doubleValue() * Math.pow(2.0, index+1);
+            homeTeamDistanceScore += homeTeamProbability.doubleValue() * (index+1);
             BigDecimal awayTeamProbability = awayTeamProbabilities[index];
             // Apply a weight based on index (where index is the round number, giving advantage to tournament distance)
-            awayTeamDistanceScore += awayTeamProbability.doubleValue() * Math.pow(2.0, index+1);
+            awayTeamDistanceScore += awayTeamProbability.doubleValue() * (index+1);
         }
         if (homeTeamDistanceScore > awayTeamDistanceScore) {
             // Home team is the winner
@@ -388,16 +394,19 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         stringSource.append(awayString);
         stringSource.append("\n");
         // Include all data for a season so normalized values (and network predictions based on them) are consistent
-        Map<String, T> seasonDataMap = getTeamSeasonDataMap();
-        Set<String> teamNames = seasonDataMap.keySet();
-        teamNames.forEach(teamName -> {
-            if (!teamName.equalsIgnoreCase(homeTeamSeasonData.getTeamName()) && !teamName.equalsIgnoreCase(awayTeamSeasonData.getTeamName())) {
-                String[] data = networkParameters.transformRow(seasonDataAsDoubleList(seasonDataMap.get(teamName)));
-                String csv = String.join(",", data);
-                stringSource.append(csv);
-                stringSource.append("\n");
-            }
-        });
+        if (NetworkProperties.getNormalizeAcrossAllSeasonData()) {
+            log.info("computeRecordIterator(): Adding all season data for normalization");
+            Map<String, T> seasonDataMap = getTeamSeasonDataMap();
+            Set<String> teamNames = seasonDataMap.keySet();
+            teamNames.forEach(teamName -> {
+                if (!teamName.equalsIgnoreCase(homeTeamSeasonData.getTeamName()) && !teamName.equalsIgnoreCase(awayTeamSeasonData.getTeamName())) {
+                    String[] data = networkParameters.transformRow(seasonDataAsDoubleList(seasonDataMap.get(teamName)));
+                    String csv = String.join(",", data);
+                    stringSource.append(csv);
+                    stringSource.append("\n");
+                }
+            });
+        }
         StringReader stringReader = new StringReader(stringSource.toString());
         try {
             InputStream inputStream = new ByteArrayInputStream(CharStreams.toString(stringReader).getBytes());
