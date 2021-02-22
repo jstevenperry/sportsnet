@@ -28,6 +28,7 @@ public class NbaSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NbaS
     @Override
     protected String[][] getDataFileNames() {
         return new String[][]{
+                {"2009", "/nba/2009-10-Team-Stats.csv", "/nba/2009-10-Opponent-Stats.csv"},
                 {"2010", "/nba/2010-11-Team-Stats.csv", "/nba/2010-11-Opponent-Stats.csv"},
                 {"2011", "/nba/2011-12-Team-Stats.csv", "/nba/2011-12-Opponent-Stats.csv"},
                 {"2012", "/nba/2012-13-Team-Stats.csv", "/nba/2012-13-Opponent-Stats.csv"},
@@ -54,7 +55,6 @@ public class NbaSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<NbaS
             for (int seasonDataFileIndex = 1; seasonDataFileIndex < seasonDataEntry.length; seasonDataFileIndex++) {
                 String seasonDataFileName = seasonDataEntry[seasonDataFileIndex];
                 Map<String, NbaSeasonData> teamSeasonDataMap = getDatabase().computeIfAbsent(year, k -> new HashMap<>());
-                // See sternly worded comment in SEASON_DATA_FILE_NAMES declaration
                 switch (seasonDataFileIndex) {
                     case 1:
                         processTeamStatsFile(year, seasonDataFileName, teamSeasonDataMap);
