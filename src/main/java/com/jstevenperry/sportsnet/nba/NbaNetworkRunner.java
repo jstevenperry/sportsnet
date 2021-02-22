@@ -8,6 +8,7 @@ import com.jstevenperry.sportsnet.framework.AbstractNetworkRunner;
 import com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.nba.model.NbaSeasonData;
+import com.jstevenperry.sportsnet.nba.plugins.NbaPlayoffPlugin2009;
 import com.jstevenperry.sportsnet.nba.plugins.NbaPlayoffPlugin2017;
 import com.jstevenperry.sportsnet.nba.plugins.NbaPlayoffPlugin2018;
 import com.jstevenperry.sportsnet.nba.plugins.NbaPlayoffPlugin2019;
@@ -26,6 +27,7 @@ public class NbaNetworkRunner extends AbstractNetworkRunner<NbaSeasonData> {
         List<AbstractTournamentRunnerPlugin<NbaSeasonData>> ret = new ArrayList<>();
         //
         // Add plugins here
+        ret.add(new NbaPlayoffPlugin2009(seasonDataDao));
         ret.add(new NbaPlayoffPlugin2017(seasonDataDao));
         ret.add(new NbaPlayoffPlugin2018(seasonDataDao));
         ret.add(new NbaPlayoffPlugin2019(seasonDataDao));
