@@ -8,6 +8,7 @@ import com.jstevenperry.sportsnet.framework.AbstractNetworkRunner;
 import com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin;
 import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
+import com.jstevenperry.sportsnet.ncaabb.plugins.TournamentRunnerPlugin2007;
 import com.jstevenperry.sportsnet.ncaabb.plugins.TournamentRunnerPlugin2008;
 import com.jstevenperry.sportsnet.ncaabb.plugins.TournamentRunnerPlugin2009;
 import com.jstevenperry.sportsnet.ncaabb.plugins.TournamentRunnerPlugin2010;
@@ -29,6 +30,7 @@ public class NcaaBbNetworkRunner extends AbstractNetworkRunner<NcaaBbSeasonData>
     @Override
     protected List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> loadPlugins(final SeasonDataDao<NcaaBbSeasonData> ncaaBbSeasonDataDao) {
         List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> ret = new ArrayList<>();
+        ret.add(new TournamentRunnerPlugin2007(ncaaBbSeasonDataDao));
         ret.add(new TournamentRunnerPlugin2008(ncaaBbSeasonDataDao));
         ret.add(new TournamentRunnerPlugin2009(ncaaBbSeasonDataDao));
         ret.add(new TournamentRunnerPlugin2010(ncaaBbSeasonDataDao));
