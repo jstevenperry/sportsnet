@@ -191,7 +191,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         if (keepGoing()) {
             int iterationNumber = 0;
             while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
-                runBatchActivationLoop(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters, computeIterationNumberString(parentIteration, iterationNumber, numberOfTrainingIterations));
+                runBatchActivationLoop(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters,
+                        computeIterationNumberString(parentIteration, iterationNumber, numberOfTrainingIterations));
             }
             log.info("**** END OF NETWORK LAYER LOOP ****");
         }
@@ -199,7 +200,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
 
     static String computeIterationNumberString(final int parentIteration, final int iterationNumber, final int numberOfTrainingIterations) {
         int iterationsPerformedSoFar = (parentIteration - 1) * numberOfTrainingIterations + iterationNumber;
-        int totalIterationsToPerform = numberOfTrainingIterations * numberOfTrainingIterations;
+        int totalIterationsToPerform = numberOfTrainingIterations * numberOfTrainingIterations + numberOfTrainingIterations;
         double percentageComplete = 100.0 * iterationsPerformedSoFar / totalIterationsToPerform;
         return String.format("%d.%d (%3.4f%%)", parentIteration, iterationNumber, percentageComplete);
     }
