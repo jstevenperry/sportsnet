@@ -442,7 +442,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         normalizeTrainingData(trainingData, evaluationData, normalizer);
         //
         // The training loop, returns the trained network model
-        MultiLayerNetwork trainedNetwork = trainNetwork(configuration, networkParameters, trainingData, trainingData, iteration);
+        MultiLayerNetwork trainedNetwork = trainNetwork(configuration, networkParameters, trainingData, iteration);
         //
         // Evaluate the model on the evaluation set to see how well the trained model performs against unknown data
         Evaluation eval = computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, trainedNetwork);
@@ -466,7 +466,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     private static MultiLayerNetwork trainNetwork(final MultiLayerConfiguration configuration,
                                                   final NetworkParameters networkParameters,
                                                   final DataSet trainingData,
-                                                  final DataSet evaluationData,
                                                   final String iteration) {
         //
         // Compute the number of epochs at which the network will be periodically evaluated
@@ -479,13 +478,12 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         for (epochCount = 0; epochCount < NetworkProperties.getMaxLearningIterations() && keepGoing(); epochCount++) {
             // Shake it up
             trainingData.shuffle();
-            evaluationData.shuffle();
             // Copy original network parameters because with each training loop it gets mutated
             //
             // Fit the model against the training data for a single epoch
             network.fit(trainingData);
             if (epochCount % NetworkProperties.getNetworkEvaluationIndex() == 0) {
-                Evaluation networkEvaluator = computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, network);
+                Evaluation networkEvaluator = computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), trainingData, network);
                 double networkError = computeNetworkError(networkEvaluator);
                 if (networkError < NetworkProperties.getMaxNetworkError()) {
                     // Network is trained, we're done here
@@ -502,7 +500,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             }
         }
         log.info(String.format("\tIteration %s, Number of epochs: %d, Network error: %2.4f%%", iteration, epochCount, computeNetworkError(
-                computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, network)) * 100));
+                computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), trainingData, network)) * 100));
         return network;
     }
 
