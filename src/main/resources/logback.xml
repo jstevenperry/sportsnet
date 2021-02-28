@@ -12,7 +12,6 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>sportsnet.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
@@ -25,7 +24,6 @@
     </appender>
 
     <appender name="RESULTS-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>sportsnet-results.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
@@ -47,7 +45,6 @@
     <root level="WARN">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
-        <appender-ref ref="RESULTS-FILE" />
     </root>
 
 </configuration>
