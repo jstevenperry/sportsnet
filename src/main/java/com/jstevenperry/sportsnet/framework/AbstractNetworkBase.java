@@ -16,6 +16,7 @@ import org.datavec.api.records.reader.RecordReader;
 import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
 import org.datavec.api.split.InputStreamInputSplit;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
+import org.jetbrains.annotations.NotNull;
 import org.nd4j.shade.guava.io.CharStreams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,11 +74,19 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
         return ret;
     }
 
-    public RecordReaderDataSetIterator createIterator(final List<Integer> yearsToPull,
-                                                      final SeasonDataDao<T> seasonDataDao,
-                                                      final TournamentResultDao tournamentResultDao,
-                                                      final TournamentParticipantDao tournamentParticipantDao,
+    public static RecordReaderDataSetIterator createIterator(final String csvData,
                                                       final NetworkParameters networkParameters) throws IOException, InterruptedException {
+        RecordReader recordReader = new CSVRecordReader(0, ',');
+        recordReader.initialize(new InputStreamInputSplit(new ByteArrayInputStream(CharStreams.toString(new StringReader(csvData)).getBytes())));
+        return new RecordReaderDataSetIterator(recordReader, 1000, networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
+    }
+
+    @NotNull
+    public String createCsvData(final List<Integer> yearsToPull,
+                                final SeasonDataDao<T> seasonDataDao,
+                                final TournamentResultDao tournamentResultDao,
+                                final TournamentParticipantDao tournamentParticipantDao,
+                                final NetworkParameters networkParameters) {
         StringWriter stringWriter = new StringWriter();
         CSVWriter csvWriter = new CSVWriter(stringWriter);
         for (Integer year : yearsToPull) {
@@ -118,9 +127,7 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
         //
         // Get the underlying String and via dl4j's arcane class structure transform it into a DataSet and return it
         StringBuffer stringBuffer = stringWriter.getBuffer();
-        RecordReader recordReader = new CSVRecordReader(0, ',');
-        recordReader.initialize(new InputStreamInputSplit(new ByteArrayInputStream(CharStreams.toString(new StringReader(stringBuffer.toString())).getBytes())));
-        return new RecordReaderDataSetIterator(recordReader, 1000, networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
+        return stringBuffer.toString();
     }
 
 }

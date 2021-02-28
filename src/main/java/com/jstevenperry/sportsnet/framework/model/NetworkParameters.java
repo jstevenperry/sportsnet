@@ -88,11 +88,11 @@ public class NetworkParameters implements Serializable {
         return yearsToTrainAndEvaluateNetwork;
     }
 
-    private List<Integer> getYearsToTrainNetwork() {
+    public List<Integer> getYearsToTrainNetwork() {
         return yearsToTrainAndEvaluateNetwork.get(0);
     }
 
-    private List<Integer> getYearsToEvaluateNetwork() {
+    public List<Integer> getYearsToEvaluateNetwork() {
         return yearsToTrainAndEvaluateNetwork.get(1);
     }
 
