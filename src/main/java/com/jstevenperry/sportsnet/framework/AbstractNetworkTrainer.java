@@ -169,9 +169,9 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
 
                 networkParameters.setNetworkLayout(networkLayout);
                 runBatchNetworkLayerTrainingLoop(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters, numberOfTrainingIterations, iterationNumber);
-                log.info("runBatchTriningLoop(): OUTER Iteration {} DONE.", iterationNumber);
+                log.debug("runBatchTriningLoop(): OUTER Iteration {} DONE.", iterationNumber);
             }
-            log.info("**** END OF BATCH LOOP ****");
+            log.debug("**** END OF BATCH LOOP ****");
         }
     }
 
@@ -194,7 +194,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                 runBatchActivationLoop(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters,
                         computeIterationNumberString(parentIteration, iterationNumber, numberOfTrainingIterations));
             }
-            log.info("**** END OF NETWORK LAYER LOOP ****");
+            log.debug("**** END OF NETWORK LAYER LOOP ****");
         }
     }
 
@@ -219,7 +219,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             //
             // Use select activation functions to configure the network
             List<ActivationFunctionMenu.ActivationFunctionChoice> activationFunctionChoices = fetchActivationChoices();
-            log.info("**** BEGIN ACTIVATION LOOP ****");
+            log.debug("**** BEGIN ACTIVATION LOOP ****");
             log.info("\t Using activation functions: {}", StringUtils.join(activationFunctionChoices.toArray(), ", "));
             for (ActivationFunctionMenu.ActivationFunctionChoice activationFunctionChoice : activationFunctionChoices) {
                 try {
@@ -233,7 +233,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                     log.error("Activation {} does not appear to work for this particular network configuration. Moving on to the next one.", activationFunctionChoice, e);
                 }
             }
-            log.info("**** END OF ACTIVATION LOOP ****");
+            log.debug("**** END OF ACTIVATION LOOP ****");
         }
     }
 
@@ -249,7 +249,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                      final String iteration) {
         List<UpdaterMenu.UpdaterChoice> updaterChoicesToUseForTraining = fetchUpdaterChoices();
         if (keepGoing()) {
-            log.info("**** BEGIN UPDATER LOOP ****");
+            log.debug("**** BEGIN UPDATER LOOP ****");
             log.info("\t Using updaters: {}", StringUtils.join(updaterChoicesToUseForTraining.toArray(), ", "));
             for (UpdaterMenu.UpdaterChoice updaterChoice : updaterChoicesToUseForTraining) {
                 // Set the IUpdater to use
@@ -267,7 +267,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                     log.error("Updater {} does not appear to work for this particular network configuration. Moving on to the next one.", updaterChoice, e);
                 }
             }
-            log.info("**** END OF UPDATER LOOP ****");
+            log.debug("**** END OF UPDATER LOOP ****");
         }
     }
 
@@ -306,8 +306,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                                final MultiLayerConfiguration configuration) throws IOException, InterruptedException {
         if (keepGoing()) {
             DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices = DataNormalizationMenu.DataNormalizationChoice.values();
-            log.info("**** BEGIN NORMALIZER LOOP ****");
-            log.info("\t Using normalizers: {}", StringUtils.join(normalizationChoices, ", "));
+            log.debug("**** BEGIN NORMALIZER LOOP ****");
+            log.debug("\t Using normalizers: {}", StringUtils.join(normalizationChoices, ", "));
             for (DataNormalizationMenu.DataNormalizationChoice dataNormalizationChoice : normalizationChoices) {
                 log.debug("\tUsing normalizer: {}", dataNormalizationChoice);
                 // Set the normalizer to use
@@ -315,7 +315,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                 runBatchLoopInternal(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters, iteration, configuration);
             }
         }
-        log.info("**** END OF NORMALIZER LOOP ****");
+        log.debug("**** END OF NORMALIZER LOOP ****");
     }
 
     private static void runBatchLoopInternal(final List<NetworkCandidate> networkCandidateList,
@@ -450,7 +450,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         log.debug(String.format("Evaluator stats: %s", eval.stats()));
         log.info(String.format("\tNetwork accuracy: %f%%", eval.accuracy() * 100.0));
         log.debug(networkParameters.toStringAbbreviated());
-        log.info("**** END OF TRAINING LOOP ({}/{}/{}) ****", networkParameters.getNormalizer(), networkParameters.getActivationFunction(), networkParameters.getUpdater());
+        log.debug("**** END OF TRAINING LOOP ({}/{}/{}) ****", networkParameters.getNormalizer(), networkParameters.getActivationFunction(), networkParameters.getUpdater());
         return trainedNetwork;
     }
 
