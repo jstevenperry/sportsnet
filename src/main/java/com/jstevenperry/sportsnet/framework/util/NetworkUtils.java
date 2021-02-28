@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -60,6 +59,7 @@ public class NetworkUtils {
     private static List<NetworkCandidate> loadNetworkFiles(final String[] networkFileNames) {
         List<NetworkCandidate> ret = new ArrayList<>();
         System.out.printf("Loading %d networks...%n", networkFileNames.length);
+        int numberOfNetworksLoaded = 0;
         for (String networkFileName : networkFileNames) {
             //
             // Load the network
@@ -82,7 +82,11 @@ public class NetworkUtils {
                 String message = String.format("Error loading network: %s", networkFileName);
                 log.error(message, e);
             }
+            if (numberOfNetworksLoaded > 0 && numberOfNetworksLoaded % 100 == 0) {
+                System.out.print("\n");
+            }
             System.out.print(".");
+            numberOfNetworksLoaded++;
         }
         System.out.print("\n");
         log.info("Loaded {} networks.", networkFileNames.length);
@@ -271,7 +275,9 @@ public class NetworkUtils {
     public static String generateRandomNetworkLayout(final Integer numberOfInputs, final Integer numberOfOutputs) {
         int numberOfHiddenLayers = NetworkProperties.getNumberOfHiddenLayers();
         List<Integer> neuronLayerDescriptor = new ArrayList<>();
-        for (int aa = 0; aa < numberOfHiddenLayers; aa++) { neuronLayerDescriptor.add(0); }
+        for (int aa = 0; aa < numberOfHiddenLayers; aa++) {
+            neuronLayerDescriptor.add(0);
+        }
 
         if (numberOfHiddenLayers < 5) {
             String errorMessage = String.format("Algorithm does not work well with < 5 hidden layers, you specified %s", numberOfHiddenLayers);

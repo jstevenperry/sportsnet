@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extends AbstractNetworkBase<T> {
 
@@ -37,11 +38,22 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
             Optional<AbstractTournamentRunnerPlugin<T>> tournamentRunnerPluginMaybe = selectPluginToRunMenu(scanner, tournamentRunnerPlugins);
             if (tournamentRunnerPluginMaybe.isPresent()) {
                 //
+                // Ask the user for a performance threshold
+                int performanceThreshold = scanPerformanceThreshold(scanner);
+                //
                 // Ask the user what they want to do
                 AbstractTournamentRunnerPlugin<T> tournamentRunnerPlugin = tournamentRunnerPluginMaybe.get();
                 List<NetworkCandidate> allSavedNetworks = NetworkUtils.loadNetworks(networkType);
                 List<NetworkCandidate> suitableNetworks = tournamentRunnerPlugin.computeValidNetworksForTournamentYear(allSavedNetworks);
                 if (!suitableNetworks.isEmpty()) {
+                    //
+                    // Filter out networks below the threshold
+                    double performanceThresholdDouble = performanceThreshold / 100.0;
+                    System.out.printf("Filtering networks above %3.2f%%...%n", performanceThresholdDouble * 100.0);
+                    suitableNetworks = suitableNetworks.stream()
+                            .filter(networkCandidate -> networkCandidate.getNetworkParameters().getNetworkAccuracy() >= performanceThresholdDouble)
+                            .collect(Collectors.toList());
+                    System.out.printf("Displaying %d networks.%n", suitableNetworks.size());
                     List<NetworkCandidate> selectedNetworks = NetworkPersister.displayNetworkSelectionMenu(scanner, suitableNetworks, NetworkPersister.Action.RUN);
                     List<GameCoordinate> gameList = tournamentRunnerPlugin.createTournamentGameList();
                     tournamentRunnerPlugin.runTournament(gameList, selectedNetworks);
@@ -52,6 +64,29 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
         } else {
             log.error("No TournamentRunnerPlugins, cannot run a network to simulate a tournament!");
         }
+    }
+
+    private Integer scanPerformanceThreshold(final BufferedReader scanner) {
+        int ret = 0;
+        String userInput = null;
+        while (StringUtils.isEmpty(userInput)) {
+            System.out.println("Enter network precision threshold (specify a number between 0 - 100) to filter networks to choose from.");
+            System.out.println("Only networks that perform above this threshold will be shown (enter 0 to choose all networks)");
+            System.out.print("==> ");
+            try {
+                // Get user input - a floating point number
+                userInput = scanner.readLine();
+                if (StringUtils.isNotEmpty(userInput)) {
+                    ret = Integer.parseInt(userInput);
+                    break;
+                }
+            } catch (Exception e) {
+                String message = String.format("Error: %s, please try again.", e.getLocalizedMessage());
+                log.error(message);
+                userInput = null; // Keep looping
+            }
+        }
+        return ret;
     }
 
     protected abstract List<AbstractTournamentRunnerPlugin<T>> loadPlugins(SeasonDataDao<T> seasonDataDao);
