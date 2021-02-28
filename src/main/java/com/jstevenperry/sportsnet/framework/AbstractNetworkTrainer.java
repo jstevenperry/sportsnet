@@ -191,10 +191,17 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         if (keepGoing()) {
             int iterationNumber = 0;
             while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
-                runBatchActivationLoop(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters, String.format("%d.%d", parentIteration, iterationNumber));
+                runBatchActivationLoop(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters, computeIterationNumberString(parentIteration, iterationNumber, numberOfTrainingIterations));
             }
             log.info("**** END OF NETWORK LAYER LOOP ****");
         }
+    }
+
+    static String computeIterationNumberString(final int parentIteration, final int iterationNumber, final int numberOfTrainingIterations) {
+        int iterationsPerformedSoFar = (parentIteration - 1) * numberOfTrainingIterations + iterationNumber;
+        int totalIterationsToPerform = numberOfTrainingIterations * numberOfTrainingIterations;
+        double percentageComplete = 100.0 * iterationsPerformedSoFar / totalIterationsToPerform;
+        return String.format("%d.%d (%3.4f%%)", parentIteration, iterationNumber, percentageComplete);
     }
 
     /**
@@ -561,7 +568,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         double performanceThreshold = NetworkProperties.getPerformanceThreshold().doubleValue();
         NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
         if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
-            log.info(String.format("*** Iteration %s: Performance threshold (%3.4f) EXCEEDED: %3.5f, saving network. ***",
+            log.info(String.format("*** Iteration %s: Performance threshold of %3.4f%% EXCEEDED: %3.5f%%, saving network. ***",
                     iteration, performanceThreshold, networkParameters.getNetworkAccuracy() * 100));
             NetworkPersister.saveNetwork(networkCandidate);
         } else {
