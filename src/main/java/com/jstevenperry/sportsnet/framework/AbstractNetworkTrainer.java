@@ -202,7 +202,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         int iterationsPerformedSoFar = (parentIteration - 1) * numberOfTrainingIterations + iterationNumber;
         int totalIterationsToPerform = numberOfTrainingIterations * numberOfTrainingIterations + numberOfTrainingIterations;
         double percentageComplete = 100.0 * iterationsPerformedSoFar / totalIterationsToPerform;
-        return String.format("%d.%d (%3.4f%%)", parentIteration, iterationNumber, percentageComplete);
+        return String.format("%d.%d (%2.1f%%)", parentIteration, iterationNumber, percentageComplete);
     }
 
     /**
@@ -499,8 +499,10 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                 }
             }
         }
-        log.info(String.format("\tIteration %s, Number of epochs: %d, Network error: %2.4f%%", iteration, epochCount, computeNetworkError(
-                computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), trainingData, network)) * 100));
+        log.info(String.format("\tIteration %s, Number of epochs: %d, Network error: %2.4f%%, Normalizer: %s, Updater: %s, Activation: %s", iteration, epochCount, computeNetworkError(
+                computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), trainingData, network)) * 100,
+                networkParameters.getNormalizer(), UpdaterMenu.UpdaterChoice.from(networkParameters.getUpdater()),
+                networkParameters.getActivationFunction()));
         return network;
     }
 

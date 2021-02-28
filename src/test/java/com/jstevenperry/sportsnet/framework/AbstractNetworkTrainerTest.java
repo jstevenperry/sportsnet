@@ -17,7 +17,7 @@ class AbstractNetworkTrainerTest {
         int currentInnerIteration = 34;
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration] / totalIterations ^ 2 + totalIterations
-        String expected = String.format("%s", "1.34 (2.0732%)");
+        String expected = String.format("%s", "1.34 (2.1%)");
         String actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
@@ -26,7 +26,7 @@ class AbstractNetworkTrainerTest {
         currentInnerIteration = 14;
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration] / totalIterations ^ 2 + totalIterations
-        expected = String.format("%s", "24.14 (45.6471%)");
+        expected = String.format("%s", "24.14 (45.6%)");
         actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
@@ -35,7 +35,7 @@ class AbstractNetworkTrainerTest {
         currentInnerIteration = 1; // Edge case
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration] / totalIterations ^ 2 + totalIterations
-        expected = String.format("%s", "1.1 (0.0099%)");
+        expected = String.format("%s", "1.1 (0.0%)");
         actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
     }
