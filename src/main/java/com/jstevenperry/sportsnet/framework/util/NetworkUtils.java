@@ -82,7 +82,7 @@ public class NetworkUtils {
                 String message = String.format("Error loading network: %s", networkFileName);
                 log.error(message, e);
             }
-            if (numberOfNetworksLoaded > 0 && numberOfNetworksLoaded % 100 == 0) {
+            if (numberOfNetworksLoaded > 0 && numberOfNetworksLoaded % 10 == 0) {
                 System.out.printf("%d\n", numberOfNetworksLoaded);
             }
             System.out.print(".");
