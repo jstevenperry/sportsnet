@@ -132,7 +132,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             fetchNetworkParameters(bufferedReader, networkParameters, tournamentParticipantDao, numberOfOutputClasses);
             //
             // Generate network structure
-            log.info("Using network layout: {}", networkParameters.getNetworkLayout());
             log.debug("Network parameters acquired.");
             //
             // Compute the training and evaluation data needed to train and evaluate networks
@@ -156,10 +155,10 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * without having to try them all manually.
      */
     private static void runBatchTrainingLoop(final List<NetworkCandidate> networkCandidateList,
-                                      final String trainingDataCsv,
-                                      final String evaluationDataCsv,
-                                      final NetworkParameters networkParameters,
-                                      final int numberOfTrainingIterations) {
+                                             final String trainingDataCsv,
+                                             final String evaluationDataCsv,
+                                             final NetworkParameters networkParameters,
+                                             final int numberOfTrainingIterations) {
         if (keepGoing()) {
             int iterationNumber = 0;
             while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
@@ -183,23 +182,24 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * without having to try them all manually.
      */
     private static void runBatchNetworkLayerTrainingLoop(final List<NetworkCandidate> networkCandidateList,
-                                                  final String trainingDataCsv,
-                                                  final String evaluationDataCsv,
-                                                  final NetworkParameters networkParameters,
-                                                  final int numberOfTrainingIterations,
-                                                  final int parentIteration) {
+                                                         final String trainingDataCsv,
+                                                         final String evaluationDataCsv,
+                                                         final NetworkParameters networkParameters,
+                                                         final int numberOfTrainingIterations,
+                                                         final int parentIteration) {
         if (keepGoing()) {
             int iterationNumber = 0;
             while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
-                runBatchActivationLoop(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters,
-                        computeIterationNumberString(parentIteration, iterationNumber, numberOfTrainingIterations));
+                String iteration = computeIterationNumberString(parentIteration, iterationNumber, numberOfTrainingIterations);
+                log.info("Iteration: {}", iteration);
+                runBatchActivationLoop(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters, iteration);
             }
             log.debug("**** END OF NETWORK LAYER LOOP ****");
         }
     }
 
     static String computeIterationNumberString(final int parentIteration, final int iterationNumber, final int numberOfTrainingIterations) {
-        int iterationsPerformedSoFar = (parentIteration - 1) * numberOfTrainingIterations + iterationNumber;
+        int iterationsPerformedSoFar = (parentIteration - 1) * numberOfTrainingIterations + iterationNumber - 1;
         int totalIterationsToPerform = numberOfTrainingIterations * numberOfTrainingIterations + numberOfTrainingIterations;
         double percentageComplete = 100.0 * iterationsPerformedSoFar / totalIterationsToPerform;
         return String.format("%d.%d (%2.1f%%)", parentIteration, iterationNumber, percentageComplete);
@@ -211,16 +211,16 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * manually.
      */
     private static void runBatchActivationLoop(final List<NetworkCandidate> networkCandidateList,
-                                        final String trainingDataCsv,
-                                        final String evaluationDataCsv,
-                                        final NetworkParameters networkParameters,
-                                        final String iteration) {
+                                               final String trainingDataCsv,
+                                               final String evaluationDataCsv,
+                                               final NetworkParameters networkParameters,
+                                               final String iteration) {
         if (keepGoing()) {
             //
             // Use select activation functions to configure the network
             List<ActivationFunctionMenu.ActivationFunctionChoice> activationFunctionChoices = fetchActivationChoices();
             log.debug("**** BEGIN ACTIVATION LOOP ****");
-            log.info("\t Using activation functions: {}", StringUtils.join(activationFunctionChoices.toArray(), ", "));
+            log.debug("\t Using activation functions: {}", StringUtils.join(activationFunctionChoices.toArray(), ", "));
             for (ActivationFunctionMenu.ActivationFunctionChoice activationFunctionChoice : activationFunctionChoices) {
                 try {
                     log.debug("\tUsing Activation: {}", activationFunctionChoice);
@@ -243,14 +243,14 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * manually.
      */
     private static void runBatchUpdaterLoop(final List<NetworkCandidate> networkCandidateList,
-                                     final String trainingDataCsv,
-                                     final String evaluationDataCsv,
-                                     final NetworkParameters networkParameters,
-                                     final String iteration) {
+                                            final String trainingDataCsv,
+                                            final String evaluationDataCsv,
+                                            final NetworkParameters networkParameters,
+                                            final String iteration) {
         List<UpdaterMenu.UpdaterChoice> updaterChoicesToUseForTraining = fetchUpdaterChoices();
         if (keepGoing()) {
             log.debug("**** BEGIN UPDATER LOOP ****");
-            log.info("\t Using updaters: {}", StringUtils.join(updaterChoicesToUseForTraining.toArray(), ", "));
+            log.debug("\t Using updaters: {}", StringUtils.join(updaterChoicesToUseForTraining.toArray(), ", "));
             for (UpdaterMenu.UpdaterChoice updaterChoice : updaterChoicesToUseForTraining) {
                 // Set the IUpdater to use
                 log.debug("\tUsing Updater: {}", updaterChoice);
@@ -344,7 +344,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         // Only keep networks in memory that are above the keep threshold to avoid running out of memory for large batch runs.
         if (networkCandidate.getNetworkParameters().getNetworkAccuracy() * 100 >= NetworkProperties.getPerformanceThresholdNetworkKeep().doubleValue()) {
             log.info("INNER Iteration: {}, network retained.", iteration);
-            log.info(computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, trainedNetwork).stats());
+            Evaluation evaluation = computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, trainedNetwork);
+            log.info(evaluation.stats());
             networkCandidateList.add(networkCandidate);
             saveNetworkIfAboveThreshold(networkCandidate, iteration);
         } else {
@@ -448,7 +449,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         Evaluation eval = computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), evaluationData, trainedNetwork);
         networkParameters.setNetworkAccuracy(eval.accuracy());
         log.debug(String.format("Evaluator stats: %s", eval.stats()));
-        log.info(String.format("\tNetwork accuracy: %f%%", eval.accuracy() * 100.0));
+        log.info(String.format("\tIteration %s, Network accuracy: %f%%, No. epochs: %d, Normalizer: %s, Updater: %s, Activation: %s",
+                iteration, eval.accuracy() * 100.0,
+                networkParameters.getNumberOfEpochs(),
+                networkParameters.getNormalizer(), UpdaterMenu.UpdaterChoice.from(networkParameters.getUpdater()),
+                networkParameters.getActivationFunction()));
         log.debug(networkParameters.toStringAbbreviated());
         log.debug("**** END OF TRAINING LOOP ({}/{}/{}) ****", networkParameters.getNormalizer(), networkParameters.getActivationFunction(), networkParameters.getUpdater());
         return trainedNetwork;
@@ -499,7 +504,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                 }
             }
         }
-        log.info(String.format("\tIteration %s, Number of epochs: %d, Network error: %2.4f%%, Normalizer: %s, Updater: %s, Activation: %s", iteration, epochCount, computeNetworkError(
+        log.debug(String.format("\tIteration %s, Number of epochs: %d, Network error: %2.4f%%, Normalizer: %s, Updater: %s, Activation: %s", iteration, epochCount, computeNetworkError(
                 computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), trainingData, network)) * 100,
                 networkParameters.getNormalizer(), UpdaterMenu.UpdaterChoice.from(networkParameters.getUpdater()),
                 networkParameters.getActivationFunction()));
@@ -515,18 +520,19 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     }
 
     private String computeTrainingDataCsv(final List<Integer> yearsToCompute,
-                                                 final SeasonDataDao<T> seasonDataDao,
-                                                 final TournamentResultDao tournamentResultDao,
-                                                 final TournamentParticipantDao tournamentParticipantDao,
-                                                 final NetworkParameters networkParameters) {
-            return createCsvData(yearsToCompute, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+                                          final SeasonDataDao<T> seasonDataDao,
+                                          final TournamentResultDao tournamentResultDao,
+                                          final TournamentParticipantDao tournamentParticipantDao,
+                                          final NetworkParameters networkParameters) {
+        return createCsvData(yearsToCompute, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
     }
+
     private String computeEvaluationDataCsv(final List<Integer> yearsToCompute,
-                                                 final SeasonDataDao<T> seasonDataDao,
-                                                 final TournamentResultDao tournamentResultDao,
-                                                 final TournamentParticipantDao tournamentParticipantDao,
-                                                 final NetworkParameters networkParameters) {
-            return createCsvData(yearsToCompute, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
+                                            final SeasonDataDao<T> seasonDataDao,
+                                            final TournamentResultDao tournamentResultDao,
+                                            final TournamentParticipantDao tournamentParticipantDao,
+                                            final NetworkParameters networkParameters) {
+        return createCsvData(yearsToCompute, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
     }
 
     private static void reupPropertiesBetweenEpochBreaks(final NetworkParameters networkParameters) {
