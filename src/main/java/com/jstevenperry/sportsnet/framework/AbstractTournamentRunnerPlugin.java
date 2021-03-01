@@ -329,7 +329,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
             winner = homeTeamCoordinate;
         } else if (homeTeamDistanceScore == awayTeamDistanceScore) {
             // Tie goes to home (it has to go to someone)
-            winner = homeTeamCoordinate;
+            winner = jumpBall(homeTeamCoordinate, awayTeamCoordinate);
             log.warn("TOURNAMENT DISTANCE TIE-BREAKER({}): Giving the win to team: {}", homeTeamDistanceScore, winner.getName());
         } else {
             // Away team is winner
@@ -343,6 +343,13 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         ));
 
         return winner;
+    }
+
+    private boolean jumpBall = false;
+
+    private TeamCoordinate jumpBall(final TeamCoordinate homeTeamCoordinate, final TeamCoordinate awayTeamCoordinate) {
+        jumpBall = !jumpBall; // toggle the possession arrow
+        return (jumpBall) ? homeTeamCoordinate : awayTeamCoordinate;
     }
 
     private BigDecimal[] convertToBigDecimal(final double[] predictions) {
