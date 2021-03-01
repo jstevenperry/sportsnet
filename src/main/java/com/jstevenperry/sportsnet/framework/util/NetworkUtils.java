@@ -83,7 +83,7 @@ public class NetworkUtils {
                 log.error(message, e);
             }
             if (numberOfNetworksLoaded > 0 && numberOfNetworksLoaded % 100 == 0) {
-                System.out.print("\n");
+                System.out.printf("%d\n", numberOfNetworksLoaded);
             }
             System.out.print(".");
             numberOfNetworksLoaded++;
