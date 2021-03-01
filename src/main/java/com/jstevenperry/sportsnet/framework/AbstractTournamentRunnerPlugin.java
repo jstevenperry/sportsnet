@@ -68,6 +68,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     private final Map<String, String> teamCsvDataMap = new HashMap<>(); // optimization, populated once per team. Savings: NumberOfTournamentTeams * NumberOfNetworks * (NumberOfTournamentGames - 1)
     private String allSeasonDataCsv; // optimization - populates once per run. Savings: NumberOfTournamentTeams * NumberOfNetworks * (NumberOfTournamentGames - 1)
     private final Map<String, String> csvDataMap = new HashMap<>(); // optimization - populated once per matchup. Savings: NumberOfTournamentGames * (NumberOfNetworks - 1)
+    private final Map<String, DataSet> dataSetMap = new HashMap<>(); // Optimization. Savings: NumberOfTournamentGames * (NumberOfNetworks - 1)
 
     public AbstractTournamentRunnerPlugin(final SeasonDataDao<T> seasonDataDao) {
         this.seasonDataDao = seasonDataDao;
@@ -266,28 +267,33 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         int awayTeamWins = 0;
         for (NetworkCandidate networkCandidate : networkCandidates) {
             MultiLayerNetwork network = networkCandidate.getMultiLayerNetwork();
-            //
-            // Compute RecordReaderDataSetIterator from the two sets of season data
-            Optional<RecordReaderDataSetIterator> recordReaderDataSetIteratorMaybe = computeRecordIterator(homeTeamSeasonData, awayTeamSeasonData, networkCandidate.getNetworkParameters());
-            if (recordReaderDataSetIteratorMaybe.isPresent()) {
+            String dataSetMapKey = computeTeamNameMapKey(homeTeamCoordinate.getName(), awayTeamCoordinate.getName());
+            DataSet tournamentData = dataSetMap.get(dataSetMapKey);
+            if (tournamentData == null) {
+                log.info("***** COMPUTING DataSet for matchup: {} *****", dataSetMapKey);
+                //
+                // Compute RecordReaderDataSetIterator from the two sets of season data
+                RecordReaderDataSetIterator recordReaderDataSetIterator = computeRecordIterator(homeTeamSeasonData, awayTeamSeasonData, networkCandidate.getNetworkParameters());
                 DataNormalization normalizer = networkCandidate.getNetworkParameters().getNormalizer().getDataNormalization();
-                DataSet tournamentData = recordReaderDataSetIteratorMaybe.get().next();
+                tournamentData = recordReaderDataSetIterator.next();
                 normalizer.fit(tournamentData);
                 normalizer.transform(tournamentData);
-                INDArray indArrayResults = network.output(tournamentData.getFeatures());
-                //
-                // Figure out who we declare the winner and compute their TeamCoordinates according to the algorithm
-                try {
-                    TeamCoordinate winningTeamCoordinate = computeWinner(indArrayResults.toDoubleMatrix(), homeTeamCoordinate, awayTeamCoordinate);
-                    if (winningTeamCoordinate.equals(homeTeamCoordinate)) {
-                        homeTeamWins++;
-                    } else {
-                        awayTeamWins++;
-                    }
-                } catch (NumberFormatException e) {
-                    String errorMessage = String.format("NumberFormatException while running %s vs %s for network %s. Skipping.", networkCandidate, homeTeamCoordinate, awayTeamCoordinate);
-                    log.error(errorMessage);
+                dataSetMap.put(dataSetMapKey, tournamentData);
+            }
+            // Run the network against the normalized data
+            INDArray indArrayResults = network.output(tournamentData.getFeatures());
+            //
+            // Figure out who we declare the winner and compute their TeamCoordinates according to the algorithm
+            try {
+                TeamCoordinate winningTeamCoordinate = computeWinner(indArrayResults.toDoubleMatrix(), homeTeamCoordinate, awayTeamCoordinate);
+                if (winningTeamCoordinate.equals(homeTeamCoordinate)) {
+                    homeTeamWins++;
+                } else {
+                    awayTeamWins++;
                 }
+            } catch (NumberFormatException e) {
+                String errorMessage = String.format("NumberFormatException while running %s vs %s for network %s. Skipping.", networkCandidate, homeTeamCoordinate, awayTeamCoordinate);
+                log.error(errorMessage);
             }
         }
         // Compute the winningTeamCoordinate based on the which team has the most votes (tie goes to home team)
@@ -295,8 +301,12 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         T winnerSeasonData = (homeTeamWins >= awayTeamWins) ? homeTeamSeasonData : awayTeamSeasonData;
         teamCoordinate.setName(winnerSeasonData.getTeamName());
         getTeamCoordinateSeasonDataMap().put(teamCoordinate, winnerSeasonData);
-        log.debug("*** WINNER: {} with {} wins in {} simulated matchups ***",
+        log.debug("***** WINNER: {} with {} wins in {} simulated matchups *****",
                 teamCoordinate.getName(), Math.max(homeTeamWins, awayTeamWins), networkCandidates.size());
+    }
+
+    private String computeTeamNameMapKey(final String homeTeamName, final String awayTeamName) {
+        return String.format("%s_vs_%s", homeTeamName, awayTeamName);
     }
 
     protected TeamCoordinate computeWinner(final double[][] results,
@@ -386,10 +396,10 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         return ret;
     }
 
-    protected Optional<RecordReaderDataSetIterator> computeRecordIterator(final T homeTeamSeasonData,
-                                                                          final T awayTeamSeasonData,
-                                                                          final NetworkParameters networkParameters) {
-        Optional<RecordReaderDataSetIterator> ret;
+    protected RecordReaderDataSetIterator computeRecordIterator(final T homeTeamSeasonData,
+                                                                final T awayTeamSeasonData,
+                                                                final NetworkParameters networkParameters) {
+        RecordReaderDataSetIterator ret;
         //
         // Wrap both rows in a CSVRecordReader, with all the bells and whistles and return the appropriate iterator
         String stringSource = computeCsvData(homeTeamSeasonData, awayTeamSeasonData, networkParameters);
@@ -399,8 +409,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
             RecordReader tournamentReader = new CSVRecordReader(0, ',');
             InputStreamInputSplit split = new InputStreamInputSplit(inputStream);
             tournamentReader.initialize(split);
-            RecordReaderDataSetIterator tournamentIterator = new RecordReaderDataSetIterator(tournamentReader, BATCH_SIZE);
-            ret = Optional.of(tournamentIterator);
+            ret = new RecordReaderDataSetIterator(tournamentReader, BATCH_SIZE);
         } catch (IOException | InterruptedException e) {
             String message = String.format("Error creating InputStream from CSV data:\n%s", stringSource);
             log.error(message, e);
@@ -411,15 +420,17 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
 
     @NotNull
     private String computeCsvData(final T homeTeamSeasonData, final T awayTeamSeasonData, final NetworkParameters networkParameters) {
-        String ret = csvDataMap.get(homeTeamSeasonData.getTeamName() + awayTeamSeasonData.getTeamName());
+        String mapKey = computeTeamNameMapKey(homeTeamSeasonData.getTeamName(), awayTeamSeasonData.getTeamName());
+        String ret = csvDataMap.get(mapKey);
         if (ret == null) {
-            log.debug("computeCsvData({}, {}): Computing CSV data for matchup", homeTeamSeasonData.getTeamName(), awayTeamSeasonData.getTeamName());
+            log.debug("***** COMPUTING CSV DATA FOR MATCHUP {} VS {} *****",
+                    homeTeamSeasonData.getTeamName(), awayTeamSeasonData.getTeamName());
             StringBuilder stringSource = new StringBuilder();
             //
             // Compute one row of data with home team first
             String homeCsv = teamCsvDataMap.get(homeTeamSeasonData.getTeamName());
             if (homeCsv == null) {
-                log.debug("computeCsvData(): Computing season data CSV for {}...", homeTeamSeasonData.getTeamName());
+                log.debug("***** COMPUTING SEASON DATA CSV FOR {} *****", homeTeamSeasonData.getTeamName());
                 String[] homeData = networkParameters.transformRow(seasonDataAsDoubleList(homeTeamSeasonData));
                 homeCsv = String.join(",", homeData);
                 teamCsvDataMap.put(homeTeamSeasonData.getTeamName(), homeCsv);
@@ -430,7 +441,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
             // Compute another row of data with away team first
             String awayCsv = teamCsvDataMap.get(awayTeamSeasonData.getTeamName());
             if (awayCsv == null) {
-                log.debug("computeCsvData(): Computing season data CSV for {}...", awayTeamSeasonData.getTeamName());
+                log.debug("***** COMPUTING SEASON DATA CSV FOR {} *****", awayTeamSeasonData.getTeamName());
                 String[] awayData = networkParameters.transformRow(seasonDataAsDoubleList(awayTeamSeasonData));
                 awayCsv = String.join(",", awayData);
                 teamCsvDataMap.put(awayTeamSeasonData.getTeamName(), awayCsv);
@@ -441,7 +452,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
             if (NetworkProperties.getNormalizeAcrossAllSeasonData()) {
                 stringSource.append(computeStringSourceForAllSeasonData(networkParameters));
             }
-            csvDataMap.put(homeTeamSeasonData.getTeamName() + awayTeamSeasonData.getTeamName(), stringSource.toString());
+            csvDataMap.put(mapKey, stringSource.toString());
             ret = stringSource.toString();
         }
         return ret;
@@ -450,7 +461,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     private String computeStringSourceForAllSeasonData(final NetworkParameters networkParameters) {
         if (allSeasonDataCsv == null) {
             StringBuilder stringSource = new StringBuilder();
-            log.info("computeStringSourceForAllSeasonData(): Adding all season data for normalization");
+            log.info("***** ADDING ALL SEASON DATA FOR NORMALIZATION *****");
             Map<String, T> seasonDataMap = getTeamSeasonDataMap();
             Set<String> teamNames = seasonDataMap.keySet();
             teamNames.forEach(teamName -> {
