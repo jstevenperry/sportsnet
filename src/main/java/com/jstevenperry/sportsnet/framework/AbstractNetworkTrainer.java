@@ -45,7 +45,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -53,6 +55,10 @@ import java.util.StringTokenizer;
 public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> extends AbstractNetworkBase<T> {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractNetworkTrainer.class);
+
+    // My "class variables of shame", but sometimes you need a little optimization (and place to put it)
+    private final Map<DataNormalizationMenu.DataNormalizationChoice, DataSet> trainingDataSetMap = new HashMap<>();
+    private final Map<DataNormalizationMenu.DataNormalizationChoice, DataSet> evaluationDataSetMap = new HashMap<>();
 
     /**
      * Get the data elements the user wants to use to train the network.
@@ -143,6 +149,10 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             // GO!
             runBatchTrainingLoop(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters, numberOfTrainingIterations);
             NetworkUtils.displayNetworkList(networkCandidateList);
+            //
+            // Clean out maps
+            evaluationDataSetMap.clear();
+            trainingDataSetMap.clear();
         }
         return networkParameters;
     }
@@ -154,11 +164,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * is tested starting here to try and find the optimal network settings
      * without having to try them all manually.
      */
-    private static void runBatchTrainingLoop(final List<NetworkCandidate> networkCandidateList,
-                                             final String trainingDataCsv,
-                                             final String evaluationDataCsv,
-                                             final NetworkParameters networkParameters,
-                                             final int numberOfTrainingIterations) {
+    private void runBatchTrainingLoop(final List<NetworkCandidate> networkCandidateList,
+                                      final String trainingDataCsv,
+                                      final String evaluationDataCsv,
+                                      final NetworkParameters networkParameters,
+                                      final int numberOfTrainingIterations) {
         if (keepGoing()) {
             int iterationNumber = 0;
             while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
@@ -181,12 +191,12 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * is tested starting here to try and find the optimal network settings
      * without having to try them all manually.
      */
-    private static void runBatchNetworkLayerTrainingLoop(final List<NetworkCandidate> networkCandidateList,
-                                                         final String trainingDataCsv,
-                                                         final String evaluationDataCsv,
-                                                         final NetworkParameters networkParameters,
-                                                         final int numberOfTrainingIterations,
-                                                         final int parentIteration) {
+    private void runBatchNetworkLayerTrainingLoop(final List<NetworkCandidate> networkCandidateList,
+                                                  final String trainingDataCsv,
+                                                  final String evaluationDataCsv,
+                                                  final NetworkParameters networkParameters,
+                                                  final int numberOfTrainingIterations,
+                                                  final int parentIteration) {
         if (keepGoing()) {
             int iterationNumber = 0;
             while (iterationNumber++ < numberOfTrainingIterations && keepGoing()) {
@@ -210,11 +220,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * and find the optimal network configuration without having to try them all
      * manually.
      */
-    private static void runBatchActivationLoop(final List<NetworkCandidate> networkCandidateList,
-                                               final String trainingDataCsv,
-                                               final String evaluationDataCsv,
-                                               final NetworkParameters networkParameters,
-                                               final String iteration) {
+    private void runBatchActivationLoop(final List<NetworkCandidate> networkCandidateList,
+                                        final String trainingDataCsv,
+                                        final String evaluationDataCsv,
+                                        final NetworkParameters networkParameters,
+                                        final String iteration) {
         if (keepGoing()) {
             //
             // Use select activation functions to configure the network
@@ -242,11 +252,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
      * and find the optimal network configuration without having to try them all
      * manually.
      */
-    private static void runBatchUpdaterLoop(final List<NetworkCandidate> networkCandidateList,
-                                            final String trainingDataCsv,
-                                            final String evaluationDataCsv,
-                                            final NetworkParameters networkParameters,
-                                            final String iteration) {
+    private void runBatchUpdaterLoop(final List<NetworkCandidate> networkCandidateList,
+                                     final String trainingDataCsv,
+                                     final String evaluationDataCsv,
+                                     final NetworkParameters networkParameters,
+                                     final String iteration) {
         List<UpdaterMenu.UpdaterChoice> updaterChoicesToUseForTraining = fetchUpdaterChoices();
         if (keepGoing()) {
             log.debug("**** BEGIN UPDATER LOOP ****");
@@ -298,12 +308,12 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         return ret;
     }
 
-    private static void runBatchNormalizerLoop(final List<NetworkCandidate> networkCandidateList,
-                                               final String trainingDataCsv,
-                                               final String evaluationDataCsv,
-                                               final NetworkParameters networkParameters,
-                                               final String iteration,
-                                               final MultiLayerConfiguration configuration) throws IOException, InterruptedException {
+    private void runBatchNormalizerLoop(final List<NetworkCandidate> networkCandidateList,
+                                        final String trainingDataCsv,
+                                        final String evaluationDataCsv,
+                                        final NetworkParameters networkParameters,
+                                        final String iteration,
+                                        final MultiLayerConfiguration configuration) throws IOException, InterruptedException {
         if (keepGoing()) {
             DataNormalizationMenu.DataNormalizationChoice[] normalizationChoices = DataNormalizationMenu.DataNormalizationChoice.values();
             log.debug("**** BEGIN NORMALIZER LOOP ****");
@@ -312,28 +322,59 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                 log.debug("\tUsing normalizer: {}", dataNormalizationChoice);
                 // Set the normalizer to use
                 networkParameters.setNormalizer(dataNormalizationChoice);
-                runBatchLoopInternal(networkCandidateList, trainingDataCsv, evaluationDataCsv, networkParameters, iteration, configuration);
+                // Reuse the normalized data from the data set map
+                DataSet trainingData = fetchOrCreateTrainingData(trainingDataCsv, networkParameters, dataNormalizationChoice);
+                DataSet evaluationData = fetchOrCreateEvaluationData(evaluationDataCsv, networkParameters, dataNormalizationChoice);
+                runBatchLoopInternal(networkCandidateList, trainingData, evaluationData, networkParameters, iteration, configuration);
             }
         }
         log.debug("**** END OF NORMALIZER LOOP ****");
     }
 
-    private static void runBatchLoopInternal(final List<NetworkCandidate> networkCandidateList,
-                                             final String trainingDataCsv,
-                                             final String evaluationDataCsv,
-                                             final NetworkParameters networkParameters,
-                                             final String iteration,
-                                             final MultiLayerConfiguration configuration) throws IOException, InterruptedException {
-        //
-        // Create training and evaluation
-        RecordReaderDataSetIterator trainingDataIterator = createIterator(trainingDataCsv, networkParameters); // TODO: CREATE THIS ONCE
-        RecordReaderDataSetIterator evaluationDataIterator = createIterator(evaluationDataCsv, networkParameters); // TODO: CREATE THIS ONCE
+    private DataSet fetchOrCreateEvaluationData(final String evaluationDataCsv, final NetworkParameters networkParameters, final DataNormalizationMenu.DataNormalizationChoice dataNormalizationChoice) throws IOException, InterruptedException {
+        DataSet evaluationData = evaluationDataSetMap.get(dataNormalizationChoice);
+        if (evaluationData == null) {
+            log.info("*** CREATING EVALUATION DATA...");
+            //
+            // Create training and evaluation
+            RecordReaderDataSetIterator evaluationDataIterator = createIterator(evaluationDataCsv, networkParameters);
+            evaluationData = evaluationDataIterator.next();
+            //
+            // Prepare the data
+            DataNormalization normalizer = networkParameters.getNormalizer().getDataNormalization();
+            normalizeTrainingData(evaluationData, normalizer);
+            evaluationDataSetMap.put(dataNormalizationChoice, evaluationData);
+        }
+        return evaluationData;
+    }
+
+    private DataSet fetchOrCreateTrainingData(final String trainingDataCsv, final NetworkParameters networkParameters, final DataNormalizationMenu.DataNormalizationChoice dataNormalizationChoice) throws IOException, InterruptedException {
+        DataSet trainingData = trainingDataSetMap.get(dataNormalizationChoice);
+        if (trainingData == null) {
+            log.info("*** CREATING TRAINING DATA...");
+            //
+            // Create training and evaluation
+            RecordReaderDataSetIterator trainingDataIterator = createIterator(trainingDataCsv, networkParameters);
+            trainingData = trainingDataIterator.next();
+            trainingDataIterator.setCollectMetaData(true);
+            //
+            // Prepare the data
+            DataNormalization normalizer = networkParameters.getNormalizer().getDataNormalization();
+            normalizeTrainingData(trainingData, normalizer);
+            trainingDataSetMap.put(dataNormalizationChoice, trainingData);
+        }
+        return trainingData;
+    }
+
+    private void runBatchLoopInternal(final List<NetworkCandidate> networkCandidateList,
+                                      final DataSet trainingData,
+                                      final DataSet evaluationData,
+                                      final NetworkParameters networkParameters,
+                                      final String iteration,
+                                      final MultiLayerConfiguration configuration) {
         //
         // Train the network. If nothing goes wrong, return the trained network.
         log.debug("Training network...");
-        DataSet trainingData = trainingDataIterator.next();
-        DataSet evaluationData = evaluationDataIterator.next();
-        trainingDataIterator.setCollectMetaData(true);
         MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingData, evaluationData, iteration);
         //
         // Save the network if its performance is at or above the threshold.
@@ -437,10 +478,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
                                                 final DataSet trainingData,
                                                 final DataSet evaluationData,
                                                 final String iteration) {
-        //
-        // Prepare the data
-        DataNormalization normalizer = networkParameters.getNormalizer().getDataNormalization();
-        normalizeTrainingData(trainingData, evaluationData, normalizer);
         //
         // The training loop, returns the trained network model
         MultiLayerNetwork trainedNetwork = trainNetwork(configuration, networkParameters, trainingData, iteration);
@@ -584,11 +621,11 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         }
     }
 
-    private static void normalizeTrainingData(final DataSet trainingData, final DataSet testData, final DataNormalization normalizer) {
+    private static void normalizeTrainingData(final DataSet testData, final DataNormalization normalizer) {
         log.debug("Normalizing data...");
-        normalizer.fit(trainingData);           // Collect the statistics (mean/stdev) from the training data. This does not modify the input data
-        normalizer.transform(trainingData);     // Apply normalization to the training data
-        double[][] trainingDataFeatures = trainingData.getFeatures().toDoubleMatrix();
+        normalizer.fit(testData);           // Collect the statistics (mean/stdev) from the training data. This does not modify the input data
+        normalizer.transform(testData);     // Apply normalization to the training data
+        double[][] trainingDataFeatures = testData.getFeatures().toDoubleMatrix();
         // Dump out a few records as a sanity check
         int sampleSize = 5;
         int sampleCount = 0;
@@ -598,7 +635,6 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
             }
             log.debug(String.format("normalizeTrainingData(): Training Data:\n%s", Arrays.toString(feature)));
         }
-        normalizer.transform(testData);         // Apply normalization to the test data. This is using statistics calculated from the *training* set
         log.debug("Normalizing data...DONE");
     }
 
