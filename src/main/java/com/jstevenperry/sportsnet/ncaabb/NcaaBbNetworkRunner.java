@@ -30,14 +30,14 @@ public class NcaaBbNetworkRunner extends AbstractNetworkRunner<NcaaBbSeasonData>
     @Override
     protected List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> loadPlugins(final SeasonDataDao<NcaaBbSeasonData> ncaaBbSeasonDataDao) {
         List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> ret = new ArrayList<>();
-        ret.add(new TournamentRunnerPlugin2007(ncaaBbSeasonDataDao));
-        ret.add(new TournamentRunnerPlugin2008(ncaaBbSeasonDataDao));
-        ret.add(new TournamentRunnerPlugin2009(ncaaBbSeasonDataDao));
-        ret.add(new TournamentRunnerPlugin2010(ncaaBbSeasonDataDao));
-        ret.add(new TournamentRunnerPlugin2013(ncaaBbSeasonDataDao));
-        ret.add(new TournamentRunnerPlugin2016(ncaaBbSeasonDataDao));
-        ret.add(new TournamentRunnerPlugin2017(ncaaBbSeasonDataDao));
         ret.add(new TournamentRunnerPlugin2018(ncaaBbSeasonDataDao));
+        ret.add(new TournamentRunnerPlugin2017(ncaaBbSeasonDataDao));
+        ret.add(new TournamentRunnerPlugin2016(ncaaBbSeasonDataDao));
+        ret.add(new TournamentRunnerPlugin2013(ncaaBbSeasonDataDao));
+        ret.add(new TournamentRunnerPlugin2010(ncaaBbSeasonDataDao));
+        ret.add(new TournamentRunnerPlugin2009(ncaaBbSeasonDataDao));
+        ret.add(new TournamentRunnerPlugin2008(ncaaBbSeasonDataDao));
+        ret.add(new TournamentRunnerPlugin2007(ncaaBbSeasonDataDao));
 
         return ret;
     }
