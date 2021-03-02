@@ -20,6 +20,7 @@ import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
 import org.datavec.api.split.InputStreamInputSplit;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.jetbrains.annotations.NotNull;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
@@ -60,9 +61,14 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
     private static final Logger log = LoggerFactory.getLogger(AbstractTournamentRunnerPlugin.class);
 
     private static final int BATCH_SIZE = 2000;
+    // My "class variables of shame", but sometimes you need a little optimization (and place to put it)
     private final SeasonDataDao<T> seasonDataDao;
     private Map<TeamCoordinate, T> teamCoordinateSeasonDataMap;
     private Map<String, T> teamSeasonDataMap;
+    private final Map<String, String> teamCsvDataMap = new HashMap<>(); // optimization, populated once per team. Savings: NumberOfTournamentTeams * NumberOfNetworks * (NumberOfTournamentGames - 1)
+    private String allSeasonDataCsv; // optimization - populates once per run. Savings: NumberOfTournamentTeams * NumberOfNetworks * (NumberOfTournamentGames - 1)
+    private final Map<String, String> csvDataMap = new HashMap<>(); // optimization - populated once per matchup. Savings: NumberOfTournamentGames * (NumberOfNetworks - 1)
+    private final Map<String, DataSet> dataSetMap = new HashMap<>(); // Optimization. Savings: NumberOfTournamentGames * (NumberOfNetworks - 1)
 
     public AbstractTournamentRunnerPlugin(final SeasonDataDao<T> seasonDataDao) {
         this.seasonDataDao = seasonDataDao;
@@ -261,28 +267,33 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         int awayTeamWins = 0;
         for (NetworkCandidate networkCandidate : networkCandidates) {
             MultiLayerNetwork network = networkCandidate.getMultiLayerNetwork();
-            //
-            // Compute RecordReaderDataSetIterator from the two sets of season data
-            Optional<RecordReaderDataSetIterator> recordReaderDataSetIteratorMaybe = computeRecordIterator(homeTeamSeasonData, awayTeamSeasonData, networkCandidate.getNetworkParameters());
-            if (recordReaderDataSetIteratorMaybe.isPresent()) {
+            String dataSetMapKey = computeTeamNameMapKey(homeTeamCoordinate.getName(), awayTeamCoordinate.getName());
+            DataSet tournamentData = dataSetMap.get(dataSetMapKey);
+            if (tournamentData == null) {
+                log.info("***** COMPUTING DataSet for matchup: {} *****", dataSetMapKey);
+                //
+                // Compute RecordReaderDataSetIterator from the two sets of season data
+                RecordReaderDataSetIterator recordReaderDataSetIterator = computeRecordIterator(homeTeamSeasonData, awayTeamSeasonData, networkCandidate.getNetworkParameters());
                 DataNormalization normalizer = networkCandidate.getNetworkParameters().getNormalizer().getDataNormalization();
-                DataSet tournamentData = recordReaderDataSetIteratorMaybe.get().next();
+                tournamentData = recordReaderDataSetIterator.next();
                 normalizer.fit(tournamentData);
                 normalizer.transform(tournamentData);
-                INDArray indArrayResults = network.output(tournamentData.getFeatures());
-                //
-                // Figure out who we declare the winner and compute their TeamCoordinates according to the algorithm
-                try {
-                    TeamCoordinate winningTeamCoordinate = computeWinner(indArrayResults.toDoubleMatrix(), homeTeamCoordinate, awayTeamCoordinate);
-                    if (winningTeamCoordinate.equals(homeTeamCoordinate)) {
-                        homeTeamWins++;
-                    } else {
-                        awayTeamWins++;
-                    }
-                } catch (NumberFormatException e) {
-                    String errorMessage = String.format("NumberFormatException while running %s vs %s for network %s. Skipping.", networkCandidate, homeTeamCoordinate, awayTeamCoordinate);
-                    log.error(errorMessage);
+                dataSetMap.put(dataSetMapKey, tournamentData);
+            }
+            // Run the network against the normalized data
+            INDArray indArrayResults = network.output(tournamentData.getFeatures());
+            //
+            // Figure out who we declare the winner and compute their TeamCoordinates according to the algorithm
+            try {
+                TeamCoordinate winningTeamCoordinate = computeWinner(indArrayResults.toDoubleMatrix(), homeTeamCoordinate, awayTeamCoordinate);
+                if (winningTeamCoordinate.equals(homeTeamCoordinate)) {
+                    homeTeamWins++;
+                } else {
+                    awayTeamWins++;
                 }
+            } catch (NumberFormatException e) {
+                String errorMessage = String.format("NumberFormatException while running %s vs %s for network %s. Skipping.", networkCandidate, homeTeamCoordinate, awayTeamCoordinate);
+                log.error(errorMessage);
             }
         }
         // Compute the winningTeamCoordinate based on the which team has the most votes (tie goes to home team)
@@ -290,8 +301,12 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         T winnerSeasonData = (homeTeamWins >= awayTeamWins) ? homeTeamSeasonData : awayTeamSeasonData;
         teamCoordinate.setName(winnerSeasonData.getTeamName());
         getTeamCoordinateSeasonDataMap().put(teamCoordinate, winnerSeasonData);
-        log.debug("*** WINNER: {} with {} wins in {} simulated matchups ***",
+        log.debug("***** WINNER: {} with {} wins in {} simulated matchups *****",
                 teamCoordinate.getName(), Math.max(homeTeamWins, awayTeamWins), networkCandidates.size());
+    }
+
+    private String computeTeamNameMapKey(final String homeTeamName, final String awayTeamName) {
+        return String.format("%s_vs_%s", homeTeamName, awayTeamName);
     }
 
     protected TeamCoordinate computeWinner(final double[][] results,
@@ -324,7 +339,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
             winner = homeTeamCoordinate;
         } else if (homeTeamDistanceScore == awayTeamDistanceScore) {
             // Tie goes to home (it has to go to someone)
-            winner = homeTeamCoordinate;
+            winner = jumpBall(homeTeamCoordinate, awayTeamCoordinate);
             log.warn("TOURNAMENT DISTANCE TIE-BREAKER({}): Giving the win to team: {}", homeTeamDistanceScore, winner.getName());
         } else {
             // Away team is winner
@@ -338,6 +353,13 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         ));
 
         return winner;
+    }
+
+    private boolean jumpBall = false;
+
+    private TeamCoordinate jumpBall(final TeamCoordinate homeTeamCoordinate, final TeamCoordinate awayTeamCoordinate) {
+        jumpBall = !jumpBall; // toggle the possession arrow
+        return (jumpBall) ? homeTeamCoordinate : awayTeamCoordinate;
     }
 
     private BigDecimal[] convertToBigDecimal(final double[] predictions) {
@@ -374,53 +396,88 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         return ret;
     }
 
-    protected Optional<RecordReaderDataSetIterator> computeRecordIterator(final T homeTeamSeasonData,
-                                                                          final T awayTeamSeasonData,
-                                                                          final NetworkParameters networkParameters) {
-        Optional<RecordReaderDataSetIterator> ret;
+    protected RecordReaderDataSetIterator computeRecordIterator(final T homeTeamSeasonData,
+                                                                final T awayTeamSeasonData,
+                                                                final NetworkParameters networkParameters) {
+        RecordReaderDataSetIterator ret;
         //
         // Wrap both rows in a CSVRecordReader, with all the bells and whistles and return the appropriate iterator
-        StringBuilder stringSource = new StringBuilder();
-        //
-        // Compute one row of data with home team first
-        String[] home = networkParameters.transformRow(seasonDataAsDoubleList(homeTeamSeasonData));
-        String homeString = String.join(",", home);
-        stringSource.append(homeString);
-        stringSource.append("\n");
-        //
-        // Compute another row of data with away team first
-        String[] away = networkParameters.transformRow(seasonDataAsDoubleList(awayTeamSeasonData));
-        String awayString = String.join(",", away);
-        stringSource.append(awayString);
-        stringSource.append("\n");
-        // Include all data for a season so normalized values (and network predictions based on them) are consistent
-        if (NetworkProperties.getNormalizeAcrossAllSeasonData()) {
-            log.info("computeRecordIterator(): Adding all season data for normalization");
-            Map<String, T> seasonDataMap = getTeamSeasonDataMap();
-            Set<String> teamNames = seasonDataMap.keySet();
-            teamNames.forEach(teamName -> {
-                if (!teamName.equalsIgnoreCase(homeTeamSeasonData.getTeamName()) && !teamName.equalsIgnoreCase(awayTeamSeasonData.getTeamName())) {
-                    String[] data = networkParameters.transformRow(seasonDataAsDoubleList(seasonDataMap.get(teamName)));
-                    String csv = String.join(",", data);
-                    stringSource.append(csv);
-                    stringSource.append("\n");
-                }
-            });
-        }
-        StringReader stringReader = new StringReader(stringSource.toString());
+        String stringSource = computeCsvData(homeTeamSeasonData, awayTeamSeasonData, networkParameters);
+        StringReader stringReader = new StringReader(stringSource);
         try {
             InputStream inputStream = new ByteArrayInputStream(CharStreams.toString(stringReader).getBytes());
             RecordReader tournamentReader = new CSVRecordReader(0, ',');
             InputStreamInputSplit split = new InputStreamInputSplit(inputStream);
             tournamentReader.initialize(split);
-            RecordReaderDataSetIterator tournamentIterator = new RecordReaderDataSetIterator(tournamentReader, BATCH_SIZE);
-            ret = Optional.of(tournamentIterator);
+            ret = new RecordReaderDataSetIterator(tournamentReader, BATCH_SIZE);
         } catch (IOException | InterruptedException e) {
-            String message = String.format("Error creating InputStream from CSV data:\n%s", stringSource.toString());
+            String message = String.format("Error creating InputStream from CSV data:\n%s", stringSource);
             log.error(message, e);
             throw new RuntimeException(e);
         }
         return ret;
+    }
+
+    @NotNull
+    private String computeCsvData(final T homeTeamSeasonData, final T awayTeamSeasonData, final NetworkParameters networkParameters) {
+        String mapKey = computeTeamNameMapKey(homeTeamSeasonData.getTeamName(), awayTeamSeasonData.getTeamName());
+        String ret = csvDataMap.get(mapKey);
+        if (ret == null) {
+            log.debug("***** COMPUTING CSV DATA FOR MATCHUP {} VS {} *****",
+                    homeTeamSeasonData.getTeamName(), awayTeamSeasonData.getTeamName());
+            StringBuilder stringSource = new StringBuilder();
+            //
+            // Compute one row of data with home team first
+            String homeCsv = teamCsvDataMap.get(homeTeamSeasonData.getTeamName());
+            if (homeCsv == null) {
+                log.debug("***** COMPUTING SEASON DATA CSV FOR {} *****", homeTeamSeasonData.getTeamName());
+                String[] homeData = networkParameters.transformRow(seasonDataAsDoubleList(homeTeamSeasonData));
+                homeCsv = String.join(",", homeData);
+                teamCsvDataMap.put(homeTeamSeasonData.getTeamName(), homeCsv);
+            }
+            stringSource.append(homeCsv);
+            stringSource.append("\n");
+            //
+            // Compute another row of data with away team first
+            String awayCsv = teamCsvDataMap.get(awayTeamSeasonData.getTeamName());
+            if (awayCsv == null) {
+                log.debug("***** COMPUTING SEASON DATA CSV FOR {} *****", awayTeamSeasonData.getTeamName());
+                String[] awayData = networkParameters.transformRow(seasonDataAsDoubleList(awayTeamSeasonData));
+                awayCsv = String.join(",", awayData);
+                teamCsvDataMap.put(awayTeamSeasonData.getTeamName(), awayCsv);
+            }
+            stringSource.append(awayCsv);
+            stringSource.append("\n");
+            // Include all data for a season so normalized values (and network predictions based on them) are consistent
+            if (NetworkProperties.getNormalizeAcrossAllSeasonData()) {
+                stringSource.append(computeStringSourceForAllSeasonData(networkParameters));
+            }
+            csvDataMap.put(mapKey, stringSource.toString());
+            ret = stringSource.toString();
+        }
+        return ret;
+    }
+
+    private String computeStringSourceForAllSeasonData(final NetworkParameters networkParameters) {
+        if (allSeasonDataCsv == null) {
+            StringBuilder stringSource = new StringBuilder();
+            log.info("***** ADDING ALL SEASON DATA FOR NORMALIZATION *****");
+            Map<String, T> seasonDataMap = getTeamSeasonDataMap();
+            Set<String> teamNames = seasonDataMap.keySet();
+            teamNames.forEach(teamName -> {
+                T seasonData = seasonDataMap.get(teamName);
+                String dataCsv = teamCsvDataMap.get(seasonData.getTeamName());
+                if (dataCsv == null) {
+                    String[] data = networkParameters.transformRow(seasonDataAsDoubleList(seasonData));
+                    dataCsv = String.join(",", data);
+                    teamCsvDataMap.put(seasonData.getTeamName(), dataCsv);
+                }
+                stringSource.append(dataCsv);
+                stringSource.append("\n");
+            });
+            allSeasonDataCsv = stringSource.toString();
+        }
+        return allSeasonDataCsv;
     }
 
     protected void createTeamCoordinateMapping(final Map<TeamCoordinate, T> coordinateSeasonDataMap,
@@ -563,7 +620,7 @@ public abstract class AbstractTournamentRunnerPlugin<T extends AbstractSeasonDat
         }
         if (ret == null) {
             // Did not find the team coordinate we were looking for (for some reason), return the default
-            log.error("Could not find winning team coordinate: {}, returning the default", teamCoordinate);
+            log.error("Could not find winning team coordinate: {}, returning the default", (Object) null);
         }
         return ret;
     }

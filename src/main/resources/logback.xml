@@ -24,7 +24,7 @@
     </appender>
 
     <appender name="RESULTS-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <append>true</append>
+        <append>false</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
             <fileNamePattern>sportsnet-results.%d{yyyy-MM-dd4}.log</fileNamePattern>
