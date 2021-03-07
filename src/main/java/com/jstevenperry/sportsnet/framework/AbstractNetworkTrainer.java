@@ -209,8 +209,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
     }
 
     static String computeIterationNumberString(final int parentIteration, final int iterationNumber, final int numberOfTrainingIterations) {
-        int iterationsPerformedSoFar = (parentIteration - 1) * numberOfTrainingIterations + iterationNumber - 1;
-        int totalIterationsToPerform = numberOfTrainingIterations * numberOfTrainingIterations + numberOfTrainingIterations;
+        int iterationsPerformedSoFar = (parentIteration - 1) * numberOfTrainingIterations + (iterationNumber - 1);
+        int totalIterationsToPerform = numberOfTrainingIterations * numberOfTrainingIterations;
         double percentageComplete = 100.0 * iterationsPerformedSoFar / totalIterationsToPerform;
         return String.format("%d.%d (%2.1f%%)", parentIteration, iterationNumber, percentageComplete);
     }

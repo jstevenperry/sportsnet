@@ -16,8 +16,8 @@ class AbstractNetworkTrainerTest {
         int currentOuterIteration = 1; // Edge case
         int currentInnerIteration = 34;
 
-        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2 + totalIterations
-        String expected = String.format("%s", "1.34 (2.0%)");
+        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
+        String expected = String.format("%s", "1.34 (2.1%)");
         String actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
@@ -25,8 +25,8 @@ class AbstractNetworkTrainerTest {
         currentOuterIteration = 24;
         currentInnerIteration = 14;
 
-        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2 + totalIterations
-        expected = String.format("%s", "24.14 (45.6%)");
+        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
+        expected = String.format("%s", "24.14 (46.5%)");
         actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
@@ -34,7 +34,7 @@ class AbstractNetworkTrainerTest {
         currentOuterIteration = 1; // Edge case
         currentInnerIteration = 1; // Edge case
 
-        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2 + totalIterations
+        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
         expected = String.format("%s", "1.1 (0.0%)");
         actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
@@ -43,8 +43,35 @@ class AbstractNetworkTrainerTest {
         currentOuterIteration = 1; // Edge case
         currentInnerIteration = 1; // Edge case
 
-        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2 + totalIterations
+        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
         expected = String.format("%s", "1.1 (0.0%)");
+        actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        assertEquals(expected, actual);
+
+        totalIterations = 2;
+        currentOuterIteration = 1; // Edge case
+        currentInnerIteration = 2;
+
+        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
+        expected = String.format("%s", "1.2 (25.0%)");
+        actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        assertEquals(expected, actual);
+
+        totalIterations = 4;
+        currentOuterIteration = 2;
+        currentInnerIteration = 3;
+
+        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
+        expected = String.format("%s", "2.3 (37.5%)");
+        actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        assertEquals(expected, actual);
+
+        totalIterations = 5;
+        currentOuterIteration = 5;
+        currentInnerIteration = 5;
+
+        // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
+        expected = String.format("%s", "5.5 (96.0%)");
         actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
     }

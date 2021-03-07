@@ -179,10 +179,6 @@ public class NetworkProperties {
         return getIntegerPropertyValue("network.evaluation.index", 10);
     }
 
-    public static String getNetworkLayout(final String sport) {
-        return getStringPropertyValue(sport + ".network.layout", StringUtils.EMPTY);
-    }
-
     public static boolean getNormalizeAcrossAllSeasonData() {
         return getBooleanPropertyValue("normalize.across.all.season.data", true);
     }
