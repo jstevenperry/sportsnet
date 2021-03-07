@@ -46,6 +46,7 @@ public class NflTournamentParticipantFlatFileDao extends AbstractTournamentParti
                 {"2017", "/nfl/2017/2017-2018-tournament_result.csv"},
                 {"2018", "/nfl/2018/2018-2019-tournament_result.csv"},
                 {"2019", "/nfl/2019/2019-2020-tournament_result.csv"},
+                {"2020", "/nfl/2020/2020-2021-tournament_result.csv"},
         };
     }
 
