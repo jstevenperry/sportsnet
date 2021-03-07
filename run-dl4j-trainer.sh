@@ -7,7 +7,7 @@
 # Script to run the MlpNetworkTrainer program.
 #
 # Program version
-PROGRAM_VERSION=2.6.0
+PROGRAM_VERSION=3.0.0
 # Set DEBUG to something other than true to turn it off
 DEBUG=true
 # Suppress annoying message about something that I don't give a crap about
