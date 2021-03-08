@@ -331,8 +331,8 @@ public class NetworkParameters implements Serializable {
 
     public String[] toStringCsv() {
         return new String[]{
-                String.format("DRP: %3.4f%%", 100*(1.0-getDropoutProbability())),
-                String.format("ACC: %3.4f%%", 100*getNetworkAccuracy()),
+                String.format("DRP: %3.4f%%", 100 * (1.0 - getDropoutProbability())),
+                String.format("ACC: %3.4f%%", 100 * getNetworkAccuracy()),
                 String.format("ACT: %s", getActivationFunction().name()),
                 String.format("UPD: %s", UpdaterMenu.UpdaterChoice.from(getUpdater()).orElse(null)),
                 String.format("EP: %d", getNumberOfEpochs()),

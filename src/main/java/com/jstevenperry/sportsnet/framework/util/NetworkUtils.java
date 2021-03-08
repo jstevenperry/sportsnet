@@ -4,26 +4,49 @@
 
 package com.jstevenperry.sportsnet.framework.util;
 
+import com.jstevenperry.sportsnet.framework.menus.UpdaterMenu;
 import com.jstevenperry.sportsnet.framework.model.NetworkCandidate;
 import com.jstevenperry.sportsnet.framework.model.NetworkParameters;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
 import org.apache.commons.lang3.StringUtils;
+import org.datavec.api.records.metadata.RecordMetaData;
+import org.datavec.api.records.reader.RecordReader;
+import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
+import org.datavec.api.split.InputStreamInputSplit;
+import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
+import org.deeplearning4j.nn.conf.GradientNormalization;
+import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
+import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
+import org.deeplearning4j.nn.conf.layers.DenseLayer;
+import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.util.ModelSerializer;
+import org.jetbrains.annotations.NotNull;
+import org.nd4j.evaluation.classification.Evaluation;
+import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
+import org.nd4j.linalg.learning.config.IUpdater;
+import org.nd4j.shade.guava.io.CharStreams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.StringTokenizer;
 
@@ -322,5 +345,121 @@ public class NetworkUtils {
         Random random = new Random();
         int bound = Math.max(max - min, 1);
         return random.nextInt(bound) + min;
+    }
+
+    /**
+     * Generate a random network layout.
+     *
+     * @param numberOfInputs  The number of inputs to the network
+     * @param numberOfOutputs The number of outputs from the network
+     * @return A String (in Ixh1xh2x...xhNxO format, where I = number of inputs,
+     * O = number of outputs, and hN is the number of neurons in the Nth hidden layer)
+     */
+    public static String computeNetworkStructure(final int numberOfInputs, final int numberOfOutputs) {
+        String hiddenLayerStructure = NetworkUtils.generateRandomNetworkLayout(numberOfInputs, numberOfOutputs);
+        return String.format("%dx%sx%d", numberOfInputs, hiddenLayerStructure, numberOfOutputs);
+    }
+
+    public static MultiLayerConfiguration configureNetwork(final NetworkParameters networkParameters) {
+        log.debug("Configuring network...");
+        NeuralNetConfiguration.Builder builder = new NeuralNetConfiguration.Builder()
+                .seed(new Random(-2).nextInt(100))
+                .activation(networkParameters.getActivationFunction())
+                .weightInit(networkParameters.getWeightInit())
+                .updater(networkParameters.getUpdater())
+                .dropOut(NetworkProperties.getDropoutProbability())
+                .l2(networkParameters.getL2RegularizationLambda())
+                .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer);
+        NeuralNetConfiguration.ListBuilder listBuilder = builder.list();
+        int[] networkLayout = NetworkUtils.parseNetworkStructure(networkParameters.getNetworkLayout());
+        for (int index = 0; index < networkLayout.length - 2; index++) {
+            listBuilder.layer(addHiddenLayer(networkLayout[index], networkLayout[index + 1]));
+        }
+        // Build the final layer and call build to create the MultiLayerConfiguration and return it
+        MultiLayerConfiguration ret = listBuilder.layer(new OutputLayer.Builder(networkParameters.getLossFunction())
+                .activation(Activation.SOFTMAX).nIn(networkLayout[networkLayout.length - 2]).nOut(networkLayout[networkLayout.length - 1]).build())
+                .build();
+        log.debug("Configuring network...DONE");
+        return ret;
+    }
+
+    public static DenseLayer addHiddenLayer(final int numberOfInputs, final int numberOfOutputs) {
+        return new DenseLayer.Builder()
+                .nIn(numberOfInputs)
+                .nOut(numberOfOutputs)
+                .build();
+    }
+
+    public static void reupPropertiesBetweenEpochBreaks(final NetworkParameters networkParameters) {
+        // Updater
+        IUpdater currentUpdater = networkParameters.getUpdater();
+        Optional<UpdaterMenu.UpdaterChoice> refreshedUpdater = UpdaterMenu.UpdaterChoice.from(networkParameters.getUpdater());
+        if (refreshedUpdater.isPresent()) {
+            networkParameters.setUpdater(refreshedUpdater.get().getUpdater());
+        } else {
+            networkParameters.setUpdater(currentUpdater);
+        }
+    }
+
+    public static double computeNetworkError(final Evaluation networkEvaluator) {
+        double accuracy = networkEvaluator.accuracy();
+        log.debug("Network accuracy: {}", accuracy);
+        return 1.0 - accuracy;
+    }
+
+    @NotNull
+    public static Evaluation computeNetworkEvaluator(final Integer numberOfOutputs, final DataSet evaluationData, final MultiLayerNetwork network) {
+        //
+        // The network evaluator
+        Evaluation eval = new Evaluation(numberOfOutputs);
+        //
+        // Evaluate the model on the training set to see how well the model fits.
+        // If the model fits then stop training early.
+        INDArray output = network.output(evaluationData.getFeatures());
+        eval.eval(evaluationData.getLabels(), output, evaluationData.getExampleMetaData(RecordMetaData.class));
+        return eval;
+    }
+
+    public static boolean saveNetworkIfAboveThreshold(final NetworkCandidate networkCandidate) {
+        boolean savedNetwork = false;
+        double performanceThreshold = NetworkProperties.getPerformanceThreshold().doubleValue();
+        NetworkParameters networkParameters = networkCandidate.getNetworkParameters();
+        if (networkParameters.getNetworkAccuracy() * 100 >= performanceThreshold) {
+            NetworkPersister.saveNetwork(networkCandidate);
+            savedNetwork = true;
+        }
+        return savedNetwork;
+    }
+
+    public static void normalizeTrainingData(final DataSet testData, final DataNormalization normalizer) {
+        log.debug("Normalizing data...");
+        normalizer.fit(testData);           // Collect the statistics (mean/stdev) from the training data. This does not modify the input data
+        normalizer.transform(testData);     // Apply normalization to the training data
+        double[][] trainingDataFeatures = testData.getFeatures().toDoubleMatrix();
+        // Dump out a few records as a sanity check
+        int sampleSize = 5;
+        int sampleCount = 0;
+        for (double[] feature : trainingDataFeatures) {
+            if (sampleCount++ == sampleSize) {
+                break;
+            }
+            log.debug(String.format("normalizeTrainingData(): Training Data:\n%s", Arrays.toString(feature)));
+        }
+        log.debug("Normalizing data...DONE");
+    }
+
+    public static boolean keepGoing() {
+        boolean ret = NetworkProperties.killSwitchActivated();
+        if (ret) {
+            log.warn("KILL SWITCH ACTIVE! TRAINING LOOP WILL NOT RUN!");
+        }
+        return !ret;
+    }
+
+    public static RecordReaderDataSetIterator createIterator(final String csvData,
+                                                             final NetworkParameters networkParameters) throws IOException, InterruptedException {
+        RecordReader recordReader = new CSVRecordReader(0, ',');
+        recordReader.initialize(new InputStreamInputSplit(new ByteArrayInputStream(CharStreams.toString(new StringReader(csvData)).getBytes())));
+        return new RecordReaderDataSetIterator(recordReader, 1000, networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
     }
 }

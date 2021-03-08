@@ -86,8 +86,8 @@ public class LossFunctionMenu {
         POISSON(LossFunctions.LossFunction.POISSON, 17),
         WASSERSTEIN(LossFunctions.LossFunction.WASSERSTEIN, 18);
 
-        private LossFunctions.LossFunction lossFunction;
-        private int ordinal;
+        private final LossFunctions.LossFunction lossFunction;
+        private final int ordinal;
 
         LossFunctionChoice(final LossFunctions.LossFunction lossFunction, final int ordinal) {
 

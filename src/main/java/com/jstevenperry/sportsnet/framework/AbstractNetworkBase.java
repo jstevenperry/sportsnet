@@ -12,18 +12,10 @@ import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
 import com.opencsv.CSVWriter;
-import org.datavec.api.records.reader.RecordReader;
-import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
-import org.datavec.api.split.InputStreamInputSplit;
-import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.jetbrains.annotations.NotNull;
-import org.nd4j.shade.guava.io.CharStreams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,13 +64,6 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
             ret.addAll(tournamentResultDao.fetchAllByYear(year));
         }
         return ret;
-    }
-
-    public static RecordReaderDataSetIterator createIterator(final String csvData,
-                                                      final NetworkParameters networkParameters) throws IOException, InterruptedException {
-        RecordReader recordReader = new CSVRecordReader(0, ',');
-        recordReader.initialize(new InputStreamInputSplit(new ByteArrayInputStream(CharStreams.toString(new StringReader(csvData)).getBytes())));
-        return new RecordReaderDataSetIterator(recordReader, 1000, networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
     }
 
     @NotNull
