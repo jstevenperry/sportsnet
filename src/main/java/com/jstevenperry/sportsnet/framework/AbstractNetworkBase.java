@@ -12,7 +12,6 @@ import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
 import com.opencsv.CSVWriter;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +65,6 @@ public abstract class AbstractNetworkBase<T extends AbstractSeasonData> {
         return ret;
     }
 
-    @NotNull
     public String createCsvData(final List<Integer> yearsToPull,
                                 final SeasonDataDao<T> seasonDataDao,
                                 final TournamentResultDao tournamentResultDao,

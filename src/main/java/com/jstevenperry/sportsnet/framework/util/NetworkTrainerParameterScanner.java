@@ -221,5 +221,32 @@ public class NetworkTrainerParameterScanner {
         return ret;
     }
 
+    /**
+     * Specifies the Updaters that are to be used for batch training runs.
+     */
+    public static List<UpdaterMenu.UpdaterChoice> fetchUpdaterChoices() {
+        List<UpdaterMenu.UpdaterChoice> ret = NetworkProperties.getUpdaters();
+        if (ret.isEmpty()) {
+            ret.add(UpdaterMenu.UpdaterChoice.AMS_GRAD);
+            ret.add(UpdaterMenu.UpdaterChoice.ADA_MAX);
+            ret.add(UpdaterMenu.UpdaterChoice.ADAM);
+            ret.add(UpdaterMenu.UpdaterChoice.SGD);
+        }
+        return ret;
+    }
+
+    public static List<ActivationFunctionMenu.ActivationFunctionChoice> fetchActivationChoices() {
+        List<ActivationFunctionMenu.ActivationFunctionChoice> ret = NetworkProperties.getActivationFunctions();
+        if (ret.isEmpty()) {
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.RELU);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.RATIONALTANH);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.RELU6);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.SOFTMAX);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.TANH);
+            ret.add(ActivationFunctionMenu.ActivationFunctionChoice.SIGMOID);
+        }
+        return ret;
+    }
+
 
 }

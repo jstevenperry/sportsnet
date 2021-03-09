@@ -41,6 +41,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -462,4 +463,67 @@ public class NetworkUtils {
         recordReader.initialize(new InputStreamInputSplit(new ByteArrayInputStream(CharStreams.toString(new StringReader(csvData)).getBytes())));
         return new RecordReaderDataSetIterator(recordReader, 1000, networkParameters.getNumberOfInputs(), networkParameters.getNumberOfOutputs());
     }
+
+    public static String computeIterationNumberString(final int parentIteration, final int iterationNumber, final int numberOfTrainingIterations) {
+        int iterationsPerformedSoFar = (parentIteration - 1) * numberOfTrainingIterations + (iterationNumber - 1);
+        int totalIterationsToPerform = numberOfTrainingIterations * numberOfTrainingIterations;
+        double percentageComplete = 100.0 * iterationsPerformedSoFar / totalIterationsToPerform;
+        return String.format("%d.%d (%2.1f%%)", parentIteration, iterationNumber, percentageComplete);
+    }
+
+    /**
+     * The network training loop. It uses the user-supplied number of epochs as a starting
+     * place and attempts to train the network to below the threshold specified in
+     * NetworkProperties. This method will try up to:
+     * (user-supplied epochs value) x (max.network.iterations in NetworkProperties)
+     * and if it can train the network before it reaches that value it breaks out early.
+     * If it cannot it still returns the trained network, albeit one that did not train
+     * below the threshold (the user may still want it anyway).
+     */
+    public static MultiLayerNetwork trainNetwork(final MultiLayerConfiguration configuration,
+                                                 final NetworkParameters networkParameters,
+                                                 final DataSet trainingData,
+                                                 final String iteration) {
+        //
+        // Compute the number of epochs at which the network will be periodically evaluated
+        log.debug("trainNetwork: training up to {} epochs", NetworkProperties.getMaxLearningIterations());
+        //
+        // Create the model to be trained
+        MultiLayerNetwork network = new MultiLayerNetwork(configuration);
+        network.init();
+        int epochCount;
+        for (epochCount = 0; epochCount < NetworkProperties.getMaxLearningIterations() && NetworkUtils.keepGoing(); epochCount++) {
+            // Shake it up
+            trainingData.shuffle();
+            // Copy original network parameters because with each training loop it gets mutated
+            //
+            // Fit the model against the training data for a single epoch
+            network.fit(trainingData);
+            if (epochCount % NetworkProperties.getNetworkEvaluationIndex() == 0) {
+                Evaluation networkEvaluator = NetworkUtils.computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), trainingData, network);
+                double networkError = NetworkUtils.computeNetworkError(networkEvaluator);
+                if (networkError < NetworkProperties.getMaxNetworkError()) {
+                    // Network is trained, we're done here
+                    log.debug("\tNetwork trained after {} epochs.", epochCount);
+                    log.debug(networkParameters.toStringAbbreviated());
+                    networkParameters.setNumberOfEpochs(epochCount);
+                    break;
+                } else if (epochCount % NetworkProperties.getEpochStatsIndexCount() == 0) {
+                    log.debug("\tEpoch number: {}, Network error: {}", epochCount, networkError);
+                    //
+                    // Reup properties - okay to mutate original object
+                    NetworkUtils.reupPropertiesBetweenEpochBreaks(networkParameters);
+                }
+            }
+        }
+        networkParameters.setNumberOfEpochs(epochCount);
+        networkParameters.setWhenTrained(LocalDateTime.now());
+        log.debug(String.format("\tIteration %s, Number of epochs: %d, Network error: %2.4f%%, Normalizer: %s, Updater: %s, Activation: %s", iteration, epochCount,
+                NetworkUtils.computeNetworkError(NetworkUtils.computeNetworkEvaluator(networkParameters.getNumberOfOutputs(), trainingData, network)) * 100,
+                networkParameters.getNormalizer(), UpdaterMenu.UpdaterChoice.from(networkParameters.getUpdater()),
+                networkParameters.getActivationFunction()));
+        return network;
+    }
+
+
 }
