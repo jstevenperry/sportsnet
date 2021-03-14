@@ -13,6 +13,7 @@
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
+        <file>logs/sportsnet.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
             <fileNamePattern>sportsnet.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -23,22 +24,18 @@
         </encoder>
     </appender>
 
-    <appender name="RESULTS-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="RESULTS-FILE" class="ch.qos.logback.core.FileAppender">
         <append>false</append>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- daily rollover -->
-            <fileNamePattern>sportsnet-results.%d{yyyy-MM-dd4}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
+        <file>logs/sportsnet-result.log</file>
         <encoder>
-            <pattern>%logger{1}:%L - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss}: %logger{1}:%L - %msg%n</pattern>
         </encoder>
     </appender>
 
     <logger name="com.jstevenperry.sportsnet" level="INFO"/>
-<!--    <logger name="com.jstevenperry.sportsnet.framework.util.NetworkUtils" level="DEBUG"/>-->
+    <!--    <logger name="com.jstevenperry.sportsnet.framework.util.NetworkUtils" level="DEBUG"/>-->
     <logger name="org.deeplearning4j.optimize.listeners" level="INFO"/>
-<!--    <logger name="com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer" level="DEBUG"/>-->
+    <!--    <logger name="com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer" level="DEBUG"/>-->
     <logger name="com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin" level="DEBUG" additivity="false">
         <appender-ref ref="RESULTS-FILE"/>
     </logger>
