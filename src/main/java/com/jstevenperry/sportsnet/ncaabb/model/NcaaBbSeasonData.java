@@ -47,10 +47,14 @@ public class NcaaBbSeasonData extends AbstractSeasonData {
                                             final boolean isTraining) {
         List<Double> ret = new ArrayList<>();
         //
-        ret.add((double) seasonData.getRank());
-        ret.add((double) seasonData.getGamesPlayed());
-        ret.add((double) seasonData.getGamesWon());
-        ret.add((double) seasonData.getGamesLost());
+        //ret.add((double) seasonData.getRank()); // Noise
+        ret.add(0.0); // Rank is just noise (it's actually just a team's alphabetical position, which is meaningless)
+//        ret.add((double) seasonData.getGamesPlayed());
+        ret.add(0.0); // Games played biases teams in past data that have gone further in the tournament
+//        ret.add((double) seasonData.getGamesWon());
+        ret.add(0.0); // Games won biases teams in past data that have gone further in the tournament
+//        ret.add((double) seasonData.getGamesLost());
+        ret.add(0.0); // Games lost biases teams in past data that have gone further in the tournament
         ret.add(seasonData.getWonLostPercentage().doubleValue());
         ret.add(seasonData.getSimpleRatingSystem());
         ret.add(seasonData.getStrengthOfSchedule());

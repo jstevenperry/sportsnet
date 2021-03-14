@@ -1,4 +1,4 @@
-#! 
+#!
 #
 # Copyright 2015-2021, James Steven Perry. All rights reserved.
 #
@@ -7,7 +7,7 @@
 # Script to run the MlpNetworkTrainer program.
 #
 # Program version
-PROGRAM_VERSION=2.6.0
+PROGRAM_VERSION=2.6.1
 # Set DEBUG to something other than true to turn it off
 DEBUG=true
 # Suppress annoying message about something that I don't give a crap about
@@ -18,7 +18,7 @@ export ND4J_IGNORE_AVX=true
 # You can also specify this property in the shell (but I probably didn't need to tell you that).
 #EXAMPLE_JAVA_OPTS="-Dnetwork.properties.file=/Users/sperry/home/network.properties"
 
-function usage {
+function usage() {
   echo "Usage: $0 "
   echo "Description: Runs the DeepLearning4J network trainer and runner"
   echo
@@ -43,8 +43,7 @@ JAVA_OPTS="-Dnetwork.properties.file=${NETWORK_PROPERTIES_FILE}"
 #JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home
 
 # Make sure ROOT_DIR is set or bail out
-if [[ -z "$ROOT_DIR" ]]
-then
+if [[ -z "$ROOT_DIR" ]]; then
   echo "ROOT_DIR is not set! This variable should be set to the source root of your project."
   echo "Make sure that you run a Maven build to create the necessary class files"
   echo "and library dependencies"
