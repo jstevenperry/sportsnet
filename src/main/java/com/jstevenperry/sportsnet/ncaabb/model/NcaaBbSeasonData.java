@@ -49,8 +49,7 @@ public class NcaaBbSeasonData extends AbstractSeasonData {
         //
         //ret.add((double) seasonData.getRank()); // Noise
         ret.add(0.0); // Rank is just noise (it's actually just a team's alphabetical position, which is meaningless)
-//        ret.add((double) seasonData.getGamesPlayed());
-        ret.add(0.0);// Games played biases teams in past data that have gone further in the tournament
+        ret.add((double) seasonData.getGamesPlayed());
         ret.add((double) seasonData.getGamesWon());
         ret.add((double) seasonData.getGamesLost());
         ret.add(seasonData.getWonLostPercentage().doubleValue());
