@@ -11,6 +11,7 @@ import com.jstevenperry.sportsnet.framework.persistence.SeasonDataDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentParticipantDao;
 import com.jstevenperry.sportsnet.framework.persistence.TournamentResultDao;
 import com.jstevenperry.sportsnet.framework.util.NetworkPersister;
+import com.jstevenperry.sportsnet.framework.util.NetworkTrainerParameterScanner;
 import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.datavec.api.records.metadata.RecordMetaData;
@@ -70,13 +71,13 @@ public abstract class AbstractNetworkEvaluator<T extends AbstractSeasonData> ext
             // Prompt the user for the year(s) they want to evaluate
             System.out.println("Enter year(s) for evaluation/validation (enter multiple years separated by commas)");
             List<Integer> yearsToEvaluate = networkParameters.getYearsToTrainAndEvaluateNetwork().get(1);
-            AbstractNetworkTrainer.scanListOfValidYears(scanner, yearsToEvaluate, tournamentParticipantDao);
+            NetworkTrainerParameterScanner.scanListOfValidYears(scanner, yearsToEvaluate, tournamentParticipantDao);
             log.info("Evaluation data year(s): " + StringUtils.join(yearsToEvaluate, ','));
             //
             // Run the evaluation
             log.info("Pulling evaluation data...");
             String evaluationDataCsv = createCsvData(yearsToEvaluate, seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
-            RecordReaderDataSetIterator evaluationDataIterator = createIterator(evaluationDataCsv, networkParameters);
+            RecordReaderDataSetIterator evaluationDataIterator = NetworkUtils.createIterator(evaluationDataCsv, networkParameters);
             DataSet evaluationData = evaluationDataIterator.next();
             DataNormalization normalization = networkParameters.getNormalizer().getDataNormalization();
             normalization.fit(evaluationData);           // Collect the statistics (mean/stdev) from the training data. This does not modify the input data

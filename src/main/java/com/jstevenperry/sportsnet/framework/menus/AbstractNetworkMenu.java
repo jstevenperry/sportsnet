@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
     private static final Logger log = LoggerFactory.getLogger(AbstractNetworkMenu.class);
@@ -154,11 +155,14 @@ public abstract class AbstractNetworkMenu<T extends AbstractSeasonData> {
                 }
                 break;
             case TRAIN_NETWORK:
-                NetworkCandidate trainedNetwork = networkTrainer.go(
+                Optional<NetworkCandidate> trainedNetworkMaybe = networkTrainer.go(
                         networkParametersGlobal, seasonDataDao, tournamentResultDao, tournamentParticipantDao, getNumberOfOutputClasses(), getNetworkType()
                 );
-                unsavedNetworks.add(trainedNetwork);
-                networkParametersGlobal = trainedNetwork.getNetworkParameters();
+                if (trainedNetworkMaybe.isPresent()) {
+                    NetworkCandidate trainedNetwork = trainedNetworkMaybe.get();
+                    unsavedNetworks.add(trainedNetwork);
+                    networkParametersGlobal = trainedNetwork.getNetworkParameters();
+                }
                 networkParametersGlobal.setNetworkSaved(false); // Reset, this is a shared object
                 break;
             case TRAIN_NETWORK_BATCH:
