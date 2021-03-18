@@ -47,7 +47,7 @@ public class NcaaBbSeasonData extends AbstractSeasonData {
                                             final boolean isTraining) {
         List<Double> ret = new ArrayList<>();
         //
-        ret.add((double) seasonData.getRank());
+        ret.add((double) seasonData.getRank()); // Noise
         ret.add((double) seasonData.getGamesPlayed());
         ret.add((double) seasonData.getGamesWon());
         ret.add((double) seasonData.getGamesLost());

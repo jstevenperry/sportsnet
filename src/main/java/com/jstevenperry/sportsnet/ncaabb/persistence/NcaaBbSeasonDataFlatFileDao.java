@@ -49,7 +49,8 @@ public class NcaaBbSeasonDataFlatFileDao extends AbstractSeasonDataFlatFileDao<N
                 {"2015", "/ncaabb/2015/SeasonData-2015-2016.csv"},
                 {"2016", "/ncaabb/2016/SeasonData-2016-2017.csv"},
                 {"2017", "/ncaabb/2017/SeasonData-2017-2018.csv"},
-                {"2018", "/ncaabb/2018/SeasonData-2018-2019.csv"}
+                {"2018", "/ncaabb/2018/SeasonData-2018-2019.csv"},
+                {"2020", "/ncaabb/2020/SeasonData-2020-2021.csv"},
         };
     }
 

@@ -39,7 +39,8 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
             if (tournamentRunnerPluginMaybe.isPresent()) {
                 //
                 // Ask the user for a performance threshold
-                int performanceThreshold = scanPerformanceThreshold(scanner);
+                int performanceThresholdLower = scanPerformanceThresholdLower(scanner);
+                int performanceThresholdUpper = scanPerformanceThresholdUpper(scanner, performanceThresholdLower);
                 //
                 // Ask the user what they want to do
                 AbstractTournamentRunnerPlugin<T> tournamentRunnerPlugin = tournamentRunnerPluginMaybe.get();
@@ -48,10 +49,13 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
                 if (!suitableNetworks.isEmpty()) {
                     //
                     // Filter out networks below the threshold
-                    double performanceThresholdDouble = performanceThreshold / 100.0;
-                    System.out.printf("Filtering networks above %3.2f%%...%n", performanceThresholdDouble * 100.0);
+                    double performanceThresholdLowerDouble = performanceThresholdLower / 100.0;
+                    double performanceThresholdUpperDouble = performanceThresholdUpper / 100.0;
+                    System.out.printf("Filtering networks above %3.2f%% and below %3.2f%%...%n", performanceThresholdLowerDouble * 100.0, performanceThresholdUpperDouble * 100.0);
                     suitableNetworks = suitableNetworks.stream()
-                            .filter(networkCandidate -> networkCandidate.getNetworkParameters().getNetworkAccuracy() >= performanceThresholdDouble)
+                            .filter(networkCandidate ->
+                                    networkCandidate.getNetworkParameters().getNetworkAccuracy() >= performanceThresholdLowerDouble &&
+                                            networkCandidate.getNetworkParameters().getNetworkAccuracy() <= performanceThresholdUpperDouble)
                             .collect(Collectors.toList());
                     System.out.printf("Displaying %d networks.%n", suitableNetworks.size());
                     List<NetworkCandidate> selectedNetworks = NetworkPersister.displayNetworkSelectionMenu(scanner, suitableNetworks, NetworkPersister.Action.RUN);
@@ -66,12 +70,35 @@ public abstract class AbstractNetworkRunner<T extends AbstractSeasonData> extend
         }
     }
 
-    private Integer scanPerformanceThreshold(final BufferedReader scanner) {
+    private Integer scanPerformanceThresholdLower(final BufferedReader scanner) {
         int ret = 0;
         String userInput = null;
         while (StringUtils.isEmpty(userInput)) {
             System.out.println("Enter network precision threshold (specify a number between 0 - 100) to filter networks to choose from.");
             System.out.println("Only networks that perform above this threshold will be shown (enter 0 to choose all networks)");
+            System.out.print("==> ");
+            try {
+                // Get user input - a floating point number
+                userInput = scanner.readLine();
+                if (StringUtils.isNotEmpty(userInput)) {
+                    ret = Integer.parseInt(userInput);
+                    break;
+                }
+            } catch (Exception e) {
+                String message = String.format("Error: %s, please try again.", e.getLocalizedMessage());
+                log.error(message);
+                userInput = null; // Keep looping
+            }
+        }
+        return ret;
+    }
+
+    private Integer scanPerformanceThresholdUpper(final BufferedReader scanner, final Integer thresholdLower) {
+        int ret = 100;
+        String userInput = null;
+        while (StringUtils.isEmpty(userInput)) {
+            System.out.printf("Enter UPPER network precision threshold (specify a number between %d - 100) to filter networks to choose from.%n", thresholdLower);
+            System.out.println("Only networks that perform BELOW this threshold will be shown (enter 100 to choose all networks)");
             System.out.print("==> ");
             try {
                 // Get user input - a floating point number
