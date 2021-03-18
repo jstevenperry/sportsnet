@@ -17,6 +17,7 @@ Alcorn State
 American
 American NCAA,American
 Appalachian State
+Appalachian State NCAA,Appalachian State
 Arizona
 Arizona NCAA,Arizona
 Arizona State,Arizona St
@@ -34,6 +35,7 @@ Austin Peay NCAA,Austin Peay
 Ball State
 Baylor
 Baylor NCAA,Baylor
+Bellarmine
 Belmont
 Belmont NCAA,Belmont
 Bethune-Cookman
@@ -120,9 +122,11 @@ Delaware State
 Denver
 Detroit Mercy
 Detroit Mercy NCAA,Detroit Mercy
+Dixie State
 Drake
 Drake NCAA,Drake
 Drexel
+Drexel NCAA,Drexel
 Duke
 Duke NCAA,Duke
 Duquesne
@@ -172,11 +176,13 @@ Gonzaga
 Gonzaga NCAA,Gonzaga
 Grambling
 Grand Canyon
+Grand Canyon NCAA,Grand Canyon
 Green Bay
 Green Bay NCAA,Green Bay
 Hampton
 Hampton NCAA,Hampton
 Hartford
+Hartford NCAA,Hartford
 Harvard
 Harvard NCAA,Harvard
 Hawaii
@@ -420,6 +426,7 @@ Rider
 Robert Morris
 Robert Morris NCAA,Robert Morris
 Rutgers
+Rutgers NCAA,Rutgers
 SIU Edwardsville
 Sacramento State
 Sacred Heart
@@ -486,6 +493,7 @@ Stony Brook
 Stony Brook NCAA,Stony Brook
 Syracuse
 Syracuse NCAA,Syracuse
+Tarleton State
 Temple
 Temple NCAA,Temple
 Tennessee
@@ -526,6 +534,7 @@ UC-Irvine NCAA,UC Irvine
 UC-Riverside
 UC-Santa Barbara,UC Santa Barbara
 UC-Santa Barbara NCAA,UC Santa Barbara
+UC-San Diego,UCSD
 UCLA
 UCLA NCAA,UCLA
 University of California,California

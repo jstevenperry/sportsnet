@@ -9,6 +9,7 @@ import com.jstevenperry.sportsnet.framework.menus.DataNormalizationMenu;
 import com.jstevenperry.sportsnet.framework.menus.UpdaterMenu;
 import org.apache.commons.lang3.StringUtils;
 import org.deeplearning4j.nn.weights.WeightInit;
+import org.nd4j.common.io.CollectionUtils;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
@@ -260,13 +261,23 @@ public class NetworkParameters implements Serializable {
      */
     public boolean isValidYearForTournamentPrediction(final Integer tournamentYear) {
         boolean ret = true;
-        if (getYearsToTrainNetwork().contains(tournamentYear)) {
+        //
+        // Sanity check
+        List<Integer> trainingYears = getYearsToTrainNetwork();
+        List<Integer> evaluationYears = getYearsToEvaluateNetwork();
+        if (CollectionUtils.containsAny(trainingYears, evaluationYears)) {
+            log.error("***** ERROR *****\nisValidYearForTournamentPrediction({}): current network is not valid for tournament prediction, " +
+                            "reason: training years and evaluation years overlap: TRN={}, EVAL={}\n*****************", tournamentYear,
+                    StringUtils.join(trainingYears, ','), StringUtils.join(evaluationYears, ','));
+            ret = false;
+        }
+        if (trainingYears.contains(tournamentYear)) {
             log.warn("isValidYearForTournamentPrediction({}): current network is not valid for tournament prediction based on its training years: {}",
                     tournamentYear, StringUtils.join(getYearsToTrainAndEvaluateNetwork().toArray(), ", "));
 
             ret = false;
         }
-        if (getYearsToEvaluateNetwork().contains(tournamentYear)) {
+        if (evaluationYears.contains(tournamentYear)) {
             log.warn("isValidYearForTournamentPrediction({}): current network is not valid for tournament prediction based on its evaluation years: {}",
                     tournamentYear, StringUtils.join(getYearsToTrainAndEvaluateNetwork().toArray(), ", "));
 
@@ -331,8 +342,8 @@ public class NetworkParameters implements Serializable {
 
     public String[] toStringCsv() {
         return new String[]{
-                String.format("DRP: %3.4f%%", 100*(1.0-getDropoutProbability())),
-                String.format("ACC: %3.4f%%", 100*getNetworkAccuracy()),
+                String.format("DRP: %3.4f%%", 100 * (1.0 - getDropoutProbability())),
+                String.format("ACC: %3.4f%%", 100 * getNetworkAccuracy()),
                 String.format("ACT: %s", getActivationFunction().name()),
                 String.format("UPD: %s", UpdaterMenu.UpdaterChoice.from(getUpdater()).orElse(null)),
                 String.format("EP: %d", getNumberOfEpochs()),

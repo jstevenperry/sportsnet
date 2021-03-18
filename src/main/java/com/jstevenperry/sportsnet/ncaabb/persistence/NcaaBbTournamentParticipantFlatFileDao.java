@@ -7,18 +7,10 @@ package com.jstevenperry.sportsnet.ncaabb.persistence;
 import com.jstevenperry.sportsnet.framework.model.TournamentParticipant;
 import com.jstevenperry.sportsnet.framework.persistence.AbstractTournamentParticipantFlatFileDao;
 import com.jstevenperry.sportsnet.ncaabb.model.NcaaBbSeasonData;
-import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component("ncaaBbTournamentParticipantDao")
 public class NcaaBbTournamentParticipantFlatFileDao extends AbstractTournamentParticipantFlatFileDao<NcaaBbSeasonData> {

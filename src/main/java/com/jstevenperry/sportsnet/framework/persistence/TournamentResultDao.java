@@ -27,6 +27,6 @@ public interface TournamentResultDao {
      * {@link TournamentResult} objects if they could be located, or an empty list
      * if not.
      */
-    public List<TournamentResult> fetchAllByYear(Integer year);
+    List<TournamentResult> fetchAllByYear(Integer year);
 
 }

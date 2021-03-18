@@ -4,6 +4,7 @@
 
 package com.jstevenperry.sportsnet.framework;
 
+import com.jstevenperry.sportsnet.framework.util.NetworkUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,7 +19,7 @@ class AbstractNetworkTrainerTest {
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
         String expected = String.format("%s", "1.34 (2.1%)");
-        String actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        String actual = NetworkUtils.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
         totalIterations = 50;
@@ -27,7 +28,7 @@ class AbstractNetworkTrainerTest {
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
         expected = String.format("%s", "24.14 (46.5%)");
-        actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        actual = NetworkUtils.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
         totalIterations = 100;
@@ -36,7 +37,7 @@ class AbstractNetworkTrainerTest {
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
         expected = String.format("%s", "1.1 (0.0%)");
-        actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        actual = NetworkUtils.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
         totalIterations = 1; // Edge case
@@ -45,7 +46,7 @@ class AbstractNetworkTrainerTest {
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
         expected = String.format("%s", "1.1 (0.0%)");
-        actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        actual = NetworkUtils.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
         totalIterations = 2;
@@ -54,7 +55,7 @@ class AbstractNetworkTrainerTest {
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
         expected = String.format("%s", "1.2 (25.0%)");
-        actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        actual = NetworkUtils.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
         totalIterations = 4;
@@ -63,7 +64,7 @@ class AbstractNetworkTrainerTest {
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
         expected = String.format("%s", "2.3 (37.5%)");
-        actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        actual = NetworkUtils.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
 
         totalIterations = 5;
@@ -72,7 +73,7 @@ class AbstractNetworkTrainerTest {
 
         // Percentage: [(currentOuterIteration - 1) * totalIterations +  currentInnerIteration - 1] / totalIterations ^ 2
         expected = String.format("%s", "5.5 (96.0%)");
-        actual = AbstractNetworkTrainer.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
+        actual = NetworkUtils.computeIterationNumberString(currentOuterIteration, currentInnerIteration, totalIterations);
         assertEquals(expected, actual);
     }
 }

@@ -28,14 +28,14 @@
         <append>false</append>
         <file>logs/sportsnet-result.log</file>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss}: %logger{1}:%L - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss}: | %-5p | %logger{1}:%L - %msg%n</pattern>
         </encoder>
     </appender>
 
     <logger name="com.jstevenperry.sportsnet" level="INFO"/>
-<!--    <logger name="com.jstevenperry.sportsnet.framework.util.NetworkUtils" level="DEBUG"/>-->
+    <!--    <logger name="com.jstevenperry.sportsnet.framework.util.NetworkUtils" level="DEBUG"/>-->
     <logger name="org.deeplearning4j.optimize.listeners" level="INFO"/>
-<!--    <logger name="com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer" level="DEBUG"/>-->
+    <!--    <logger name="com.jstevenperry.sportsnet.framework.AbstractNetworkTrainer" level="DEBUG"/>-->
     <logger name="com.jstevenperry.sportsnet.framework.AbstractTournamentRunnerPlugin" level="DEBUG" additivity="false">
         <appender-ref ref="RESULTS-FILE"/>
     </logger>

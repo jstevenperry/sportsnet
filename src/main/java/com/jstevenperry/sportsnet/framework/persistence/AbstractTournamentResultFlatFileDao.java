@@ -6,7 +6,6 @@ package com.jstevenperry.sportsnet.framework.persistence;
 
 import com.jstevenperry.sportsnet.framework.model.AbstractSeasonData;
 import com.jstevenperry.sportsnet.framework.model.TournamentResult;
-import com.jstevenperry.sportsnet.nhl.persistence.NhlTournamentResultFlatFileDao;
 import com.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

@@ -16,6 +16,7 @@ import com.jstevenperry.sportsnet.ncaabb.plugins.TournamentRunnerPlugin2013;
 import com.jstevenperry.sportsnet.ncaabb.plugins.TournamentRunnerPlugin2016;
 import com.jstevenperry.sportsnet.ncaabb.plugins.TournamentRunnerPlugin2017;
 import com.jstevenperry.sportsnet.ncaabb.plugins.TournamentRunnerPlugin2018;
+import com.jstevenperry.sportsnet.ncaabb.plugins.TournamentRunnerPlugin2020;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class NcaaBbNetworkRunner extends AbstractNetworkRunner<NcaaBbSeasonData>
     @Override
     protected List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> loadPlugins(final SeasonDataDao<NcaaBbSeasonData> ncaaBbSeasonDataDao) {
         List<AbstractTournamentRunnerPlugin<NcaaBbSeasonData>> ret = new ArrayList<>();
+        ret.add(new TournamentRunnerPlugin2020(ncaaBbSeasonDataDao));
         ret.add(new TournamentRunnerPlugin2018(ncaaBbSeasonDataDao));
         ret.add(new TournamentRunnerPlugin2017(ncaaBbSeasonDataDao));
         ret.add(new TournamentRunnerPlugin2016(ncaaBbSeasonDataDao));
