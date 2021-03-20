@@ -89,8 +89,8 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         log.debug("Pulling training and evaluation data...");
         String trainingDataCsv = createCsvData(networkParameters.getYearsToTrainNetwork(), seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
         String evaluationDataCsv = createCsvData(networkParameters.getYearsToEvaluateNetwork(), seasonDataDao, tournamentResultDao, tournamentParticipantDao, networkParameters);
-        RecordReaderDataSetIterator trainingDataIterator = NetworkUtils.createIterator(trainingDataCsv, networkParameters);
-        RecordReaderDataSetIterator evaluationDataIterator = NetworkUtils.createIterator(evaluationDataCsv, networkParameters);
+        DataSet trainingData = fetchOrCreateTrainingDataSet(trainingDataCsv, networkParameters, networkParameters.getNormalizer());
+        DataSet evaluationData = fetchOrCreateEvaluationDataSet(evaluationDataCsv, networkParameters, networkParameters.getNormalizer());
         //
         // Create the network definition
         log.debug("Configuring network...");
@@ -98,7 +98,7 @@ public abstract class AbstractNetworkTrainer<T extends AbstractSeasonData> exten
         //
         // Train the network. If nothing goes wrong, return the trained network.
         log.debug("Training network...");
-        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingDataIterator.next(), evaluationDataIterator.next(), "1.1");
+        MultiLayerNetwork trainedNetwork = goInternal(configuration, networkParameters, trainingData, evaluationData, "1.1");
         // Restore the value for next time since it will be set to the actual number used, and the user may not want that next time
         networkParameters.setNumberOfEpochs(numberOfEpochs);
         log.debug("Training network...DONE.");
