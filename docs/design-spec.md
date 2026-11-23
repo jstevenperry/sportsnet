@@ -53,8 +53,8 @@ In scope:
   configuration, and optional tournament templates;
 - construct supervised training/evaluation datasets;
 - build, train, evaluate, serialize, load, and run feed-forward classifiers;
-- batch experimentation and the unsaved-candidate lifecycle;
-- network listing, lookup, and saving;
+- batch experimentation and persistence of qualifying trained networks;
+- listing and lookup of persisted networks;
 - tournament ranking and bracket simulation;
 - correlated management-event recording, searching, and summaries;
 - configuration, logging, errors, persistence, and test suites.
@@ -218,7 +218,7 @@ integration tests.
    model.
 7. Batch jobs MUST expose a correlation identifier and observable lifecycle
    events. Cancellation MUST be checked at bounded intervals (at least once
-   per training epoch and between candidate iterations).
+   per training epoch and between batch iterations).
 8. Errors MUST be explicit and actionable. Do not return an empty success
    response or an empty model in place of a failed repository/backend
    operation.

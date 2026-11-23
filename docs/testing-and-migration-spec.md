@@ -127,8 +127,9 @@ Use fake repositories and a fake backend to cover:
 - valid training success, early-stop success, max-epoch completion below
   threshold, invalid request, repository failure, backend failure, and
   cancellation;
-- candidate visibility, expiration/capacity, lookup, save success, retriable
-  save failure, and candidate consumption only after successful persistence;
+- persisted-model listing and lookup, atomic persistence of qualifying
+  training results, and absence of in-memory network retention for
+  below-threshold results;
 - no evaluation data influencing fitted preprocessing or training updates;
 - batch start, each iteration, final summary, per-iteration failure policy,
   cancellation before next iteration, deterministic results despite completion

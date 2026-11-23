@@ -557,7 +557,7 @@ prediction, matching the legacy `allow.evaluation.years.for.prediction`
 setting. An artifact manifest records year sets, the switch value, and the
 resolved feature/preprocessing schema.
 
-### 3.5 Training and candidate lifecycle
+### 3.5 Training and persisted-model lifecycle
 
 A single training request MUST:
 
@@ -571,25 +571,17 @@ A single training request MUST:
    criteria, checking cancellation between epochs;
 6. calculate held-out metrics and record resolved parameters, seed, stopping
    reason, and runtime;
-7. if early stopping is reached, persist atomically when the composite
-   performance threshold is met, otherwise retain a valid unsaved candidate;
-   if max epochs are reached without early stopping, record a distinct
-   completed-below-target outcome and do not expose a candidate through the
-   legacy single-training endpoint;
+7. if early stopping is reached and the composite performance threshold is
+   met, persist the model atomically; otherwise record a distinct
+   completed-below-target outcome and do not return or retain the model;
 8. emit end/failure events and release transient data.
 
-The current Java implementation returns no network unless its early-stop
-condition is reached, despite comments suggesting a max-epoch model may still
-be usable. The replacement MUST distinguish “completed but target not met”
-from “training failed.” For v1, the legacy single-training endpoint returns
-the empty optional for completed-below-target, while the internal service and
-management events retain the precise outcome.
-
-Unsaved candidates are addressed by model UUID, can be listed/inspected, and
-can be saved by ID. They MUST have explicit TTL and capacity limits. Save by
-ID MUST be atomic and consume the candidate only after persistent storage
-succeeds; a failed write leaves a retriable candidate. Missing/expired IDs
-produce not-found behavior.
+The replacement MUST distinguish “completed but target not met” from
+“training failed.” For v1, the legacy single-training endpoint returns the
+empty optional for completed-below-target, while the internal service and
+management events retain the precise outcome. Models that do not qualify for
+persistence are transient training state only and MUST NOT be retained as
+in-memory networks.
 
 Batch training MUST:
 

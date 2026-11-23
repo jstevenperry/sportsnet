@@ -21,13 +21,6 @@ It MUST NOT implement, proxy, redirect, or internally call `/resources/...` rout
 Season data, properties, templates, network artifacts, metadata indexes, and
 reindex operations are in-process repository/service operations.
 
-The legacy `/ncaabb` API includes a `resourceType` query parameter for saving a
-trained candidate. Retain the route and parameter only as an NCAA API
-compatibility contract; it MUST NOT reintroduce a resource-service REST
-surface. Translate the legacy `DL4J_NETWORK` value to the new internal model
-artifact type only if compatibility requires it. New clients SHOULD use the
-versioned artifact type defined by the replacement.
-
 The API MUST preserve the legacy route spelling and JSON field names specified
 below. The handler MUST return a stable error body and status code; do not
 expose stack traces or backend internals.
@@ -36,10 +29,9 @@ expose stack traces or backend internals.
 
 | Method and path | Request | Successful response | Required semantics |
 |---|---|---|---|
-| `GET /ncaabb/networks?unsaved={bool}` | Optional boolean; absent/false lists persisted descriptors, true lists in-memory candidates | `200`, descriptor array | Return metadata only, not weights; sort deterministically. |
-| `GET /ncaabb/networks/{networkId}` | UUID path segment | `200`, descriptor or empty result | Check unsaved cache, then persistent repository. Invalid UUID is `400`; unknown ID returns the legacy empty optional with `200`. |
-| `POST /ncaabb/networks` | Network descriptor JSON | `200`, trained descriptor or explicit no-model outcome | Run one training request synchronously. Invalid parameters are `400`; backend/repository failure is `500`. Do not report a model success when training failed. |
-| `POST /ncaabb/networks/{networkId}?resourceType=...` | Candidate UUID and compatible artifact-type parameter | `201`, persisted descriptor | Persist only a known unsaved candidate. Unknown/expired candidate is `404`; an unsuccessful write is `500` and does not consume candidate. |
+| `GET /ncaabb/networks` | None | `200`, persisted descriptor array | Return metadata only, not weights; sort deterministically. |
+| `GET /ncaabb/networks/{networkId}` | UUID path segment | `200`, descriptor or empty result | Read only from persistent repository. Invalid UUID is `400`; unknown ID returns the legacy empty optional with `200`. |
+| `POST /ncaabb/networks` | Network descriptor JSON | `200`, persisted trained descriptor or explicit no-model outcome | Run one training request synchronously and persist only when the composite performance threshold is met. Invalid parameters are `400`; backend/repository failure is `500`. Do not report a model success when training failed. |
 | `POST /ncaabb/networks/batch` | Network descriptor with positive `numberOfBatchIterations` | `202`, accepted descriptor containing `batchTrainingRunId` | Assign the correlation/job ID before queuing work. The response MUST NOT race generation of the ID. Progress and terminal state are discoverable through management events. |
 | `POST /ncaabb/simulations` | `{ "networkIds": [UUID, ...], "tournamentYear": integer }` | `200`, ranking or bracket CSV/text body | Reject absent year, unknown plugin year, malformed IDs, and invalid simulation requests. Emit start/end/exception events. |
 | `GET /ncaabb/tournamentYears` | None | `200`, array of `{ tournamentYear, pluginDescription, outputType }` | Include only registered/enabled plugins, with output type (`BRACKET` or `TEAM_RANKING`). |
@@ -64,10 +56,9 @@ the NCAA evaluation route.
 
 | Method and path | Request | Successful response | Required semantics |
 |---|---|---|---|
-| `GET /mlb/networks?unsaved={bool}` | Optional boolean | `200`, descriptor array | `unsaved=true` lists in-memory candidates; otherwise list persisted metadata. |
-| `GET /mlb/networks/{networkId}` | UUID path segment | `200`, descriptor or empty result | Check candidate cache then persistent repository; unknown ID is empty optional with `200`. |
-| `POST /mlb/networks` | Network descriptor JSON | `200`, optional trained descriptor | Train one model using MLB features and six declared outputs. |
-| `POST /mlb/networks/{networkId}?resourceType=...` | Candidate UUID and resource type | `201`, persisted descriptor | Persist an unsaved MLB candidate only. |
+| `GET /mlb/networks` | None | `200`, persisted descriptor array | List persisted metadata only. |
+| `GET /mlb/networks/{networkId}` | UUID path segment | `200`, descriptor or empty result | Read only from persistent repository; unknown ID is empty optional with `200`. |
+| `POST /mlb/networks` | Network descriptor JSON | `200`, optional persisted trained descriptor | Train one model using MLB features and six declared outputs; persist only when the composite performance threshold is met. |
 | `POST /mlb/simulations` | `{ "networkIds": [UUID, ...], "tournamentYear": integer }` | `200`, plugin-produced text | Supported plugin years are 2009 and 2023; output type is `TEAM_RANKING`. |
 | `GET /mlb/tournamentYears` | None | `200`, plugin descriptor array | Return registered MLB plugins only. |
 | `GET /mlb/trainingYears` | None | `200`, integer array | Return participant/training years with usable MLB data. |
@@ -207,14 +198,14 @@ At minimum, map:
 
 - malformed JSON, invalid schema/enum/path UUID, invalid request parameters,
   impossible year combinations, or missing required filters → `400`;
-- unknown model, expired unsaved candidate, or missing required file → `404`;
+- unknown model or missing required file → `404`;
 - unsupported artifact/backend format → an explicit client or server error
   according to whether the caller supplied the invalid format;
 - storage corruption, read/write failure, model load/predict failure, or
   unexpected implementation failure → `500`;
 - accepted asynchronous batch → `202`;
-- newly persisted candidate/event → `201` where the corresponding route
-  creates a durable resource.
+- newly created durable resource/event → `201` where the corresponding route
+  creates it.
 
 Response bodies MUST have a stable machine-readable error code/message. Log
 internal exceptions with correlation IDs. Do not include secrets, raw
@@ -249,11 +240,15 @@ not the internal repository contract.
 
 Required methods are equivalent to:
 
-- `save(candidate) -> persisted descriptor`;
+- `save(qualified model) -> persisted descriptor`;
 - `load(id) -> descriptor + backend model + preprocessor`;
 - `get_descriptor(id)`;
 - `list_descriptors(sport, filters)`;
 - `rebuild_index(sport)` as an internal command/maintenance operation.
+
+The repository contains persisted models only. Training models that do not
+meet the composite performance threshold are discarded after their outcome is
+recorded; they MUST NOT be retained in an in-memory candidate store.
 
 Reindexing MUST be idempotent and MUST NOT delete the only valid index before
 replacement indexes have been built and validated. Preserve atomicity and
@@ -381,13 +376,13 @@ applications:
 2. `networkPerformanceThreshold` is canonical; if absent, accept
    `networkThreshold`, then the configured default. If both are present,
    canonical wins. Return both legacy fields with the resolved value.
-   `DL4J_NETWORK` is accepted only as a legacy NCAA save-route value and maps
-   to the new internal artifact type; it does not imply DL4J loading support.
-3. If training completes but the legacy early-stop condition is never met,
-   the legacy single-training endpoint returns `200` with an empty optional.
-   Record the internal outcome distinctly from failure. If early stopping is
-   reached but the composite save threshold is not, return an unsaved
-   candidate.
+   Model artifacts use the replacement's internal format; DL4J loading is not
+   supported.
+3. If training completes without meeting both the legacy early-stop condition
+   and composite performance threshold, the legacy single-training endpoint
+   returns `200` with an empty optional. Record the internal outcome
+   distinctly from failure. A model is persisted and returned only when both
+   conditions are met.
 4. Management events persist across process restarts. Apply no age-based
    expiration by default; any configured capacity/retention policy must emit
    observable eviction information.
