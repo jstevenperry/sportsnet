@@ -1,0 +1,51 @@
+server:
+  port: 8287
+  tomcat:
+    max-http-form-post-size: 200MB
+
+sportsnet:
+  resource:
+    service:
+      protocol: http
+      host: localhost
+      port: 8299
+      uri: /resources
+  management:
+    service:
+      protocol: http
+      host: localhost
+      port: 8299
+      uri: /management
+  service:
+    uri:
+      networks: /networks
+      trainingYears: /trainingYears
+      tournamentYears: /tournamentYears
+      dataElements: /dataElements
+      simulations: /simulations
+      events: /events
+      searchEvents: /searchEvents
+      stats: /stats
+  ncaabb:
+    uri: /ncaabb
+
+spring:
+  jackson:
+    serialization:
+      FAIL_ON_EMPTY_BEANS: false
+
+  servlet:
+    multipart:
+      max-request-size: 100MB
+      max-file-size: 100MB
+      
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+    info:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: shutdown
