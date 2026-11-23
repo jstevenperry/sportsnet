@@ -22,7 +22,8 @@ The implementation MUST provide equivalents of:
    descriptors/indexes; lists metadata without loading model weights.
 4. **Training service** — prepares datasets, resolves configuration,
    constructs/trains/evaluates a model, applies thresholds, records events,
-   and stores or stashes the result.
+   and persists only results that qualify for storage; all other model state
+   is discarded.
 5. **Tournament service** — checks model/year eligibility, obtains season
    vectors, calls model inference, accumulates tournament scores, and emits
    ranking or bracket output.
@@ -94,9 +95,8 @@ Current source-specific module baselines:
 MLB composes batting, pitching, and fielding CSVs into one team-season record.
 Its respective input row widths are 29, 36, and 19 fields, each with one
 header row; its participant CSV has two fields. Team normalization includes
-the aliases `Cleveland Indians` → `Cleveland Guardians` and `Los Angeles
-Angels of Anaheim` → `Los Angeles Angels`. The six declared MLB output classes
-and actual label range/order MUST be validated against fixtures and real
+historical aliases. The six declared MLB output classes and actual label
+range/order MUST be validated against synthetic fixtures and authorized
 participant data rather than inferred from the class count alone.
 
 The MLB extension is implemented by `MlbSeasonData`, `MlbSeasonDataCsvDao`,
@@ -123,10 +123,11 @@ shared framework.
 - **Model artifact:** backend-specific serialized weights plus a backend-neutral
   manifest and descriptor. A model handle couples the loaded artifact with
   its descriptor and fitted preprocessor.
-- **Training result:** descriptor, model handle (if produced), final metrics,
-  stopping reason, threshold decision, and saved/stashed state. Training
-  failure, valid-but-below-threshold completion, and successful persistence
-  MUST be distinct outcomes.
+- **Training result:** final metrics, stopping reason, threshold decision, and
+  outcome. Training failure, valid-but-below-threshold completion, and
+  successful persistence MUST be distinct outcomes. A model descriptor or
+  handle is returned only for a qualifying model that has been persisted;
+  below-threshold model state is discarded, but its metrics are still reported.
 - **Team coordinate:** tournament identity `(region, round, index)`, with
   optional team name, per-match aggregate votes/scores, and cumulative score.
   Equality/identity MUST use only the coordinate triple, not display name or
@@ -149,9 +150,11 @@ directory, using a layout equivalent to:
 <base>/<SPORT>/<network-index-directory>/<descriptor-index>
 ```
 
-`SPORT` is the uppercase sport code (`NCAABB` in this application). A new
-implementation MAY choose a different physical layout, but MUST resolve all
-reads and writes through repository interfaces and document the mapping.
+`SPORT` is the uppercase sport code (`NCAABB` in this application). The
+Python implementation uses `<resource-root>/Networks/<SPORT>/<uuid>.model.keras`
+and `<resource-root>/Networks/<SPORT>/<uuid>.json` for model and
+descriptor/manifest. A rebuildable SQLite search index is stored in Networks.
+All reads and writes MUST go through repository interfaces.
 Tournament template resources currently use:
 
 - `ncaabb/tournament-template-ncaabb.txt` for game/coordinate pairings;
@@ -159,6 +162,13 @@ Tournament template resources currently use:
 
 The alias file is `ncaabb/data/SeasonData-Alias.csv`. Do not assume these
 external data files exist in this source repository.
+
+The configured base directory is the directory that *contains* the sport
+directories (it is not itself a sport directory). Pointing it one level too
+deep or too shallow is a common deployment mistake, so any missing-resource
+error MUST report the full resolved path that was searched, and the expected
+layout MUST be documented for operators. Runtime CSV resources MUST be
+external deployment inputs, and tests MUST use synthetic fixtures.
 
 ### 2.2 Available years
 
@@ -171,12 +181,13 @@ entry.
 
 The replacement MUST obtain supported-year lists from the repository's
 validated manifest/configuration, not infer continuity from integer ranges.
-Training-year listing MUST return only years for which the participant labels
-and season feature inputs required for training are available. Tournament-year
-listing MUST return only plugins actually enabled by the runtime. In the
-current Java runtime only the 2024 plugin is registered; other plugin classes
-are present but inactive. The active plugin set MUST be explicit configuration
-and covered by tests.
+Training-year listing MUST return only years declared by the participant
+manifest and supported by the required season features. Runtime data MUST NOT
+extend or alter these year manifests. Tournament-year listing MUST return only
+plugins actually enabled by the runtime. In
+the current Java runtime only the 2024 NCAA plugin is registered; other
+plugin classes are present but inactive. The active plugin set MUST be
+explicit configuration and covered by tests.
 
 ### 2.3 CSV parsing and merge behavior
 
@@ -191,25 +202,49 @@ name:
 | `AdvancedOpponentSeasonData.csv` | 34 | 2 | team name and advanced opponent statistics |
 
 The implementation MUST preserve CSV quoting semantics. Strip surrounding
-whitespace and the source `*` marker from team names. For numeric fields, the
-legacy parser removes `%` and maps an empty field to zero before numeric
-conversion. The replacement MUST preserve that mapping only for fields
-confirmed optional by the source data contract; it MUST reject malformed,
-non-finite, or missing required values with file/year/row/column context rather
-than silently turning all errors into zero.
+whitespace and the source `*` marker from team names. For numeric season
+statistics, map blank or whitespace-only fields to zero and remove `%` before
+numeric conversion. Reject malformed or non-finite nonblank values with
+file/row/column context. This zero-filling rule does not apply to missing
+team rows, team names, or tournament participant labels.
+CSV header rows are skipped; their names and contents are not validated.
+Data fields are interpreted by position, so input columns must retain the
+documented order.
 
-Rows with unexpected column counts MUST fail the load and identify the file,
-year, expected and actual counts. A season record assembled from any subset
+Selected rows with unexpected column counts MUST fail the load and identify
+the file, expected and actual counts. A season record assembled from any subset
 must be checked for completeness before it is eligible for training or
-inference.
+inference. For NCAA training and evaluation, read the year's tournament
+participants first and process season statistics only for those teams, resolving
+aliases before selection. Exclude participants that do not join across the four
+files for the affected year and log their names, year, missing files, and
+guidance to check aliases or data rows. Nonparticipant rows do not affect the
+dataset. Tournament inference MUST reject incomplete joins.
 
-The alias CSV has one header row. The first column identifies the source team
-name and the second column, when present, is a name alias. The source loader
-applies aliases after parsing season rows. Alias resolution MUST be
-deterministic, case/whitespace policy MUST be explicit, duplicate aliases to
-different records MUST fail validation, and all tournament participant names
-must resolve to the intended season record. Do not silently drop an unmatched
-participant.
+The alias CSV may begin with any number of comment lines (first non-blank
+character `#`) and then has one
+header row. The first column identifies the source team name and the second
+column, when present and non-blank, is a name alias. The legacy loader keeps a
+**list** of aliases per source name, and the same season record is stored under
+every one of them. A team therefore MAY have any number of aliases, across any
+number of rows: the data provider renames teams from year to year (for example
+`Alabama State`, `Alabama State NCAA`, and `Alabama St`), and the alias file
+accumulates every name ever used. Several source names may also share an alias.
+A row with a blank second column, or no second column, means the source name is
+valid as is.
+
+The replacement MUST NOT model an alias as a one-to-one mapping and MUST NOT
+fail merely because one name appears in several rows with different aliases.
+Treat all names linked by alias rows as one team, and resolve them to one
+deterministic canonical name (for example, the lexicographically first name
+that has a blank-alias row, otherwise the lexicographically first linked name).
+The result MUST NOT depend on row order. Case/whitespace policy MUST be
+explicit. Alias resolution MUST fail validation when two different season
+records resolve to the same canonical team for a year. For NCAA training and
+evaluation, exclude unmatched participants for the affected year with a
+warning that identifies the team and year and suggests checking aliases and
+season rows. A dataset with no participant examples MUST fail. A missing alias
+file MUST be reported with the resolved path that was searched.
 
 Participant CSV files have one header row and exactly two fields per
 non-empty row: team name and victory count. Remove surrounding whitespace,
@@ -337,9 +372,14 @@ The MLB module loads team batting, pitching, and fielding files for each
 supported season year and joins their rows by canonical team name. Each file
 has one header row; the row widths are 29, 36, and 19 columns respectively.
 The playoff-result file has two fields per participant row: team name and
-number of victories. Supported season-stat years are 2009–2023; playoff
-participant years are 2010–2022. The runtime currently registers ranking
+number of victories. The Java source declares season-stat years 2009–2023 and
+playoff participant/training years 2010–2022; it currently registers ranking
 plugins for 2009 and 2023.
+
+Provider-defined aggregate rows MUST be excluded from team records in parsed
+season data. Blank or whitespace-only numeric season statistics MUST be
+filled with zero. Nonblank malformed or non-finite values, missing team rows,
+team names, and participant labels remain validation errors.
 
 The ordered `mlb-season-v1` feature schema has 78 values, grouped and ordered
 as follows:
@@ -362,8 +402,7 @@ of that declaration. Do not treat the training-row width as the model input
 width.
 
 Canonicalize team names consistently across all three season files and the
-playoff-result file, including `Cleveland Indians` → `Cleveland Guardians`
-and `Los Angeles Angels of Anaheim` → `Los Angeles Angels`. The current
+playoff-result file using the sport's configured alias rules. The current
 fielding parser assigns the `#Fld` column to the `errors` feature; the
 replacement MUST map `errors` from the CSV `E` column and test that mapping
 with a fixture.
@@ -371,6 +410,14 @@ with a fixture.
 ## 3. Network definition and ML backend contract
 
 ### 3.1 Backend independence
+
+Identifiers chosen at code-generation time (types, functions, parameters,
+variables, fields, and persisted keys) MUST NOT collide with, shadow, or be
+ambiguous with similarly named members of the selected backend or its
+libraries, and MUST name what they actually hold. For example, a repository
+method that persists a model MUST NOT be named like a backend method that
+saves model weights, and a value scored on training data MUST NOT carry a name
+that suggests evaluation data.
 
 The domain layer MUST express models as a resolved network specification:
 
@@ -382,7 +429,7 @@ The domain layer MUST express models as a resolved network specification:
 - loss identifier;
 - optimizer identifier and numeric parameters;
 - weight initialization identifier;
-- dropout and L2 parameters;
+- L2 parameters;
 - random seed;
 - feature-schema and preprocessing identifiers.
 
@@ -411,65 +458,65 @@ with a clear error.
 
 ### 3.2 Architecture layout
 
-Legacy network layouts are strings of positive layer widths separated by `x`,
-including input and output (for example `64x48x24x7`). The replacement SHOULD
-store the resolved widths as an integer array and SHOULD accept/emit the
-legacy string only at compatibility boundaries.
+Network layouts are sequences of positive layer widths, input first and output
+last, written as `x`-separated strings at the API boundary (for example
+`64x48x24x7`). Implementations SHOULD store the resolved widths as an integer
+array.
 
-The source exposes these structure algorithm identifiers:
+Request parameters:
 
-- `DEFAULT`, `DEFAULT_RAND`
-- `DEFAULT_SMALL`, `DEFAULT_RAND_SMALL`
-- `TAPERED_TREE`, `TAPERED_TREE_RAND`
-- `HOUR_GLASS`, `HOUR_GLASS_RAND`
-- `USER_DEFINED`, `USER_DEFINED_RAND`
+- `networkStructureAlgorithm` is required. It MUST be one of `HOUR_GLASS`,
+  `TAPERED_TREE`, `USER_DEFINED`, or `USER_DEFINED_RAND`. A missing or unknown
+  value is rejected as a validation error (`400`); there is no default.
+- `USER_DEFINED` and `USER_DEFINED_RAND` require `networkLayout`.
+  `numberOfHiddenLayers` is ignored because the layout determines the hidden
+  layer count.
+- `HOUR_GLASS` and `TAPERED_TREE` require `numberOfHiddenLayers`, an integer
+  `>= 3` with no default. `networkLayout` is ignored.
+- Both generated shapes require the schema's input width `I` to be `>=` its
+  output width `O`; otherwise the request is invalid.
 
-Random variants MUST use the explicit run seed and persist the resolved
-widths. `USER_DEFINED` MUST have an unambiguous contract in the replacement:
-the preferred representation is hidden widths only, with input/output widths
-derived from the data schema. If existing callers send the legacy full-layout
-string, normalize it at the API boundary, validate its input/output dimensions,
-and record the normalized form. The Java helper's user-defined parsing and
-minimum-layer checks are inconsistent; do not copy those ambiguities into the
-domain.
+Random choices MUST use the explicit run seed, so the same seed and inputs
+always produce the same layout. The resolved full layout and the effective
+hidden-layer count are persisted in the descriptor.
 
-The legacy generator's exact widths are awkward and some layer-count cases
-produce invalid indexing/division behavior. Historical layout parity is
-defined by representative inputs and expected resolved width arrays from the
-Java implementation. The replacement MUST at minimum validate: hidden-layer count > 0, every width
-> 0, first width equals the registered module's input width, last width equals
-its output width, and no arithmetic overflow or unbounded allocation.
-Random generation MUST have deterministic inclusive/exclusive bounds
-documented by the implementation.
+The layout resolver MUST validate: hidden-layer count > 0 and within
+configured limits, every width > 0, first width equals the registered module's
+input width, last width equals its output width, and no arithmetic overflow or
+unbounded allocation. Reject any result outside configured positive-width and
+total-parameter limits.
 
-For implementations that do not need bit-for-bit legacy topology parity, use
-the following precise v1 layout contract for these identifiers. Let `I` and
-`O` be the schema input/output widths, `H` the hidden-layer count, and
-`w[1..H]` the generated hidden widths. All divisions below are integer floor
-division over positive integers. After generating hidden widths, the resolved
-full layout is `[I, w[1], ..., w[H], O]`. Reject arithmetic overflow and any
-result outside configured positive-width and total-parameter limits.
-`DEFAULT`, `HOUR_GLASS`, and `TAPERED_TREE` choose `floor((lo + hi) / 2)`
-for each stated range. `DEFAULT_SMALL` uses the explicitly stated endpoint
-rules in its row. Random variants choose a seeded uniform integer from
-`[lo, hi)` and return `lo` when `lo == hi`.
+**Notation.** `I` and `O` are the schema input and output widths, `H` is the
+hidden-layer count, and `w[1..H]` are the hidden widths; the resolved layout is
+`[I, w[1], ..., w[H], O]`. Layer 0 is the input layer (width `I`). Random
+integers are drawn uniformly and inclusively from the stated range using the
+seeded generator, in the order stated per algorithm. Linear interpolation
+between layer `a` (width `x`) and layer `b` (width `y`) gives layer `j` the
+width `x + floor((y - x) * (j - a) / (b - a))`, using mathematical floor.
 
-| Identifier family | Hidden-width generation |
+- `P` (peak width) is a random integer in `[4*I, 10*I]`.
+- `N` (neck width) is a random integer in `[2*O, 4*O]`.
+- `F` (final hidden width) is a random integer in `[2*O, 4*O]`.
+
+| Algorithm | Hidden-width generation |
 |---|---|
-| `DEFAULT[_RAND]` | Require `H >= 2`. Let `a = min(I*H, I*O*O)`, `m = floor(H/2)`, `b = I*O`, and `c = O*O*O`. Set `w[1] = a`. For `j = m, m-1, ..., 1`, assign `w[j+1]` by choosing between `min(floor(a/j), b)` and `max(floor(a/j), b)`. Then set `w[m+1] = b`. For `j = H-1, H-2, ..., m+1`, assign `w[j+1]` by choosing between `min(floor(c/j), c)` and `max(floor(c/j), c)`. Finally set `w[H] = c`. Later assignments overwrite earlier assignments to the same position, matching the source construction order. |
-| `DEFAULT_SMALL` / `DEFAULT_RAND_SMALL` | Let `m = floor(H/2)`. Set `w[1] = I + 2*O`. For `j = 2, ..., m`, `DEFAULT_SMALL` uses the maximum of `w[j-1] + 2*O` and `w[j-1] + 2*(j-1)*O`; the random variant selects within the range. Set `w[m+1] = 2*I*O`. For `j = m+2, ..., H-1`, `DEFAULT_SMALL` uses the minimum of `2*floor(w[j-1]/(j-1))` and `w[j-1] - I`; the random variant selects within the range. Set `w[H] = I + O`. If `H=1`, the terminal assignment defines the sole hidden width. |
-| `HOUR_GLASS[_RAND]` | For `j = 1, ..., H-1`, choose between `min(floor(I*O*H/j), floor(I*O*O/j))` and the corresponding maximum. Set `w[H]` by choosing between `min(O*O*O, H*H*H)` and the corresponding maximum. |
-| `TAPERED_TREE[_RAND]` | Require `H >= 2`; let `m = floor(H/2)`. For `j = 1, ..., m-1`, choose between `min(floor(I*O*H/(j+2)), floor(I*O*O/(j+2)))` and the corresponding maximum. Set `w[m]` between `min(I*O*m, I*O)` and the corresponding maximum. For `j = m, ..., H-1`, append `w[j+1]`, choosing between `min(floor(I*O*H/(j+2)), floor(I*O*O/(j+2)))` and the corresponding maximum. |
-| `USER_DEFINED[_RAND]` | Parse positive integers separated by `x`. The v1 API accepts a full layout only when its first/last widths equal `I`/`O`; strip them to obtain the hidden list and require its length to equal `H`. `USER_DEFINED` preserves those hidden widths. `USER_DEFINED_RAND` chooses each resolved hidden width in order between `max(1, floor(previousWidth/2))` and `max(lowerBound+1, floor(currentWidth*3/2))`, exclusive at the upper end, using the seeded generator. `previousWidth` is `I` for the first hidden layer and the preceding resolved hidden width thereafter. |
+| `HOUR_GLASS` | Two humps with a narrow neck between them. Draw `P`, then `N`, then `F`. For odd `H`, the neck is layer `n = (H+1)/2`, with peaks `p = n-1` and `q = n+1`. For even `H`, the neck is layers `H/2` and `H/2+1`, with peaks `p = H/2-1` and `q = H/2+2`. Set `w[p] = w[q] = P` and every neck layer to `N`. Layers `1..p-1` interpolate from layer 0 (`I`) to layer `p` (`P`). Layers `q+1..H` interpolate from layer `q` (`P`) to layer `H` (`F`). When `H` is 3 or 4, `q = H` and there are no smoothing layers: the shape is peak, neck, peak (and for `H = 4`, peak, neck, neck, peak). |
+| `TAPERED_TREE` | One hump that rises quickly and tapers slowly. Draw `P`, then `F`. The peak is layer `p = ceil(H/4)`, with `w[p] = P`. Layers `1..p-1` interpolate from layer 0 (`I`) to layer `p` (`P`) (the rapid rise). Layers `p+1..H` interpolate from layer `p` (`P`) to layer `H` (`F`) (the gradual taper). |
+| `USER_DEFINED` | Parse positive integers separated by `x`. The first and last widths MUST equal `I` and `O`. The hidden widths are the interior values, and `H` is their count (at least 1). The hidden widths are preserved. |
+| `USER_DEFINED_RAND` | Resolve the layout as `USER_DEFINED`, then replace each hidden width in order with a seeded random integer in `[max(1, floor(previousWidth/2)), max(lowerBound+1, floor(currentWidth*3/2)))`, exclusive at the upper end. `previousWidth` is `I` for the first hidden layer and the preceding resolved hidden width thereafter. The user's widths act as upper guides; the layer count, `I`, and `O` never change. |
 
-For every chosen range, normalize bounds to `lo=min(first,second)` and
-`hi=max(first,second)` before selecting. A range that would generate a
-non-positive width is invalid rather than silently clamped, except for the
-explicit lower bound in `USER_DEFINED_RAND`. Implementations claiming exact
-legacy topology parity MUST instead use Java-generated golden widths for
-representative `I`, `O`, `H`, algorithm, and seed inputs; the table defines the
-replacement contract and does not claim that every legacy edge case is
-preserved.
+Worked examples with `I = 100`, `O = 3`, and drawn values `P = 700`, `N = 8`,
+`F = 12` (hidden widths only):
+
+| Algorithm | `H` | Hidden widths |
+|---|---|---|
+| `HOUR_GLASS` | 3 | 700, 8, 700 |
+| `HOUR_GLASS` | 4 | 700, 8, 8, 700 |
+| `HOUR_GLASS` | 7 | 300, 500, 700, 8, 700, 356, 12 |
+| `HOUR_GLASS` | 20 | 166, 233, 300, 366, 433, 500, 566, 633, 700, 8, 8, 700, 614, 528, 442, 356, 270, 184, 98, 12 |
+| `TAPERED_TREE` | 3 | 700, 356, 12 |
+| `TAPERED_TREE` | 7 | 400, 700, 562, 424, 287, 149, 12 |
+| `TAPERED_TREE` | 20 | 220, 340, 460, 580, 700, 654, 608, 562, 516, 470, 424, 378, 333, 287, 241, 195, 149, 103, 57, 12 |
 
 ### 3.3 Supported legacy option identifiers
 
@@ -540,16 +587,82 @@ class order. The canonical metric record includes:
 - optional loss, epoch count, training error, and stopping reason.
 
 Legacy `realNetworkAccuracy` is the arithmetic mean of accuracy, precision,
-recall, and F1, on a 0–1 scale. The configured performance threshold is a
-percentage on a 0–100 scale; save when `realNetworkAccuracy * 100 >=
-threshold`. Legacy early stopping instead checks `1 - recall < maxNetworkError`
-at the configured evaluation interval. Keep the stopping criterion and
-save-threshold score separate. The canonical metric definitions above are
-the replacement contract; do not claim numerical metric parity with DL4J
-unless golden confusion matrices confirm equivalent aggregation.
+recall, and F1, on a 0–1 scale and remains a reported diagnostic. The
+configured performance threshold is a percentage on a 0–100 scale; save when
+evaluation `networkAccuracy * 100 >= threshold`. Keep the stopping criterion
+and save-threshold score separate. The
+canonical metric definitions above are the replacement contract; do not claim
+numerical metric parity with DL4J unless golden confusion matrices confirm
+equivalent aggregation.
 
-The replacement MUST evaluate using a held-out evaluation set, not the
-training examples. Evaluation rows MUST NOT influence fitted preprocessing or
+**Training and evaluation are two distinct phases.** The replacement MUST
+operate as follows:
+
+1. *Training phase.* Train one epoch at a time. At every
+   `networkEvaluationIndex` epochs, score the network on the **training data**
+   and compute the network error as `1 - recall` (macro recall on the training
+   data). If the error is strictly below `maxNetworkError`, training stops
+   early and the network is considered trained. Otherwise continue until
+   `maxNumberOfTrainingEpochs`. The evaluation data MUST NOT be read, predicted
+   on, or scored during this phase. This error is the descriptor's
+   `trainingError`.
+2. *Evaluation phase.* If and only if training stopped because
+   `maxNetworkError` was reached, score the network once on the evaluation
+   data and compute the canonical metrics. Evaluation accuracy is compared to
+   the performance threshold to decide whether to persist.
+3. If the epoch limit is exhausted without reaching `maxNetworkError`, the
+   evaluation phase MUST NOT run. The network is discarded, no evaluation
+   metrics exist, and the outcome is completed-below-target.
+
+**Locked terminology.** Implementations MUST NOT conflate these terms in code,
+logs, wire data, or docs. The data the network was not trained on is called the
+*evaluation data* (never "held-out").
+
+| Term | Definition | Data | Used for |
+| --- | --- | --- | --- |
+| training loss | The framework's per-epoch loss (for example cross-entropy), the quantity back-propagation minimizes. Not a rate and not comparable to `maxNetworkError`. | training | Diagnostics only |
+| training error | `1 - macro recall` of predictions on the training data (legacy `computeNetworkError`). 0 means every outcome category is right. | training | Early stop when strictly `< maxNetworkError` |
+| training accuracy | Fraction of training rows predicted correctly. | training | Diagnostics |
+| evaluation error/accuracy/precision/recall/F1 | Canonical metrics on the evaluation data; evaluation error is `1 - evaluation recall`. | evaluation | Persist when accuracy × 100 is `>= networkPerformanceThreshold` |
+| composite percent | Mean of evaluation accuracy, precision, recall, F1, times 100. | evaluation | Diagnostic |
+
+Rates are fractions in 0–1; loss and percentage fields are not. Very low
+training error with high evaluation error means overfitting, which is addressed
+by tuning (regularization, layer sizes, epoch counts, `maxNetworkError`), not by
+a code change. Because error is sampled every `networkEvaluationIndex` epochs,
+it can fall from above the target to far below it (even 0) between checks, so
+the stop point may undershoot the target.
+
+**Progress reporting.** Operators need visibility into long training runs.
+If the maximum epochs are reached before training error falls strictly below
+`maxNetworkError`, the server MUST log the final training error, target, and
+readable training confusion matrix at INFO, whether or not the request is a
+batch. Evaluation is not run in this case. Each completed batch iteration logs
+evaluation metrics and its confusion matrix at INFO when evaluation ran;
+otherwise it logs training metrics and the training confusion matrix. It
+explains the threshold decisions and whether the network was saved;
+non-batch detailed metrics remain DEBUG.
+The replacement SHOULD emit progress lines carrying sport, model ID,
+correlation ID, epoch and maximum epochs, training loss, training error,
+training accuracy, `maxNetworkError`, and the decision (continue, monitoring
+only, early stop, maximum epochs reached), and exactly one evaluation line
+(evaluation metrics, performance threshold, whether it qualifies for
+persistence) when the evaluation phase runs. Progress is independent of
+stopping: an optional request property `reportingInterval` (positive integer,
+in epochs) sets the print cadence, defaulting to every 10% of
+`maxNumberOfTrainingEpochs` (every epoch when fewer than ten). Only milestone
+epochs, the stopping epoch, and the final epoch print;
+`networkEvaluationIndex` schedules error checks, never printing, and reporting
+MUST NOT change when training stops. This property is an addition to the
+legacy contract and is not honored by the Java implementation.
+
+Legacy detail: the legacy loop counts epochs from zero and so first checks the
+error after the first epoch, but never checks after the final epoch unless it
+falls on an interval. The replacement MAY additionally check at the final
+epoch; if so it MUST record that choice.
+
+The replacement MUST evaluate using an evaluation set that was not used for
+training. Evaluation rows MUST NOT influence fitted preprocessing or
 gradient updates. Preserve the source's train/evaluation-year disjointness
 rule. Tournament-year eligibility MUST reject training years and, by default,
 evaluation years; a configuration switch may permit evaluation-year
@@ -568,20 +681,23 @@ A single training request MUST:
    NCAA basketball), and create train/evaluation matrices;
 4. fit preprocessing on training features and persist its state;
 5. build and train according to max epochs/evaluation interval/stopping
-   criteria, checking cancellation between epochs;
-6. calculate held-out metrics and record resolved parameters, seed, stopping
-   reason, and runtime;
-7. if early stopping is reached and the composite performance threshold is
-   met, persist the model atomically; otherwise record a distinct
-   completed-below-target outcome and do not return or retain the model;
+   criteria, scoring only the training data to decide when to stop and
+   checking cancellation between epochs;
+6. only if early stopping was reached, calculate evaluation-data metrics and
+   record resolved parameters, seed, stopping reason, and runtime;
+7. if early stopping is reached and the evaluation accuracy threshold is
+   met, persist the model atomically and return its descriptor; otherwise
+   record a distinct completed-below-target outcome, return the unsaved
+   training report (no model), and discard the model state;
 8. emit end/failure events and release transient data.
 
 The replacement MUST distinguish “completed but target not met” from
-“training failed.” For v1, the legacy single-training endpoint returns the
-empty optional for completed-below-target, while the internal service and
-management events retain the precise outcome. Models that do not qualify for
-persistence are transient training state only and MUST NOT be retained as
-in-memory networks.
+“training failed.” For v1, the single-training endpoint returns an unsaved training
+report for completed-below-target (`networkSaved: false`, with every metric and
+confusion matrix available from the run, on training and, if scored, evaluation data), while the internal service and management events
+retain the precise outcome. No persisted descriptor or model is returned for
+this outcome. Models that do not qualify for persistence MUST
+not be retained after the training request.
 
 Batch training MUST:
 
@@ -614,6 +730,18 @@ MUST NOT impose the NCAA distance formula or NCAA bracket conventions on other
 sports.
 
 ### 4.1 NCAA inference and scoring
+
+Before scoring any tournament request, validate every required input file
+against the sport module's declared CSV contract: header row count,
+data row width, numeric fields (with blank statistics filled with
+zero), team-key uniqueness,
+feature extraction schema, and participant/team resolution. This validation
+MUST run against the configured tournament data used by the request. If a
+required file or row no
+longer matches the contract, fail the whole simulation before model
+prediction or output generation; do not emit partial picks or silently skip
+malformed tournament teams. Emit a correlated failure event with a safe,
+source-located diagnostic.
 
 For each network ID, load its artifact/descriptor, validate tournament-year
 eligibility, build each tournament team's 64-feature row in a stable order,
@@ -700,7 +828,6 @@ Legacy property names and defaults observed in
 |---|---|
 | `beta.1.decay.scale.value` | `0.9` |
 | `beta.2.decay.scale.value` | `0.999`; legacy Adam-family mapping appears to use beta-1 scale for beta-2 as well; verify before parity |
-| `dropout.probability` | `0.95`; determine whether this means drop rate or keep rate before mapping |
 | `epoch.stats.index.count` | `100` |
 | `learning.rule.learning.rate` | `1.0`, then optimizer-specific scaling in legacy code |
 | `l2.regularization.lambda` | `0.0005` |
@@ -711,10 +838,10 @@ Legacy property names and defaults observed in
 | `number.batch.iterations` | `10` |
 | `network.evaluation.index` | `10`; MUST be positive |
 | `stats.show.eval` | `false` |
-| `networkStructureAlgorithms` | no usable default; legacy lookup may return an empty list |
+| `networkStructureAlgorithms` | no default; the request MUST name one of `HOUR_GLASS`, `TAPERED_TREE`, `USER_DEFINED`, `USER_DEFINED_RAND` |
 | `normalizers` | no usable default; legacy lookup may return an empty list |
 | `normalize.across.all.season.data` | `true`; no use found in inspected pipeline |
-| `number.of.hidden.layers` | `7` |
+| `number.of.hidden.layers` | no default; required (integer `>= 3`) for `HOUR_GLASS` and `TAPERED_TREE`, ignored for `USER_DEFINED[_RAND]` |
 | `output.layer.activation` | `SOFTMAX` |
 | `output.layer.loss.function` | `NEGATIVELOGLIKELIHOOD` |
 | `performance.threshold` | `70` percent |
