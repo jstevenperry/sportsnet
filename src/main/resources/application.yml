@@ -28,6 +28,8 @@ sportsnet:
       stats: /stats
   ncaabb:
     uri: /ncaabb
+  mlb:
+    uri: /mlb
 
 spring:
   jackson:

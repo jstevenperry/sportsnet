@@ -13,7 +13,11 @@ import org.springframework.context.annotation.ComponentScan;
  * @author J Steven Perry
  */
 @EnableAutoConfiguration
-@ComponentScan(basePackages = {"com.jstevenperry.sportsnet"})
+@ComponentScan(basePackages = {
+        "com.jstevenperry.sportsnet.framework",
+        "com.jstevenperry.sportsnet.ncaabb",
+        "com.jstevenperry.sportsnet.resource"
+})
 public class ApplicationConfig {
     // Nothing to do
 }

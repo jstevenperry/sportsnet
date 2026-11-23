@@ -38,6 +38,45 @@ springBoot {
     mainClass = 'com.jstevenperry.sportsnet.ncaabb.SportsnetNcaaBbApplication'
 }
 
+def ncaaBbMainClass = 'com.jstevenperry.sportsnet.ncaabb.SportsnetNcaaBbApplication'
+def mlbMainClass = 'com.jstevenperry.sportsnet.mlb.SportsnetMlbApplication'
+
+tasks.named('bootJar') {
+    archiveClassifier = 'ncaabb'
+    mainClass = ncaaBbMainClass
+}
+
+tasks.named('bootRun') {
+    mainClass = ncaaBbMainClass
+}
+
+tasks.register('bootJarMlb', org.springframework.boot.gradle.tasks.bundling.BootJar) {
+    group = 'build'
+    description = 'Builds the executable MLB application archive.'
+    archiveClassifier = 'mlb'
+    mainClass = mlbMainClass
+    targetJavaVersion = java.targetCompatibility
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.register('bootRunMlb', org.springframework.boot.gradle.tasks.run.BootRun) {
+    group = 'application'
+    description = 'Runs the MLB application.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = mlbMainClass
+}
+
+tasks.register('bootRunNcaaBb', org.springframework.boot.gradle.tasks.run.BootRun) {
+    group = 'application'
+    description = 'Runs the NCAA basketball application.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = ncaaBbMainClass
+}
+
+tasks.named('assemble') {
+    dependsOn tasks.named('bootJarMlb')
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }

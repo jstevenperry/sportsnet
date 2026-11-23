@@ -2,11 +2,9 @@ package com.jstevenperry.sportsnet.resource.config;
 
 import com.jstevenperry.sportsnet.framework.config.AbstractSportsnetProperties;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ComponentScan("com.jstevenperry.sportsnet")
 public class SportsnetProperties extends AbstractSportsnetProperties {
 
     @Value("${sportsnet.resource-service.base-directory}")
