@@ -27,14 +27,11 @@ The replacement is a **single deployable application** combining the shared
 framework, the NCAA basketball and MLB sport modules, resource/data access,
 model storage, and management-event responsibilities. Sport modules remain
 separate internally; the deployment MAY select one sport application at a
-time. The normal runtime MUST NOT require separate resource-service or
-management-service processes.
-
-The replacement MUST NOT expose a `/resources` REST API. Resource files,
-properties, model artifacts, indexes, and reindex operations are accessed
-through in-process repositories/services. Preserve the NCAA basketball API
-and MLB APIs, plus the management API defined in the interface specification.
-The management API is not the removed resource API.
+time. The application includes resource/data access and management-event
+responsibilities in the same deployment. Resource files, properties, model
+artifacts, indexes, and reindex operations use in-process repositories.
+Preserve the NCAA basketball API, MLB APIs, and management API defined in the
+interface specification.
 
 The shared framework is an **extensible sport-neutral core**. NCAA men's
 basketball is the reference sport module, and MLB provides a second concrete
@@ -61,10 +58,7 @@ In scope:
 
 Out of scope:
 
-- importing DL4J model weights into another ML framework (they are not
-  portable and must be retained as archives or replaced by retraining);
-- preserving `/resources/...` routes or making resource access through
-  loopback HTTP calls;
+- importing DL4J model weights into another ML framework;
 - inventing missing season, participant, tournament-template, or properties
   data not included in this repository;
 - shipping sports beyond the current NCAA and MLB implementations in the
@@ -115,14 +109,10 @@ beans. Both default to port 8287, so only one can bind that port at a time;
 running separate processes on different ports is possible, subject to safe
 storage/configuration isolation.
 
-The repository has no Java test sources and contains no season-data,
-tournament-participant, tournament-template, model, or `network.properties`
-fixtures. `application.yml` sets the Java HTTP port to 8287 and the old
-resource/management service URLs to localhost:8299. The resource service also
-requires base-directory and network-directory configuration keys not present
-in the checked-in YAML. Therefore an implementation MUST make these runtime
-inputs explicit and MUST add deterministic test fixtures rather than assume
-production data is checked in.
+The repository has no Java test sources. Runtime data, aliases, tournament
+templates, models, and network properties are external deployment inputs.
+Implementations MUST make these runtime inputs explicit and MUST add
+deterministic synthetic test fixtures for data parsing and application behavior.
 
 Notable observed behavior to account for:
 
@@ -139,9 +129,7 @@ Notable observed behavior to account for:
   registers only the 2024 ranking plugin. MLB registers 2009 and 2023 ranking
   plugins. A plugin class existing in source does not mean its year is
   available through the API.
-- Model and data operations currently cross service boundaries by REST.
-  Those internal HTTP calls are removed in the replacement; repository calls
-  are direct.
+- Model and data operations use direct in-process repository calls.
 - The legacy normalizer is fitted independently to training, evaluation, and
   tournament data. That leaks evaluation/inference distribution into
   preprocessing and prevents reliable train/serve parity. The replacement
@@ -238,5 +226,4 @@ An application conversion is not complete until:
 - feature-parity fixtures and API contract tests pass;
 - a real selected ML backend passes backend-conformance and end-to-end
   train/save/load/predict tests;
-- the repository contains no active `/resources` routes or internal HTTP calls
-  required for data/model access.
+- data and model access use in-process repositories.

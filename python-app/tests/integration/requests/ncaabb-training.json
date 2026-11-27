@@ -1,0 +1,22 @@
+{
+  "yearsToTrainNetwork": "2023",
+  "yearsToEvaluateNetwork": "2022",
+  "networkStructureAlgorithm": "TAPERED_TREE",
+  "networkLayout-ignored": "64x256x1024x32x7",
+  "numberOfHiddenLayers": 7,
+  "maxNumberOfTrainingEpochs": 1000,
+  "networkEvaluationIndex": 1,
+  "reportingInterval": 10,
+  "maxNetworkError": 0.15,
+  "networkPerformanceThreshold": 20,
+  "normalizer": "NORMALIZER_STANDARDIZE",
+  "activationFunction": "RELU",
+  "outputLayerActivation": "SOFTMAX",
+  "outputLayerLossFunction": "SPARSE_MCXENT",
+  "updater": "ADA_MAX",
+  "weightInit": "XAVIER_UNIFORM",
+  "learningRuleLearningRate": 0.005,
+  "l2RegularizationLambda": 0.01,
+  "seed": 17,
+  "shuffle": false
+}

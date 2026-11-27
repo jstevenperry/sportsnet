@@ -17,9 +17,8 @@ into generic training, persistence, or event services.
 ### 1.1 Route policy
 
 The application exposes the NCAA basketball API, MLB API, and management API.
-It MUST NOT implement, proxy, redirect, or internally call `/resources/...` routes.
 Season data, properties, templates, network artifacts, metadata indexes, and
-reindex operations are in-process repository/service operations.
+reindex operations use in-process repositories and services.
 
 The API MUST preserve the legacy route spelling and JSON field names specified
 below. The handler MUST return a stable error body and status code; do not
@@ -31,11 +30,11 @@ expose stack traces or backend internals.
 |---|---|---|---|
 | `GET /ncaabb/networks` | None | `200`, persisted descriptor array | Return metadata only, not weights; sort deterministically. |
 | `GET /ncaabb/networks/{networkId}` | UUID path segment | `200`, descriptor or empty result | Read only from persistent repository. Invalid UUID is `400`; unknown ID returns the legacy empty optional with `200`. |
-| `POST /ncaabb/networks` | Network descriptor JSON | `200`, persisted trained descriptor or explicit no-model outcome | Run one training request synchronously and persist only when the composite performance threshold is met. Invalid parameters are `400`; backend/repository failure is `500`. Do not report a model success when training failed. |
+| `POST /ncaabb/networks` | Network descriptor JSON | `200`, persisted trained descriptor or unsaved training report | Run one training request synchronously. Return the descriptor when the model is persisted after meeting the evaluation accuracy threshold; otherwise return the unsaved training report (§1.6 below), so every run reports its metrics, and retain no model. Invalid parameters are `400`; backend/repository failure is `500`. Do not report a model success when training failed. |
 | `POST /ncaabb/networks/batch` | Network descriptor with positive `numberOfBatchIterations` | `202`, accepted descriptor containing `batchTrainingRunId` | Assign the correlation/job ID before queuing work. The response MUST NOT race generation of the ID. Progress and terminal state are discoverable through management events. |
 | `POST /ncaabb/simulations` | `{ "networkIds": [UUID, ...], "tournamentYear": integer }` | `200`, ranking or bracket CSV/text body | Reject absent year, unknown plugin year, malformed IDs, and invalid simulation requests. Emit start/end/exception events. |
 | `GET /ncaabb/tournamentYears` | None | `200`, array of `{ tournamentYear, pluginDescription, outputType }` | Include only registered/enabled plugins, with output type (`BRACKET` or `TEAM_RANKING`). |
-| `GET /ncaabb/trainingYears` | None | `200`, integer array | Return years that have usable labeled participant data and matching season inputs. |
+| `GET /ncaabb/trainingYears` | None | `200`, integer array | Return years declared by the NCAA participant manifest that have usable labels and matching season inputs. |
 | `GET /ncaabb/evaluate/networks/{networkId}/{evaluationYear}` | UUID and integer year | `200`, evaluated descriptor | Evaluate persisted or otherwise accessible model on the requested year, using the model's training-fitted preprocessor. Unknown model/year is `404`/`400`; invalid evaluation is an explicit error. |
 
 `networkIds` in simulation MAY be empty only if a documented implementation
@@ -58,10 +57,10 @@ the NCAA evaluation route.
 |---|---|---|---|
 | `GET /mlb/networks` | None | `200`, persisted descriptor array | List persisted metadata only. |
 | `GET /mlb/networks/{networkId}` | UUID path segment | `200`, descriptor or empty result | Read only from persistent repository; unknown ID is empty optional with `200`. |
-| `POST /mlb/networks` | Network descriptor JSON | `200`, optional persisted trained descriptor | Train one model using MLB features and six declared outputs; persist only when the composite performance threshold is met. |
+| `POST /mlb/networks` | Network descriptor JSON | `200`, persisted trained descriptor or unsaved training report | Train one model using MLB features and six declared outputs. Return the descriptor when the model is persisted after meeting the evaluation accuracy threshold; otherwise return the unsaved training report and retain no model. |
 | `POST /mlb/simulations` | `{ "networkIds": [UUID, ...], "tournamentYear": integer }` | `200`, plugin-produced text | Supported plugin years are 2009 and 2023; output type is `TEAM_RANKING`. |
 | `GET /mlb/tournamentYears` | None | `200`, plugin descriptor array | Return registered MLB plugins only. |
-| `GET /mlb/trainingYears` | None | `200`, integer array | Return participant/training years with usable MLB data. |
+| `GET /mlb/trainingYears` | None | `200`, integer array | Return years declared by the MLB participant manifest that have usable labels and matching season inputs. |
 | `POST /mlb/networks/batch` | Descriptor with positive `numberOfBatchIterations` | `202`, accepted descriptor | Queue the batch and assign its correlation/job ID before work starts. |
 
 MLB's current source DTO does not add a different wire schema. The same
@@ -79,22 +78,24 @@ validation MUST distinguish caller-controlled values from server-owned values.
 | `networkId` | UUID identity assigned before a model is trained. |
 | `numberOfInputs`, `numberOfOutputs` | Resolved dimensions; NCAA is 64 and 7, MLB is 78 and 6. The selected sport module owns these values. |
 | `yearsToTrainNetwork`, `yearsToEvaluateNetwork` | Explicit disjoint year lists. |
-| `networkLayout` | Legacy `x`-separated resolved layout or normalized user input. |
+| `networkLayout` | `x`-separated full layout. Required for `USER_DEFINED[_RAND]`; ignored for `HOUR_GLASS` and `TAPERED_TREE`. In the descriptor, the resolved layout. |
 | `activationFunction`, `outputLayerActivation` | Hidden and output activation identifiers. |
 | `lossFunction`, `outputLayerLossFunction` | General and output loss identifiers. |
 | `numberOfEpochs`, `maxNumberOfTrainingEpochs`, `networkEvaluationIndex`, `maxNetworkError`, `epochStatsIndexCount` | Runtime training controls and observed result count. |
-| `weightInit`, `updater`, `learningRuleLearningRate`, `beta1DecayScaleValue`, `l2RegularizationLambda`, `dropoutProbability` | Model construction and optimizer parameters. |
+| `reportingInterval` (training request only, optional, replacement addition) | Positive integer epoch cadence for console progress lines; does not affect stopping. Default is every 10% of `maxNumberOfTrainingEpochs`. Invalid (zero/negative) values are rejected as `400`. |
+| `weightInit`, `updater`, `learningRuleLearningRate`, `beta1DecayScaleValue`, `l2RegularizationLambda` | Model construction and optimizer parameters. |
 | `normalizer` | Feature preprocessing choice; artifact also stores fitted state. |
 | `networkType` | Sport/model type; NCAA legacy value is `NCAABB`. |
 | `whenTrained` | Legacy local date-time string format `yyyy-MM-dd HH:mm:ss`; replacement SHOULD use an unambiguous UTC timestamp in a versioned API. |
 | `networkSaved` | Whether artifact persistence completed. |
 | `realNetworkAccuracy` | Mean of accuracy, precision, recall, and F1, on 0–1 scale. |
-| `networkAccuracy`, `networkPrecision`, `networkRecall`, `networkF1Score` | Held-out metrics, each on 0–1 scale. |
-| `trainingError` | Legacy `1 - recall` at stopping/evaluation point. |
+| `networkAccuracy`, `networkPrecision`, `networkRecall`, `networkF1Score` | Metrics on the evaluation data, each on 0–1 scale. They exist only when training reached `maxNetworkError` and the evaluation phase ran. |
+| `trainingError` | Legacy `1 - recall`, scored on the **training data**, at the epoch where training stopped. This is the value compared with `maxNetworkError`. It is stored with the model and never recomputed: re-evaluating a model on another year updates the evaluation metrics but leaves `trainingError` unchanged. |
 | `networkThreshold`, `networkPerformanceThreshold` | Legacy aliases/related threshold fields; define one internal threshold and document alias precedence. |
-| `networkStructureAlgorithm`, `numberOfHiddenLayers` | Architecture-generation choice and layer count. |
+| `networkStructureAlgorithm`, `numberOfHiddenLayers` | `networkStructureAlgorithm` is required (`HOUR_GLASS`, `TAPERED_TREE`, `USER_DEFINED`, `USER_DEFINED_RAND`; no default). `numberOfHiddenLayers` is required and `>= 3` for `HOUR_GLASS` and `TAPERED_TREE`, ignored for the `USER_DEFINED` algorithms. Violations return `400`. |
 | `numberOfBatchIterations`, `batchTrainingRunId` | Batch size and correlation ID. |
-| `confusionMatrixCsv` | Stable confusion-matrix CSV for compatibility. |
+| `confusionMatrixCsv` | Stable confusion-matrix CSV (header `Actual\Predicted,<classes>`, one row per actual class) scored on the **evaluation data**. |
+| `trainingAccuracy`, `trainingPrecision`, `trainingRecall`, `trainingF1Score`, `realTrainingAccuracy`, `trainingConfusionMatrixCsv` | The same metrics and confusion matrix scored on the **training data** at the epoch where training stopped (`trainingError = 1 - trainingRecall`). |
 
 Additional legacy DTO fields and constraints:
 
@@ -151,9 +152,27 @@ Supported event types from source:
 `FETCH_RESOURCE_FILE`, `EXCEPTION`, `PING`.
 
 The replacement may add event types but MUST preserve the listed names in a
-compatibility API. Since no resource HTTP endpoint exists in the replacement,
-`FETCH_RESOURCE_FILE` may be retained only for old event ingestion; new
-internal resource reads need not emit that API-era event.
+compatibility API.
+
+At batch completion, the server logs a summary and emits
+`TRAIN_NETWORK_BATCH_END`. Its `additionalContext` contains `persisted`,
+`completedBelowThreshold`, `failed`, `cancelled`, `requestedIterations`,
+`startedIterations`, `notStarted`, `trained`, `trainingTargetNotMet`,
+`evaluationBelowThreshold`, `totalTrainingElapsedMillis`,
+`averageIterationElapsedMillis`, `trainingYears`, `evaluationYears`,
+`networkStructureAlgorithm`, `hiddenLayerCounts`, `updater`,
+`hiddenActivation`, `outputActivation`, `l2`, and `learningRate`. The hidden
+layer counts are the distinct counts observed in completed iteration layouts,
+or an empty list if no iteration completed. `trained`
+counts returned outcomes that reached the training error target, whether or
+not they were persisted. `trainingTargetNotMet` counts returned outcomes that
+exhausted their epochs; `evaluationBelowThreshold` counts trained outcomes not
+saved due to evaluation accuracy. The duration sums attempted iteration times
+and excludes queue time. Average iteration time divides that duration by
+started iterations, including failed and cancelled attempts; it is null if no
+iteration started. `cancelled` includes cancellation detected before an
+iteration begins, and an error after a training outcome returns can be counted
+as a failure as well as a trained or persisted outcome.
 
 Search semantics MUST be the intersection (AND) of all supplied filters.
 Management event types are a set of accepted values. Sort by creation time;
@@ -211,6 +230,21 @@ Response bodies MUST have a stable machine-readable error code/message. Log
 internal exceptions with correlation IDs. Do not include secrets, raw
 credentials, stack traces, or large model bytes in client error messages.
 
+Every `400` MUST tell the caller why. The error body carries `code`,
+`message`, `correlationId`, and, for request-body or parameter validation
+failures, a `details` array with one entry per problem: `field` (the JSON
+property name as the client sent it, with a dotted path for nested values) and
+`message` (a human-readable reason, for example `Field required` or `numberOfHiddenLayers of at least
+3 is required for TAPERED_TREE`). `details` MUST NOT echo submitted values. The
+top-level `message` summarizes the first problem so that clients showing only
+`message` still see the cause. Every `400` MUST also be logged on the server at
+warning level with the HTTP method, path, correlation ID, and the same field
+and reason list, and MUST NOT log request bodies or submitted values.
+Unknown JSON request properties MUST be ignored, not rejected, so callers can
+"comment out" a parameter by renaming it (for example
+`"networkLayout-ignored"`); an ignored property is never an error and never
+changes behavior.
+
 ## 2. Internal repositories (no resource REST API)
 
 ### 2.1 Resource/data repository
@@ -233,22 +267,20 @@ Paths MUST be constructed from validated sport/year/file identifiers and
 resolved beneath configured read roots. Reject absolute paths, `..`, symbolic
 link escapes, and unsupported extensions. A missing file MUST NOT be converted
 to a fabricated empty matrix or `"NO DATA"` sentinel for internal consumers.
-The old resource controller used a sentinel in one HTTP response path; that is
-not the internal repository contract.
 
 ### 2.2 Model repository and artifact index
 
 Required methods are equivalent to:
 
-- `save(qualified model) -> persisted descriptor`;
+- `persist_model(qualified model) -> persisted descriptor` (the name is illustrative; it MUST differ from the backend's weight-saving method);
 - `load(id) -> descriptor + backend model + preprocessor`;
 - `get_descriptor(id)`;
 - `list_descriptors(sport, filters)`;
 - `rebuild_index(sport)` as an internal command/maintenance operation.
 
 The repository contains persisted models only. Training models that do not
-meet the composite performance threshold are discarded after their outcome is
-recorded; they MUST NOT be retained in an in-memory candidate store.
+meet the evaluation accuracy threshold are discarded after their outcome is
+recorded; they MUST NOT be returned or retained after the training request.
 
 Reindexing MUST be idempotent and MUST NOT delete the only valid index before
 replacement indexes have been built and validated. Preserve atomicity and
@@ -264,17 +296,24 @@ Each artifact MUST include:
 - preprocessing type and fitted parameters;
 - training/evaluation years and random seed;
 - resolved optimizer/activation/loss/initializer/regularization values;
-- metrics, stopping reason, threshold decision, timestamps, and source
-  application version.
+- evaluation metrics, the training-data `trainingError`, stopping reason,
+  threshold decision, timestamps, and source application version.
 
-Persist model data and manifest together, or use a manifest state marker that
-is written last. Write to a temporary path, fsync where supported, validate by
-reloading, then atomically promote. Do not expose a descriptor index for an
-artifact that failed validation. Model lookup by sport and UUID MUST verify
-that artifact identity matches its manifest.
+Store the model at `SPORTSNET_RESOURCE_ROOT/Networks/<SPORT>/<uuid>.model.keras`
+and the per-model JSON index/manifest at
+`SPORTSNET_RESOURCE_ROOT/Networks/<SPORT>/<uuid>.json`, where `SPORT` is the
+uppercase sport code.
+The JSON contains the complete descriptor as well as the manifest fields above.
+Write both to temporary paths, fsync where supported, validate the model by
+reloading, then publish the model and finally the JSON as the completion
+marker, without overwriting existing files. Publish a SQLite search-index row
+only after both files are complete. Serialize publishing with reindexing.
+Incomplete pairs MUST remain undiscoverable and be reported by reindexing;
+complete unindexed pairs MUST be recoverable. Model lookup by sport and UUID
+MUST verify that artifact identity matches its manifest.
 
 Existing artifacts are DL4J `.zip` archives with an embedded
-`network.parameters` descriptor and adjacent JSON indexes. These may be
+`network.parameters` descriptor and JSON indexes in a separate directory. These may be
 retained read-only as archives; the new app MUST NOT claim to load them in a
 different framework. Network file names may change. If existing file-backed
 indices are retained, create an explicit migration/import and rollback
@@ -301,9 +340,8 @@ ordering by timestamp plus a stable ID tie-breaker.
 ### 3.1 Configuration
 
 The legacy YAML defines port 8287, NCAA URI `/ncaabb`, multipart limits,
-Jackson serialization, and actuator settings. The old resource and management
-hosts/ports point to localhost:8299. Those internal service URLs MUST be
-removed from the unified runtime configuration.
+Jackson serialization, and actuator settings. The unified runtime uses
+in-process resource repositories and the durable management-event store.
 
 Use environment variables, a validated configuration file, or both. Required
 operational settings include:
@@ -316,10 +354,12 @@ operational settings include:
 - training/batch work limits, kill switch/cancellation, worker/concurrency
   limits, and random-seed policy;
 - network structure algorithms, activations, losses, optimizers, normalizer,
-  weight initialization, dropout, L2, learning rate, epoch limits/evaluation
+  weight initialization, L2, learning rate, epoch limits/evaluation
   interval, error/performance thresholds;
 - smoothing flags and evaluation-year prediction policy;
 - logging level/format and health/readiness behavior.
+- routine HTTP access logs are DEBUG-level and suppressed by default; the
+  access log level is configurable independently of training logs and errors.
 
 Configuration MUST be validated at startup and exposed in a redacted
 diagnostic form. Secrets MUST come from a secret provider/environment and MUST
@@ -366,6 +406,12 @@ entire large CSV rows. Metrics SHOULD cover active/queued jobs, duration,
 success/failure/stopping reasons, models persisted, repository errors, cache
 size/evictions, and tournament models skipped.
 
+Training progress and the single post-training evaluation line are operator
+output as defined under "Progress reporting" in the system and domain spec;
+they use the locked terminology (training loss/error/accuracy versus evaluation
+metrics) and MUST NOT print on every epoch unless the configured interval says
+so.
+
 ## 4. Compatibility contract
 
 The replacement MUST follow these contracts consistently across both sport
@@ -379,10 +425,18 @@ applications:
    Model artifacts use the replacement's internal format; DL4J loading is not
    supported.
 3. If training completes without meeting both the legacy early-stop condition
-   and composite performance threshold, the legacy single-training endpoint
-   returns `200` with an empty optional. Record the internal outcome
-   distinctly from failure. A model is persisted and returned only when both
-   conditions are met.
+   (training-data error below `maxNetworkError`) and the performance threshold
+   (evaluation accuracy × 100), the single-training endpoint returns
+   `200` with an unsaved training report (`networkSaved: false`) carrying
+   `networkId`, `networkType`, `stopReason`, `numberOfEpochs`, the thresholds,
+   the year sets, `elapsedTimeMillis`, `trainingError`, and every
+   training-data metric (including `trainingConfusionMatrixCsv`), plus, only
+   if the evaluation phase ran, every evaluation-data metric (including
+   `confusionMatrixCsv`). If `maxNetworkError` was never reached, the
+   evaluation data is never scored and the evaluation metrics are absent.
+   Record the internal outcome distinctly from failure. A persisted descriptor
+   is returned only for a model persisted after meeting both conditions; no
+   model is retained otherwise.
 4. Management events persist across process restarts. Apply no age-based
    expiration by default; any configured capacity/retention policy must emit
    observable eviction information.
